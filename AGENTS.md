@@ -153,7 +153,9 @@
 
 Windows의 Chrome과 Edge를 주 실행 환경으로 사용하고 Safari 및 실제 iPhone Safari에서 핵심 흐름을 교차 확인한다. PWA 설치, Web Push와 오프라인 사용은 MVP 완료 조건에 포함하지 않는다.
 
-승인된 서버 기반은 Spring Boot 자체 API와 PostgreSQL이다. 웹 클라이언트는 데이터베이스를 직접 호출하지 않으며, 서버를 데이터의 진실의 원천으로 사용하는 온라인 우선 방식을 따른다. 로컬 PostgreSQL은 Docker Compose로 실행하고 운영 배포 대상은 외부 테스트 준비 시점에 별도로 결정한다.
+승인된 서버 기반은 Eclipse Temurin Java 21 LTS, Spring Boot 4.1.x, Gradle Wrapper의 Groovy DSL, Spring Data JPA, Flyway와 PostgreSQL 18.x다. 웹 클라이언트는 데이터베이스를 직접 호출하지 않으며, 서버를 데이터의 진실의 원천으로 사용하는 온라인 우선 방식을 따른다. 로컬 PostgreSQL은 Docker Compose로 실행하고 운영 배포 대상은 외부 테스트 준비 시점에 별도로 결정한다.
+
+승인된 웹 기준선은 Node.js 24 LTS, Next.js 16.4.x, React 19.3.x, TypeScript 7.0.x와 pnpm 12.x다. 저장소는 `apps/web`, `apps/api`, `infra`, `docs`를 두는 단순 다중 언어 모노레포로 구성하며 Nx나 Turborepo를 추가하지 않는다. 세부 규칙은 `docs/01-plan/convention.md`를 따른다.
 
 프로젝트 초기화 시 실제 호환성을 확인한 뒤 이 파일 또는 관련 하위 디렉터리의 `AGENTS.md`에 다음을 추가한다.
 
