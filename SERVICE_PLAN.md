@@ -2,7 +2,7 @@
 
 > **요약**: 반복 생활비의 결제일·금액·담당자·결제수단·완료 상태를 한곳에서 관리하는 반응형 웹 서비스의 기능 중심 MVP 요구사항
 >
-> **버전**: 0.4
+> **버전**: 0.5
 > **작성일**: 2026-10-07
 > **상태**: Review
 > **범위**: 로그인·인증을 제외한 제품 기능
@@ -334,7 +334,8 @@ MVP 기능 기획은 다음 시나리오가 설계와 테스트 항목으로 추
 - Windows의 Chrome과 Edge를 주 개발 환경으로 사용하고 Safari 및 실제 iPhone Safari에서 핵심 흐름을 교차 확인한다.
 - 네이티브 iOS·Android 앱과 앱스토어 배포는 MVP 범위에 포함하지 않는다.
 
-Next.js, React, Node.js와 패키지 관리자 버전은 프로젝트 초기화 시 호환성을 확인한 뒤 고정한다.
+- 웹 기준선은 Node.js 24 LTS, Next.js 16.4.x, React 19.3.x, TypeScript 7.0.x와 pnpm 12.x다.
+- 정확한 patch 버전은 프로젝트 초기화 시 호환성을 실행 검증하고 lockfile과 `packageManager` 필드로 고정한다.
 
 ### 14.2 확정된 백엔드와 데이터 방향
 
@@ -346,10 +347,22 @@ Next.js, React, Node.js와 패키지 관리자 버전은 프로젝트 초기화 
 - 서버 데이터를 진실의 원천으로 하는 온라인 우선 방식을 사용하며 MVP에는 오프라인 쓰기 대기열과 충돌 병합을 포함하지 않는다.
 - 로컬 개발의 PostgreSQL은 Docker Compose로 실행한다.
 - 운영 배포 방식, VPS 또는 클라우드 제공자와 운영 데이터베이스 관리 방식은 외부 테스트 준비 시점에 결정한다.
+- 서버 기준선은 Eclipse Temurin Java 21 LTS, Spring Boot 4.1.x와 Gradle Groovy DSL이다.
+- Gradle은 저장소에 포함한 Wrapper로 실행하고 전역 Gradle 설치에 의존하지 않는다.
+- 데이터 접근은 Spring Data JPA, 스키마 변경은 Flyway를 사용하며 Hibernate 자동 DDL 생성 대신 `validate`를 사용한다.
+- PostgreSQL 기준선은 18.x다.
 
-Spring Boot 언어, 빌드 도구, 데이터 접근 기술과 정확한 버전은 프로젝트 초기화 전에 별도로 확정한다.
+정확한 Spring Boot, Gradle과 PostgreSQL patch 버전은 프로젝트 초기화 시 공식 생성 결과와 호환성을 실행 검증한 뒤 고정한다.
 
-### 14.3 남은 별도 결정 사항
+### 14.3 확정된 저장소 구조
+
+- 하나의 Git 저장소에서 `apps/web`과 `apps/api`를 함께 관리하는 단순 다중 언어 모노레포를 사용한다.
+- `apps/web`은 Next.js 프런트엔드, `apps/api`는 Spring Boot 백엔드다.
+- 공용 로컬 인프라는 루트 `infra`, 기획과 설계는 루트 `docs`에서 관리한다.
+- Nx, Turborepo와 별도 모노레포 프레임워크는 MVP에 도입하지 않는다.
+- 웹과 API는 각각 독립 실행·테스트·배포 단위를 유지한다.
+
+### 14.4 남은 별도 결정 사항
 
 다음 항목은 이 PRD가 임의로 확정하지 않는다.
 
@@ -371,6 +384,7 @@ Spring Boot 언어, 빌드 도구, 데이터 접근 기술과 정확한 버전�
 
 | 버전 | 날짜 | 변경 내용 |
 |---|---|---|
+| 0.5 | 2026-10-08 | Java 21, Spring Boot 4.1, Gradle Groovy DSL과 단순 웹·API 모노레포 기준 확정 |
 | 0.4 | 2026-10-08 | 기능 우선의 Next.js 반응형 웹/PWA로 전환하고 네이티브 앱과 외부 알림을 후속 범위로 이동 |
 | 0.3 | 2026-10-07 | Spring Boot 자체 API, PostgreSQL과 온라인 우선 데이터 방향 확정 |
 | 0.2 | 2026-10-07 | React Native, Expo, TypeScript 기반 모바일 우선 클라이언트 방향 확정 |
