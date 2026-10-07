@@ -1,8 +1,8 @@
 # 한달살림 핵심 ERD
 
-> 상태: Draft
+> 상태: Approved
 >
-> 이 ERD는 MVP의 개념 관계 초안이다. 필드와 제약의 상세 기준은 `schema.md`를 따른다.
+> 이 ERD는 MVP의 승인된 개념 관계다. 필드와 제약의 상세 기준은 `schema.md`를 따른다.
 
 ```mermaid
 erDiagram
