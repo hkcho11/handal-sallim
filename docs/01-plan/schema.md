@@ -199,12 +199,12 @@
 | `recurring_expense_id` | `uuid` | Y | `(recurring_expense_id, space_id)` → `recurring_expenses(id, space_id)` |
 | `effective_from` | `date` | Y | 이 revision이 적용되는 첫 예정일 |
 | `name` | `varchar(120)` | Y | 비용명 |
-| `category_id` | `uuid` | Y | `(category_id, space_id)` → `categories(id, space_id)` |
+| `category_id` | `uuid` | N | `(category_id, space_id)` → `categories(id, space_id)`, 등록 후 보완 가능 |
 | `interval_months` | `smallint` | Y | CHECK IN `(1, 2, 3, 12)` |
 | `anchor_due_date` | `date` | Y | 반복 계산 기준 예정일 |
 | `default_expected_amount` | `bigint` | Y | CHECK > 0, 원 단위 |
-| `assignee_user_id` | `uuid` | Y | `(space_id, assignee_user_id)` → `space_members(space_id, user_id)` |
-| `default_payment_method_id` | `uuid` | N | 등록 시 필수. 결제수단 보관 후에는 미지정 가능 |
+| `assignee_user_id` | `uuid` | N | `(space_id, assignee_user_id)` → `space_members(space_id, user_id)`, 등록 후 보완 가능 |
+| `default_payment_method_id` | `uuid` | N | 등록 시 선택. 등록 후 지정하거나 결제수단 보관 후 미지정 가능 |
 | `created_by` | `uuid` | Y | `(space_id, created_by)` → `space_members(space_id, user_id)` |
 | `created_at` | `timestamptz` | Y | 생성 시각 |
 
@@ -217,6 +217,8 @@
 - `다음 발생분부터 변경`은 새 revision을 만들고 적용일 이후의 미완료 청구만 새 revision 기준으로 다시 계산한다.
 - 완료된 청구는 revision 변경으로 수정하지 않는다.
 - 새 revision의 첫 회차는 `default_expected_amount`를 사용하고, 같은 revision의 후속 회차는 별도 변경이 없으면 직전 실제 결제 금액을 사용한다.
+- 최초 등록은 비용명, 예상 금액, 반복 간격과 첫 예정일만 요구하며 카테고리, 담당자와 기본 결제수단이 NULL인 revision을 허용한다.
+- 선택 정보를 나중에 채우면 적용 범위 선택에 따라 현재 미완료 청구 스냅샷을 수정하거나 새 revision을 만든다.
 - 결제수단이 보관되면 다음 미완료 회차부터 `default_payment_method_id`가 NULL인 새 revision을 만들 수 있다.
 
 ### 4.10 `scheduled_charges`
@@ -229,10 +231,10 @@
 | `recurring_expense_revision_id` | `uuid` | Y | 적용된 revision; 반복 설정·공간과 함께 복합 FK로 검증 |
 | `due_date` | `date` | Y | 해당 회차 예정일 |
 | `expense_name` | `varchar(120)` | Y | 발생 당시 비용명 스냅샷 |
-| `category_id` | `uuid` | Y | 발생 당시 카테고리 |
+| `category_id` | `uuid` | N | 발생 당시 카테고리, 미지정 가능 |
 | `expected_amount` | `bigint` | Y | CHECK > 0 |
-| `assignee_user_id` | `uuid` | Y | `(space_id, assignee_user_id)` → 공간 멤버, 발생 당시 담당자 |
-| `planned_payment_method_id` | `uuid` | N | 발생 당시 기본 결제수단. 보관 후 미래 회차는 미지정 가능 |
+| `assignee_user_id` | `uuid` | N | `(space_id, assignee_user_id)` → 공간 멤버, 발생 당시 담당자, 미지정 가능 |
+| `planned_payment_method_id` | `uuid` | N | 발생 당시 기본 결제수단. 최초 등록 또는 보관 후 미지정 가능 |
 | `status` | `varchar(20)` | Y | `PENDING`, `COMPLETED`, `CANCELLED` |
 | `actual_amount` | `bigint` | N | 완료 시 CHECK > 0 |
 | `actual_paid_on` | `date` | N | 완료 시 실제 결제일 |
@@ -259,7 +261,7 @@
 | `type` | `varchar(20)` | Y | `INCOME`, `EXPENSE` |
 | `amount` | `bigint` | Y | CHECK > 0, 원 단위 |
 | `occurred_on` | `date` | Y | 실제 거래일 |
-| `category_id` | `uuid` | Y | `(category_id, space_id)` → 공간 카테고리 |
+| `category_id` | `uuid` | N | `(category_id, space_id)` → 공간 카테고리. 직접 입력 거래는 필수, 미분류 고정비의 자동 생성 거래만 NULL 허용 |
 | `payment_method_id` | `uuid` | Y | `(payment_method_id, space_id)` → 공간 결제수단 |
 | `memo` | `varchar(500)` | N | 로그 기록 금지 |
 | `visibility` | `varchar(20)` | Y | `SHARED`, `PRIVATE` |
@@ -271,6 +273,8 @@
 | 공통 필드 |  |  | `created_at`, `updated_at`, `version` |
 
 제약/인덱스:
+
+- CHECK: `source = 'SCHEDULED_CHARGE' OR category_id IS NOT NULL` — 직접 입력 거래는 카테고리 필수
 
 - UNIQUE: `scheduled_charge_id` WHERE NOT NULL — 청구와 자동 거래 1:1
 - 자동 생성 거래는 `EXPENSE`, `SHARED`, `SCHEDULED_CHARGE`여야 한다.
@@ -380,6 +384,7 @@ MVP에는 `이번 회차만 삭제`를 제공하지 않는다. 필요하면 향�
 - DATA-08: 완료 취소와 재완료는 자동 생성 거래 한 행의 `VOIDED`/`ACTIVE` 전환으로 처리한다.
 - DATA-09: 초대는 발급 후 24시간에 만료한다.
 - DATA-10: 예정 청구는 서버만 생성하고 등록·월간 조회·완료 시 누락분을 멱등 보충한다. MVP에는 일일 생성 작업을 두지 않는다.
+- DATA-11: 고정비 최초 등록은 비용명·예상 금액·반복 주기·첫 예정일만 필수이며 카테고리·담당자·결제수단은 나중에 지정할 수 있다.
 
 추가로 다음 구조를 구현 기준으로 승인했다.
 
@@ -419,6 +424,8 @@ MVP에는 금융 연동 테이블을 생성하지 않는다. 카드·은행 거�
 - 새 revision 적용 전후의 미완료 청구와 완료 청구가 각각 올바른 설정을 유지하는지 검증한다.
 - 반복 고정지출 삭제가 선택 회차와 이후 미완료 청구만 취소하고 완료 기록은 유지하는지 검증한다.
 - 결제수단 보관 후 미래 청구가 미지정 상태가 되고 완료 시 실제 결제수단을 요구하는지 검증한다.
+- 카테고리·담당자·결제수단 없이 고정비와 예정 청구가 생성되고 미지정 상태로 조회되는지 검증한다.
+- 미분류 자동 생성 거래는 허용하되 직접 입력 거래의 카테고리 누락은 거부하는지 검증한다.
 - 월말, 윤년, 공간 시간대 자정 경계를 결정한 정책에 맞게 검증한다.
 
 ## 10. 인덱스와 삭제 정책
