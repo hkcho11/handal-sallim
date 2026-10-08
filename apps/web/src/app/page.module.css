@@ -1,0 +1,12 @@
+.page {
+  display: grid;
+  min-height: 100vh;
+  place-content: center;
+  gap: 1rem;
+  padding: 2rem;
+  text-align: center;
+}
+
+.page h1 {
+  font-size: clamp(2rem, 6vw, 3rem);
+}
