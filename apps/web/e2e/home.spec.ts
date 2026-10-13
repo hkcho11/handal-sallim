@@ -34,91 +34,68 @@ test("등록한 실제 항목을 홈에 표시하고 예시 합계와 구분한�
 });
 
 for (const width of [360, 1280]) {
-  test(`지출 카드에서 해당 내역으로 이동한다 (${width}px)`, async ({
-    page,
-  }) => {
+  test(`지출 요약에서 내역을 아래에 펼친다 (${width}px)`, async ({ page }) => {
     await page.setViewportSize({ width, height: 800 });
     await page.route("**/backend/recurring-expenses", (route) =>
       route.fulfill({ json: [] }),
     );
     await page.goto("/");
     const summary = page.getByRole("region", { name: "이번 달 지출 요약" });
-    const cards = summary.getByRole("link");
-    const boxes = await cards.evaluateAll((links) =>
-      links.map((link) => {
-        const { x, y, width } = link.getBoundingClientRect();
-        return { x, y, width };
+    const actual = summary.getByRole("button", { name: /실제 지출/ });
+    const remaining = summary.getByRole("button", { name: /남은 지출/ });
+    const labels = summary
+      .locator("span")
+      .filter({ hasText: /^(실제 지출|남은 지출|월 예상 지출)$/ });
+    const boxes = await labels.evaluateAll((items) =>
+      items.map((item) => {
+        const { x, y } = item.getBoundingClientRect();
+        return { x, y };
       }),
     );
-    if (width === 360) {
-      expect(boxes[0].y).toBeLessThan(boxes[1].y);
-      expect(boxes[1].y).toBe(boxes[2].y);
-      expect(boxes[0].width).toBeGreaterThan(boxes[1].width);
-    } else {
-      expect(boxes[0].y).toBe(boxes[1].y);
-      expect(boxes[1].y).toBe(boxes[2].y);
-    }
+    expect(boxes).toHaveLength(3);
+    expect(boxes[0].y).toBe(boxes[1].y);
+    expect(boxes[1].y).toBe(boxes[2].y);
+    expect(boxes[0].x).toBeLessThan(boxes[1].x);
+    expect(boxes[1].x).toBeLessThan(boxes[2].x);
+    await expect(summary.getByRole("link")).toHaveCount(0);
     await expect(summary.getByText("예시 데이터")).toBeVisible();
+    await expect(actual).toHaveAttribute("aria-expanded", "false");
+    await actual.focus();
+    await page.keyboard.press("Enter");
+    await expect(actual).toHaveAttribute("aria-expanded", "true");
+    const actualDetails = summary.getByRole("region", {
+      name: "실제 지출 내역",
+    });
     await expect(
-      summary.getByText("결제 완료된 고정비 + 일반 지출"),
-    ).toHaveCount(0);
+      actualDetails.getByText("장보기", { exact: true }),
+    ).toBeVisible();
+    await expect(actualDetails.getByRole("listitem")).toHaveCount(9);
+    await expect(page).toHaveURL("/");
+    await remaining.click();
+    await expect(actualDetails).toHaveCount(0);
+    await expect(remaining).toHaveAttribute("aria-expanded", "true");
+    const remainingDetails = summary.getByRole("region", {
+      name: "남은 지출 내역",
+    });
+    await expect(remainingDetails.getByRole("listitem")).toHaveCount(4);
+    await expect(remainingDetails.getByRole("listitem").first()).toContainText(
+      "전기요금",
+    );
     await page.screenshot({
       path: `test-results/spending-summary-${width}.png`,
     });
-    const views = [
-      { path: "actual", title: "실제 지출 내역", amount: "545,000원" },
-      { path: "remaining", title: "남은 예정 지출 내역", amount: "818,000원" },
-      {
-        path: "projected",
-        title: "월말 예상 지출 내역",
-        amount: "1,363,000원",
-      },
-    ];
-    for (const view of views) {
-      await summary.locator(`a[href="/spending/${view.path}"]`).click();
-      await expect(page).toHaveURL(`/spending/${view.path}`);
-      await expect(
-        page.getByRole("heading", { name: view.title }),
-      ).toBeVisible();
-      await expect(
-        page
-          .getByRole("region", { name: "합계와 계산 기준" })
-          .getByText(view.amount, { exact: true }),
-      ).toBeVisible();
-      await expect(
-        page.getByRole("region", { name: "결제 완료된 지출" }),
-      ).toHaveCount(view.path === "remaining" ? 0 : 1);
-      await expect(
-        page.getByRole("region", { name: "미결제 고정비" }),
-      ).toHaveCount(view.path === "actual" ? 0 : 1);
-      if (view.path !== "actual") {
-        await expect(
-          page
-            .getByRole("region", { name: "미결제 고정비" })
-            .getByRole("listitem")
-            .first(),
-        ).toContainText("전기요금");
-      }
-      if (view.path === "projected")
-        await expect(
-          page.getByText(/앞으로 발생할 일반 지출은 포함하지 않습니다/),
-        ).toBeVisible();
-      await page.evaluate(() => {
-        document.documentElement.style.fontSize = "200%";
-      });
-      expect(
-        await page.evaluate(
-          () => document.documentElement.scrollWidth > window.innerWidth,
-        ),
-      ).toBe(false);
-      await page.getByRole("link", { name: "← 홈으로" }).click();
-      await expect(page).toHaveURL("/");
-      await page.evaluate(() => {
-        document.documentElement.style.fontSize = "100%";
-      });
-    }
+    await remaining.click();
+    await expect(remainingDetails).toHaveCount(0);
+    await expect(remaining).toHaveAttribute("aria-expanded", "false");
+    await page.evaluate(() => {
+      document.documentElement.style.fontSize = "200%";
+    });
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth > window.innerWidth,
+      ),
+    ).toBe(false);
   });
-
   test(`대시보드와 하단 탭을 ${width}px에서 사용할 수 있다`, async ({
     page,
   }) => {

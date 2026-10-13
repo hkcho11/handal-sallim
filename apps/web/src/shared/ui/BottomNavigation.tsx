@@ -12,16 +12,7 @@ export default function BottomNavigation() {
   return (
     <nav aria-label="하단 메뉴" className={styles.navigation}>
       <div className={styles.tabs}>
-        <Link
-          href="/"
-          aria-current={
-            pathname === "/"
-              ? "page"
-              : pathname.startsWith("/spending/")
-                ? "location"
-                : undefined
-          }
-        >
+        <Link href="/" aria-current={pathname === "/" ? "page" : undefined}>
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="m3 10 9-7 9 7v10H3Z M9 20v-7h6v7" />
           </svg>

@@ -1,13 +1,21 @@
+"use client";
+
+import { useState } from "react";
 import {
   calculateSpendingStatistics,
   MOCK_SPENDING_ENTRIES,
 } from "./spendingStatistics";
 import styles from "./home-dashboard.module.css";
-import Link from "next/link";
+import SpendingBreakdown from "./SpendingBreakdown";
 
 const won = (amount: number) => `${amount.toLocaleString("ko-KR")}원`;
 
 export default function MonthlySpending({ remaining }: { remaining: number }) {
+  const [selected, setSelected] = useState<"actual" | "remaining" | null>(null);
+
+  function handleSelect(view: "actual" | "remaining") {
+    setSelected((current) => (current === view ? null : view));
+  }
   const statistics = calculateSpendingStatistics(
     MOCK_SPENDING_ENTRIES,
     remaining,
@@ -22,31 +30,38 @@ export default function MonthlySpending({ remaining }: { remaining: number }) {
           </h2>
           <span className={styles.badge}>예시 데이터</span>
         </div>
-        <div className={styles.statGrid}>
-          <Link
-            href="/spending/actual"
-            className={`${styles.panel} ${styles.summary} ${styles.statCard}`}
+        <div className={`${styles.panel} ${styles.statGrid}`}>
+          <button
+            type="button"
+            className={styles.statItem}
+            aria-expanded={selected === "actual"}
+            aria-controls="spending-breakdown"
+            onClick={() => handleSelect("actual")}
           >
-            <h3>실제 지출</h3>
-            <p className={styles.statAmount}>{won(statistics.spent)}</p>
-            <span className={styles.statAction}>내역 보기 ›</span>
-          </Link>
-          <Link
-            href="/spending/remaining"
-            className={`${styles.panel} ${styles.statCard}`}
+            <span className={styles.statLabel}>실제 지출</span>
+            <strong className={styles.statAmount}>
+              {won(statistics.spent)}
+            </strong>
+          </button>
+          <button
+            type="button"
+            className={styles.statItem}
+            aria-expanded={selected === "remaining"}
+            aria-controls="spending-breakdown"
+            onClick={() => handleSelect("remaining")}
           >
-            <h3>남은 예정 지출</h3>
-            <p className={styles.statAmount}>{won(remaining)}</p>
-            <span className={styles.statAction}>내역 보기 ›</span>
-          </Link>
-          <Link
-            href="/spending/projected"
-            className={`${styles.panel} ${styles.statCard}`}
-          >
-            <h3>월말 예상 지출</h3>
-            <p className={styles.statAmount}>{won(statistics.projected)}</p>
-            <span className={styles.statAction}>내역 보기 ›</span>
-          </Link>
+            <span className={styles.statLabel}>남은 지출</span>
+            <strong className={styles.statAmount}>{won(remaining)}</strong>
+          </button>
+          <div className={styles.statItem}>
+            <span className={styles.statLabel}>월 예상 지출</span>
+            <strong className={styles.statAmount}>
+              {won(statistics.projected)}
+            </strong>
+          </div>
+        </div>
+        <div id="spending-breakdown" hidden={selected === null}>
+          {selected && <SpendingBreakdown view={selected} />}
         </div>
       </section>
       <section className={styles.panel} aria-labelledby="category-title">
