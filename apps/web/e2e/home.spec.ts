@@ -28,8 +28,8 @@ test("등록한 실제 항목을 홈에 표시하고 예시 합계와 구분한�
     registered.getByRole("heading", { name: "테스트 등록 고정비" }),
   ).toBeVisible();
   await expect(registered.getByText("일정 미정")).toBeVisible();
-  await expect(registered.getByText(/등록 금액 합계 42,000원/)).toBeVisible();
-  const summary = page.getByRole("region", { name: "이번 달 결제 현황" });
+  await expect(registered.getByText(/1건 · 42,000원/)).toBeVisible();
+  const summary = page.getByRole("region", { name: "이번 달 지출 요약" });
   await expect(summary.getByText("818,000원")).toBeVisible();
 });
 
@@ -110,7 +110,12 @@ for (const width of [360, 1280]) {
     await expect(page.getByRole("heading", { name: "한달살림" })).toBeVisible();
     await page.keyboard.press("Tab");
     await expect(page.getByRole("link", { name: "+ 내역 추가" })).toBeFocused();
-    await expect(page.getByText("미결제 4건")).toBeVisible();
+    await expect(
+      page.getByRole("region", { name: "다가오는 결제·지연 항목" }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("region", { name: "이번 달 결제 현황" }),
+    ).toHaveCount(0);
     const statistics = page.getByRole("region", { name: "이번 달 지출 요약" });
     await expect(statistics.getByText("545,000원")).toBeVisible();
     await expect(statistics.getByText("1,363,000원")).toBeVisible();
@@ -156,7 +161,9 @@ for (const width of [360, 1280]) {
         () => document.documentElement.scrollWidth > window.innerWidth,
       ),
     ).toBe(false);
-    const lastCard = page.getByRole("heading", { name: "내 개인 내역" });
+    const lastCard = page
+      .getByRole("region", { name: "결제수단별 금액" })
+      .getByText("미지정", { exact: true });
     await lastCard.scrollIntoViewIfNeeded();
     const card = await lastCard.boundingBox();
     const nav = await navigation.boundingBox();

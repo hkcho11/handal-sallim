@@ -69,9 +69,6 @@ export default function MonthlySpending({ remaining }: { remaining: number }) {
           <h2 id="category-title">카테고리별 지출</h2>
           <span className={styles.badge}>예시 · 공동 + 내 개인</span>
         </div>
-        <p className={styles.muted}>
-          실제 지출 기준 · 카테고리를 누르면 내역을 볼 수 있습니다.
-        </p>
         <div className={styles.categoryList}>
           {statistics.categories.map((category) => (
             <details key={category.name} className={styles.category}>

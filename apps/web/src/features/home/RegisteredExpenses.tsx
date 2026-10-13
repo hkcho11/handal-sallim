@@ -7,7 +7,11 @@ import styles from "./home-dashboard.module.css";
 
 const STATUS_LABELS = { PENDING: "예정", OVERDUE: "지연", COMPLETED: "완료" };
 
-export default function RegisteredExpenses() {
+export default function RegisteredExpenses({
+  compact = false,
+}: {
+  compact?: boolean;
+}) {
   const [expenses, setExpenses] = useState<FixedExpense[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
@@ -59,12 +63,16 @@ export default function RegisteredExpenses() {
         </div>
       ) : expenses.length === 0 ? (
         <p className={styles.muted}>
-          등록한 고정비가 없습니다. 내역 추가에서 등록해 보세요.
+          {compact
+            ? "고정비를 추가해 보세요."
+            : "등록한 고정비가 없습니다. 내역 추가에서 등록해 보세요."}
         </p>
       ) : (
         <>
           <p className={styles.muted}>
-            실제 등록 내역 {expenses.length}건 · 등록 금액 합계{" "}
+            {compact
+              ? `${expenses.length}건 · `
+              : `실제 등록 내역 ${expenses.length}건 · 등록 금액 합계 `}
             {expenses
               .reduce((sum, expense) => sum + expense.expectedAmount, 0)
               .toLocaleString("ko-KR")}
@@ -72,11 +80,16 @@ export default function RegisteredExpenses() {
           </p>
           <ul className={styles.timeline}>
             {expenses.map((expense) => (
-              <li key={expense.id} className={styles.charge}>
-                <div className={styles.date}>
-                  <span>등록</span>
-                  <strong>내역</strong>
-                </div>
+              <li
+                key={expense.id}
+                className={compact ? styles.registeredRow : styles.charge}
+              >
+                {!compact && (
+                  <div className={styles.date}>
+                    <span>등록</span>
+                    <strong>내역</strong>
+                  </div>
+                )}
                 <div className={styles.chargeInfo}>
                   <div className={styles.chargeTitle}>
                     <h3>{expense.name}</h3>
@@ -88,22 +101,26 @@ export default function RegisteredExpenses() {
                         : "일정 미정"}
                     </span>
                   </div>
-                  <p>첫 결제일 {expense.firstDueDate ?? "미정"}</p>
-                  <p>
-                    담당자{" "}
-                    {expense.payer === "ME"
-                      ? "나"
-                      : expense.payer === "PARTNER"
-                        ? "함께 관리하는 사람"
-                        : "미지정"}{" "}
-                    · {expense.paymentMethodName ?? "결제수단 미지정"}
-                  </p>
+                  {!compact && (
+                    <>
+                      <p>첫 결제일 {expense.firstDueDate ?? "미정"}</p>
+                      <p>
+                        담당자{" "}
+                        {expense.payer === "ME"
+                          ? "나"
+                          : expense.payer === "PARTNER"
+                            ? "함께 관리하는 사람"
+                            : "미지정"}{" "}
+                        · {expense.paymentMethodName ?? "결제수단 미지정"}
+                      </p>
+                    </>
+                  )}
                 </div>
                 <div className={styles.amount}>
                   <strong>
                     {expense.expectedAmount.toLocaleString("ko-KR")}원
                   </strong>
-                  <span>등록 금액</span>
+                  {!compact && <span>등록 금액</span>}
                 </div>
               </li>
             ))}

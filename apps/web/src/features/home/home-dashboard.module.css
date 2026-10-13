@@ -7,7 +7,7 @@
 }
 
 .container {
-  max-width: 1100px;
+  max-width: 960px;
   margin: auto;
   display: grid;
   gap: 1.25rem;
@@ -341,11 +341,12 @@
 
 .categoryList {
   display: grid;
-  gap: 0.25rem;
+  gap: 0;
+  margin-top: 0.75rem;
 }
 
 .category summary {
-  padding: 0.8rem 0;
+  padding: 0.6rem 0;
   cursor: pointer;
   min-height: 44px;
   list-style: none;
@@ -417,6 +418,47 @@
   display: block;
   color: #4c5a50;
   margin-top: 0.3rem;
+}
+
+.registeredRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem;
+  align-items: center;
+  padding-block: 0.75rem;
+  border-top: 1px solid #e8ece5;
+}
+
+.registeredRow h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.paymentTable {
+  margin-top: 1rem;
+}
+
+.paymentHead,
+.paymentRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  padding-block: 0.65rem;
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+
+.paymentHead {
+  color: #4c5a50;
+  font-size: 0.8rem;
+}
+.paymentRow {
+  border-top: 1px solid #e8ece5;
+}
+.paymentHead > :not(:first-child),
+.paymentRow > :not(:first-child) {
+  text-align: right;
 }
 
 .loadError button {
