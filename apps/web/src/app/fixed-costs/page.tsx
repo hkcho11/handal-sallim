@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import FixedExpensesScreen from "@/features/fixed-expenses/FixedExpensesScreen";
 
 export default function FixedCostsPage() {
-  redirect("/entries/new");
+  return <FixedExpensesScreen />;
 }

@@ -1,0 +1,281 @@
+.page {
+  min-height: 100vh;
+  padding: clamp(1rem, 4vw, 3rem);
+  background: #f6f7f4;
+  color: #17211b;
+  font-variant-numeric: tabular-nums;
+}
+
+.container {
+  max-width: 1100px;
+  margin: auto;
+  display: grid;
+  gap: 1.25rem;
+}
+
+.header,
+.month,
+.sectionHeader,
+.chargeTitle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.header h1 {
+  margin: 0.35rem 0 0;
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
+  letter-spacing: -0.05em;
+}
+
+.eyebrow {
+  margin: 0;
+  color: #4c5a50;
+  font-size: 0.9rem;
+}
+
+.add {
+  padding: 0.85rem 1rem;
+  min-height: 44px;
+  border-radius: 0.65rem;
+  background: #225b3e;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 650;
+}
+
+.month {
+  margin-top: 1rem;
+}
+
+.month h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.month span,
+.muted,
+.summaryNote,
+.chargeInfo p,
+.amount span {
+  color: #4c5a50;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.preview {
+  margin: -0.5rem 0 0;
+  color: #4c5a50;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.primaryGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 1.25rem;
+}
+
+.panel {
+  min-width: 0;
+  border: 1px solid #d6ded5;
+  border-radius: 1rem;
+  padding: clamp(1rem, 2.5vw, 1.5rem);
+  background: #fff;
+}
+
+.panel h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.sectionHeader a {
+  color: #244d36;
+  font-size: 0.9rem;
+  text-underline-offset: 0.2em;
+  padding-block: 0.5rem;
+}
+
+.muted {
+  margin: 0.5rem 0 1rem;
+}
+
+.timeline {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.charge {
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr) auto;
+  gap: 0.85rem;
+  align-items: center;
+  padding: 1rem 0;
+  border-top: 1px solid #e8ece5;
+}
+
+.date {
+  display: grid;
+  gap: 0.25rem;
+  text-align: center;
+  background: #f6f7f4;
+  border-radius: 0.6rem;
+  padding: 0.6rem 0.2rem;
+}
+
+.date span {
+  font-size: 0.75rem;
+  color: #4c5a50;
+}
+
+.chargeTitle {
+  justify-content: start;
+  gap: 0.5rem;
+}
+
+.charge h3,
+.method h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.chargeInfo p {
+  margin: 0.35rem 0 0;
+  font-size: 0.8rem;
+}
+
+.badge {
+  padding: 0.2rem 0.45rem;
+  border-radius: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 650;
+}
+
+.pending {
+  background: #f0f1ed;
+  color: #4c5a50;
+}
+
+.completed {
+  background: #e5f3e9;
+  color: #1b5231;
+}
+
+.overdue {
+  background: #fff0ed;
+  color: #8b2619;
+}
+
+.amount {
+  display: grid;
+  gap: 0.2rem;
+  text-align: right;
+}
+
+.amount span {
+  font-size: 0.75rem;
+}
+
+.summary {
+  background: #edf4ed;
+}
+
+.attention {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1.5rem 0;
+}
+
+.attention span {
+  color: #8b2619;
+}
+
+.largeAmount {
+  margin: -0.5rem 0 1.5rem;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 750;
+  letter-spacing: -0.04em;
+}
+
+.metrics {
+  display: grid;
+  gap: 0.85rem;
+  margin: 1.25rem 0;
+}
+
+.metrics div {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.metrics dt {
+  color: #4c5a50;
+  font-size: 0.9rem;
+}
+
+.metrics dd {
+  margin: 0;
+  font-weight: 650;
+}
+
+.summary progress {
+  width: 100%;
+  height: 0.5rem;
+  accent-color: #225b3e;
+}
+
+.summaryNote {
+  margin: 0.75rem 0 0;
+  font-size: 0.8rem;
+}
+
+.methodGrid,
+.financeGrid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.financeGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.method {
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid #e0e6df;
+  border-radius: 0.7rem;
+}
+
+.method .metrics {
+  margin-bottom: 0;
+}
+
+.page a:focus-visible {
+  outline: 3px solid #d57730;
+  outline-offset: 3px;
+}
+
+@media (max-width: 767px) {
+  .primaryGrid,
+  .methodGrid,
+  .financeGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .charge {
+    grid-template-columns: 3rem minmax(0, 1fr);
+  }
+
+  .amount {
+    grid-column: 2;
+    text-align: left;
+  }
+}

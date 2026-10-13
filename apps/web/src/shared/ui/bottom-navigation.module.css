@@ -1,0 +1,50 @@
+.navigation {
+  position: fixed;
+  z-index: 10;
+  inset: auto 0 0;
+  border-top: 1px solid #d6ded5;
+  background: #fff;
+  padding: 0.5rem 1rem calc(0.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+.tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  max-width: 32rem;
+  margin: auto;
+  gap: 0.5rem;
+}
+
+.tabs a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  min-height: 3.5rem;
+  padding: 0.4rem;
+  border-radius: 0.7rem;
+  color: #4c5a50;
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 650;
+}
+
+.tabs a[aria-current="page"] {
+  background: #e5f3e9;
+  color: #1b5231;
+}
+
+.tabs svg {
+  width: 1.4rem;
+  height: 1.4rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.tabs a:focus-visible {
+  outline: 3px solid #d57730;
+  outline-offset: 2px;
+}
