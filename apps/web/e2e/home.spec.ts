@@ -1,5 +1,38 @@
 import { expect, test } from "@playwright/test";
 
+test("등록한 실제 항목을 홈에 표시하고 예시 합계와 구분한다", async ({
+  page,
+}) => {
+  await page.route("**/backend/recurring-expenses", (route) =>
+    route.fulfill({
+      json: [
+        {
+          id: "3c6b40a1-3fea-454b-93ac-a7a9917cff10",
+          name: "테스트 등록 고정비",
+          expectedAmount: 42000,
+          intervalMonths: null,
+          recurringDayOfMonth: null,
+          firstDueDate: null,
+          firstChargeId: null,
+          firstChargeStatus: null,
+          payer: null,
+          paymentMethodId: null,
+          paymentMethodName: null,
+        },
+      ],
+    }),
+  );
+  await page.goto("/");
+  const registered = page.getByRole("region", { name: "등록한 고정비" });
+  await expect(
+    registered.getByRole("heading", { name: "테스트 등록 고정비" }),
+  ).toBeVisible();
+  await expect(registered.getByText("일정 미정")).toBeVisible();
+  await expect(registered.getByText(/등록 금액 합계 42,000원/)).toBeVisible();
+  const summary = page.getByRole("region", { name: "이번 달 결제 현황" });
+  await expect(summary.getByText("818,000원")).toBeVisible();
+});
+
 for (const width of [360, 1280]) {
   test(`대시보드와 하단 탭을 ${width}px에서 사용할 수 있다`, async ({
     page,

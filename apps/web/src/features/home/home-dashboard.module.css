@@ -263,6 +263,26 @@
   outline-offset: 3px;
 }
 
+.loadError {
+  color: #8b2619;
+}
+
+.loadError button {
+  min-height: 44px;
+  padding: 0.65rem 1rem;
+  border: 0;
+  border-radius: 0.55rem;
+  background: #225b3e;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.loadError button:focus-visible {
+  outline: 3px solid #d57730;
+  outline-offset: 3px;
+}
+
 @media (max-width: 767px) {
   .primaryGrid,
   .methodGrid,

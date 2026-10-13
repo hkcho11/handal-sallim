@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { MOCK_DASHBOARD, summarizeCharges } from "./mockDashboard";
 import styles from "./home-dashboard.module.css";
+import RegisteredExpenses from "./RegisteredExpenses";
 
 const won = (amount: number) => `${amount.toLocaleString("ko-KR")}원`;
 const statusStyles = {
@@ -26,13 +27,14 @@ export default function HomeDashboard() {
             + 내역 추가
           </Link>
         </header>
+        <RegisteredExpenses />
         <div className={styles.month}>
           <h2>{month}</h2>
           <span>예시 데이터 · {referenceDate}</span>
         </div>
         <p className={styles.preview}>
-          대시보드 미리보기입니다. 표시된 금액과 일정은 실제 등록 내역과
-          연결되지 않습니다.
+          아래는 예시 대시보드입니다. 예시 금액과 일정은 위의 실제 등록 내역과
+          별개이며, 예시 합계에 실제 등록 금액은 포함되지 않습니다.
         </p>
 
         <div className={styles.primaryGrid}>
