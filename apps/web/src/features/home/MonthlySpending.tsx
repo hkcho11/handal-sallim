@@ -3,6 +3,7 @@ import {
   MOCK_SPENDING_ENTRIES,
 } from "./spendingStatistics";
 import styles from "./home-dashboard.module.css";
+import Link from "next/link";
 
 const won = (amount: number) => `${amount.toLocaleString("ko-KR")}원`;
 
@@ -15,30 +16,38 @@ export default function MonthlySpending({ remaining }: { remaining: number }) {
   return (
     <>
       <section aria-labelledby="spending-title">
-        <h2 id="spending-title" className={styles.sectionTitle}>
-          이번 달 지출 요약
-        </h2>
+        <div className={styles.sectionHeader}>
+          <h2 id="spending-title" className={styles.sectionTitle}>
+            이번 달 지출 요약
+          </h2>
+          <span className={styles.badge}>예시 데이터</span>
+        </div>
         <div className={styles.statGrid}>
-          <article className={`${styles.panel} ${styles.summary}`}>
+          <Link
+            href="/spending/actual"
+            className={`${styles.panel} ${styles.summary} ${styles.statCard}`}
+          >
             <h3>실제 지출</h3>
             <p className={styles.statAmount}>{won(statistics.spent)}</p>
-            <p className={styles.summaryNote}>결제 완료된 고정비 + 일반 지출</p>
-          </article>
-          <article className={styles.panel}>
-            <h3>남은 고정비 예정액</h3>
+            <span className={styles.statAction}>내역 보기 ›</span>
+          </Link>
+          <Link
+            href="/spending/remaining"
+            className={`${styles.panel} ${styles.statCard}`}
+          >
+            <h3>남은 예정 지출</h3>
             <p className={styles.statAmount}>{won(remaining)}</p>
-            <p className={styles.summaryNote}>지연 항목을 포함한 미결제 금액</p>
-          </article>
-          <article className={styles.panel}>
+            <span className={styles.statAction}>내역 보기 ›</span>
+          </Link>
+          <Link
+            href="/spending/projected"
+            className={`${styles.panel} ${styles.statCard}`}
+          >
             <h3>월말 예상 지출</h3>
             <p className={styles.statAmount}>{won(statistics.projected)}</p>
-            <p className={styles.summaryNote}>실제 지출 + 남은 고정비 예정액</p>
-          </article>
+            <span className={styles.statAction}>내역 보기 ›</span>
+          </Link>
         </div>
-        <p className={styles.summaryNote}>
-          예시 데이터 · 공동 생활비와 내 개인 지출 합계입니다. 월말 예상에는
-          앞으로의 일반 지출이 포함되지 않습니다.
-        </p>
       </section>
       <section className={styles.panel} aria-labelledby="category-title">
         <div className={styles.sectionHeader}>

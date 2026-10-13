@@ -284,6 +284,29 @@
   color: #4c5a50;
 }
 
+.statCard {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.statCard:hover {
+  border-color: #225b3e;
+}
+
+.statAction {
+  color: #244d36;
+  font-size: 0.85rem;
+}
+
+.detailBack {
+  display: inline-block;
+  min-height: 44px;
+  padding-block: 0.75rem;
+  color: #244d36;
+  text-underline-offset: 0.2em;
+}
+
 .statAmount {
   margin: 1rem 0;
   font-size: clamp(1.4rem, 3vw, 2rem);
@@ -389,7 +412,6 @@
 
 @media (max-width: 767px) {
   .primaryGrid,
-  .statGrid,
   .methodGrid,
   .financeGrid {
     grid-template-columns: minmax(0, 1fr);
@@ -402,5 +424,22 @@
   .amount {
     grid-column: 2;
     text-align: left;
+  }
+
+  .statGrid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
+    gap: 0.75rem;
+  }
+
+  .statCard:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .statGrid .statAmount {
+    font-size: 1.1rem;
+  }
+
+  .statCard:first-child .statAmount {
+    font-size: 2rem;
   }
 }
