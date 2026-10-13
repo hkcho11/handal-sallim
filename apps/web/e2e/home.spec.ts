@@ -49,6 +49,18 @@ for (const width of [360, 1280]) {
     await page.keyboard.press("Tab");
     await expect(page.getByRole("link", { name: "+ 내역 추가" })).toBeFocused();
     await expect(page.getByText("미결제 4건")).toBeVisible();
+    const statistics = page.getByRole("region", { name: "이번 달 지출 요약" });
+    await expect(statistics.getByText("545,000원")).toBeVisible();
+    await expect(statistics.getByText("1,363,000원")).toBeVisible();
+    const categories = page.getByRole("region", { name: "카테고리별 지출" });
+    const food = categories.locator("details").filter({ hasText: "식비" });
+    await food.locator("summary").focus();
+    await page.keyboard.press("Enter");
+    await expect(food).toHaveAttribute("open", "");
+    await expect(food.getByText("장보기")).toBeVisible();
+    await expect(food.getByText("식사")).toBeVisible();
+    await page.keyboard.press("Enter");
+    await expect(food.getByText("장보기")).toBeHidden();
     await page.screenshot({
       path: `test-results/home-${width}.png`,
       fullPage: true,
@@ -59,7 +71,9 @@ for (const width of [360, 1280]) {
     ).toHaveAttribute("aria-current", "page");
     await navigation.getByRole("link", { name: "고정비", exact: true }).click();
     await expect(page).toHaveURL(/\/fixed-costs$/);
-    await expect(page.getByText("등록한 고정비가 없습니다.")).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "고정비", exact: true }),
+    ).toBeVisible();
     await expect(
       navigation.getByRole("link", { name: "고정비", exact: true }),
     ).toHaveAttribute("aria-current", "page");

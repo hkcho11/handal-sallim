@@ -267,6 +267,110 @@
   color: #8b2619;
 }
 
+.sectionTitle {
+  margin: 0 0 1rem;
+  font-size: 1.15rem;
+}
+
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.statGrid h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #4c5a50;
+}
+
+.statAmount {
+  margin: 1rem 0;
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  font-weight: 750;
+  overflow-wrap: anywhere;
+}
+
+.categoryList {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.category summary {
+  padding: 0.8rem 0;
+  cursor: pointer;
+  min-height: 44px;
+  list-style: none;
+}
+
+.category summary::-webkit-details-marker {
+  display: none;
+}
+
+.category summary:focus-visible {
+  outline: 3px solid #d57730;
+  outline-offset: 3px;
+}
+
+.categoryHeading {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.65rem;
+}
+
+.categoryHeading strong::after {
+  content: " +";
+  color: #4c5a50;
+}
+
+.category[open] .categoryHeading strong::after {
+  content: " −";
+}
+
+.categoryHeading > span {
+  font-size: 0.9rem;
+  color: #4c5a50;
+}
+
+.barTrack,
+.barFill {
+  display: block;
+  height: 0.55rem;
+  border-radius: 1rem;
+}
+
+.barTrack {
+  background: #edf1ea;
+}
+
+.barFill {
+  background: #225b3e;
+}
+
+.categoryEntries {
+  list-style: none;
+  padding: 0.75rem 1rem;
+  margin: 0 0 0.5rem;
+  background: #f6f7f4;
+  border-radius: 0.6rem;
+}
+
+.categoryEntries li {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding-block: 0.5rem;
+}
+
+.categoryEntries small {
+  display: block;
+  color: #4c5a50;
+  margin-top: 0.3rem;
+}
+
 .loadError button {
   min-height: 44px;
   padding: 0.65rem 1rem;
@@ -285,6 +389,7 @@
 
 @media (max-width: 767px) {
   .primaryGrid,
+  .statGrid,
   .methodGrid,
   .financeGrid {
     grid-template-columns: minmax(0, 1fr);

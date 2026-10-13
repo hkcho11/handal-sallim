@@ -2,6 +2,7 @@ import Link from "next/link";
 import { MOCK_DASHBOARD, summarizeCharges } from "./mockDashboard";
 import styles from "./home-dashboard.module.css";
 import RegisteredExpenses from "./RegisteredExpenses";
+import MonthlySpending from "./MonthlySpending";
 
 const won = (amount: number) => `${amount.toLocaleString("ko-KR")}원`;
 const statusStyles = {
@@ -27,54 +28,55 @@ export default function HomeDashboard() {
             + 내역 추가
           </Link>
         </header>
-        <RegisteredExpenses />
         <div className={styles.month}>
           <h2>{month}</h2>
           <span>예시 데이터 · {referenceDate}</span>
         </div>
         <p className={styles.preview}>
-          아래는 예시 대시보드입니다. 예시 금액과 일정은 위의 실제 등록 내역과
-          별개이며, 예시 합계에 실제 등록 금액은 포함되지 않습니다.
+          통계와 일정은 예시 데이터입니다. 예시 합계에 실제 등록 금액은 포함되지
+          않습니다. 실제 등록 내역은 아래에서 확인하세요.
         </p>
+
+        <MonthlySpending remaining={totals.remaining} />
 
         <div className={styles.primaryGrid}>
           <section className={styles.panel} aria-labelledby="timeline-title">
             <div className={styles.sectionHeader}>
-              <h2 id="timeline-title">이번 달 고정비 타임라인</h2>
+              <h2 id="timeline-title">다가오는 결제·지연 항목</h2>
               <Link href="/fixed-costs">고정비 관리 →</Link>
             </div>
             <p className={styles.muted}>미결제 항목부터 확인하세요.</p>
             <ul className={styles.timeline}>
-              {charges.map((charge) => (
-                <li key={charge.id} className={styles.charge}>
-                  <div className={styles.date}>
-                    <span>10월</span>
-                    <strong>{charge.dueDay}일</strong>
-                  </div>
-                  <div className={styles.chargeInfo}>
-                    <div className={styles.chargeTitle}>
-                      <h3>{charge.name}</h3>
-                      <span
-                        className={`${styles.badge} ${statusStyles[charge.status]}`}
-                      >
-                        {charge.status}
-                      </span>
+              {charges
+                .filter((charge) => charge.status !== "완료")
+                .map((charge) => (
+                  <li key={charge.id} className={styles.charge}>
+                    <div className={styles.date}>
+                      <span>10월</span>
+                      <strong>{charge.dueDay}일</strong>
                     </div>
-                    <p>
-                      담당자 {charge.payer ?? "미지정"} ·{" "}
-                      {charge.paymentMethod ?? "결제수단 미지정"}
-                    </p>
-                  </div>
-                  <div className={styles.amount}>
-                    <strong>
-                      {won(charge.actualAmount ?? charge.expectedAmount)}
-                    </strong>
-                    <span>
-                      {charge.status === "완료" ? "실제 결제액" : "예상 금액"}
-                    </span>
-                  </div>
-                </li>
-              ))}
+                    <div className={styles.chargeInfo}>
+                      <div className={styles.chargeTitle}>
+                        <h3>{charge.name}</h3>
+                        <span
+                          className={`${styles.badge} ${statusStyles[charge.status]}`}
+                        >
+                          {charge.status}
+                        </span>
+                      </div>
+                      <p>
+                        담당자 {charge.payer ?? "미지정"} ·{" "}
+                        {charge.paymentMethod ?? "결제수단 미지정"}
+                      </p>
+                    </div>
+                    <div className={styles.amount}>
+                      <strong>
+                        {won(charge.actualAmount ?? charge.expectedAmount)}
+                      </strong>
+                      <span>예상 금액</span>
+                    </div>
+                  </li>
+                ))}
             </ul>
           </section>
 
@@ -116,6 +118,8 @@ export default function HomeDashboard() {
             </p>
           </section>
         </div>
+
+        <RegisteredExpenses />
 
         <section className={styles.panel} aria-labelledby="methods-title">
           <h2 id="methods-title">결제수단별 이번 달 금액</h2>

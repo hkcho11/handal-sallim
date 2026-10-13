@@ -21,4 +21,10 @@ test("예시 대시보드에 미결제 일정과 금액 요약을 표시한다",
   expect(summary.getByText("135,000원")).toBeTruthy();
   expect(screen.getByRole("heading", { name: "결제수단 미지정" })).toBeTruthy();
   expect(screen.getByRole("heading", { name: "내 개인 내역" })).toBeTruthy();
+  const spending = within(
+    screen.getByRole("region", { name: "이번 달 지출 요약" }),
+  );
+  expect(spending.getByText("545,000원")).toBeTruthy();
+  expect(spending.getByText("1,363,000원")).toBeTruthy();
+  expect(screen.getByRole("region", { name: "카테고리별 지출" })).toBeTruthy();
 });
