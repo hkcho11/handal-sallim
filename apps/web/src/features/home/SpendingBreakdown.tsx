@@ -1,7 +1,7 @@
-import { MOCK_DASHBOARD } from "./mockDashboard";
+import type { DashboardCharge } from "./dashboard";
 import {
-  MOCK_SPENDING_ENTRIES,
   selectHomeSpendingEntries,
+  type SpendingEntry,
 } from "./spendingStatistics";
 import styles from "./home-dashboard.module.css";
 
@@ -9,14 +9,19 @@ const won = (amount: number) => `${amount.toLocaleString("ko-KR")}원`;
 
 export default function SpendingBreakdown({
   view,
+  entries: allEntries,
+  charges,
+  month,
 }: {
   view: "actual" | "remaining";
+  entries: SpendingEntry[];
+  charges: DashboardCharge[];
+  month: string;
 }) {
-  const entries = selectHomeSpendingEntries(
-    MOCK_SPENDING_ENTRIES,
-    "2026-10",
-  ).sort((a, b) => b.date.localeCompare(a.date));
-  const pending = MOCK_DASHBOARD.charges
+  const entries = selectHomeSpendingEntries(allEntries, month).sort((a, b) =>
+    b.date.localeCompare(a.date),
+  );
+  const pending = charges
     .filter((charge) => charge.status !== "완료")
     .sort(
       (a, b) =>
@@ -47,7 +52,7 @@ export default function SpendingBreakdown({
           {pending.map((charge) => (
             <li className={styles.charge} key={charge.id}>
               <div className={styles.date}>
-                <span>10월</span>
+                <span>{Number(month.slice(5))}월</span>
                 <strong>{charge.dueDay}일</strong>
               </div>
               <div className={styles.chargeInfo}>

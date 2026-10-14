@@ -1,4 +1,11 @@
 import { expect, test } from "@playwright/test";
+import { DASHBOARD_FIXTURE } from "../src/test/dashboardFixtures";
+
+test.beforeEach(async ({ page }) => {
+  await page.route("**/backend/dashboard", (route) =>
+    route.fulfill({ json: DASHBOARD_FIXTURE }),
+  );
+});
 
 test("등록한 실제 항목을 홈에 표시하고 예시 합계와 구분한다", async ({
   page,
@@ -43,6 +50,7 @@ for (const width of [360, 1280]) {
     const summary = page.getByRole("region", { name: "이번 달 지출 요약" });
     const actual = summary.getByRole("button", { name: /실제 지출/ });
     const remaining = summary.getByRole("button", { name: /남은 지출/ });
+    await expect(actual).toBeVisible();
     const labels = summary
       .locator("span")
       .filter({ hasText: /^(실제 지출|남은 지출|월 예상 지출)$/ });
@@ -58,7 +66,7 @@ for (const width of [360, 1280]) {
     expect(boxes[0].x).toBeLessThan(boxes[1].x);
     expect(boxes[1].x).toBeLessThan(boxes[2].x);
     await expect(summary.getByRole("link")).toHaveCount(0);
-    await expect(summary.getByText("예시 데이터")).toBeVisible();
+    await expect(summary.getByText("예시 데이터")).toHaveCount(0);
     await expect(actual).toHaveAttribute("aria-expanded", "false");
     await actual.focus();
     await page.keyboard.press("Enter");

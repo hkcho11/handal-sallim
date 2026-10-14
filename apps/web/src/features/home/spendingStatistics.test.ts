@@ -1,10 +1,11 @@
 import { expect, test } from "vitest";
+import { calculateSpendingStatistics } from "./spendingStatistics";
 import {
-  calculateSpendingStatistics,
+  MOCK_DASHBOARD,
   MOCK_SPENDING_ENTRIES,
   mockCompletedEntries,
-} from "./spendingStatistics";
-import { MOCK_DASHBOARD, summarizeCharges } from "./mockDashboard";
+  summarizeCharges,
+} from "../../test/dashboardFixtures";
 
 test("완료된 고정비만 실제 금액으로 합산하며 예정액을 별도로 더한다", () => {
   const remaining = summarizeCharges(MOCK_DASHBOARD.charges).remaining;

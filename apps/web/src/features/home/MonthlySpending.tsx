@@ -3,24 +3,30 @@
 import { useState } from "react";
 import {
   calculateSpendingStatistics,
-  MOCK_SPENDING_ENTRIES,
+  type SpendingEntry,
 } from "./spendingStatistics";
+import { summarizeCharges, type DashboardCharge } from "./dashboard";
 import styles from "./home-dashboard.module.css";
 import SpendingBreakdown from "./SpendingBreakdown";
 
 const won = (amount: number) => `${amount.toLocaleString("ko-KR")}원`;
 
-export default function MonthlySpending({ remaining }: { remaining: number }) {
+export default function MonthlySpending({
+  entries,
+  charges,
+  month,
+}: {
+  entries: SpendingEntry[];
+  charges: DashboardCharge[];
+  month: string;
+}) {
+  const remaining = summarizeCharges(charges).remaining;
   const [selected, setSelected] = useState<"actual" | "remaining" | null>(null);
 
   function handleSelect(view: "actual" | "remaining") {
     setSelected((current) => (current === view ? null : view));
   }
-  const statistics = calculateSpendingStatistics(
-    MOCK_SPENDING_ENTRIES,
-    remaining,
-    "2026-10",
-  );
+  const statistics = calculateSpendingStatistics(entries, remaining, month);
   return (
     <>
       <section aria-labelledby="spending-title">
@@ -28,7 +34,6 @@ export default function MonthlySpending({ remaining }: { remaining: number }) {
           <h2 id="spending-title" className={styles.sectionTitle}>
             이번 달 지출 요약
           </h2>
-          <span className={styles.badge}>예시 데이터</span>
         </div>
         <div className={`${styles.panel} ${styles.statGrid}`}>
           <button
@@ -61,15 +66,24 @@ export default function MonthlySpending({ remaining }: { remaining: number }) {
           </div>
         </div>
         <div id="spending-breakdown" hidden={selected === null}>
-          {selected && <SpendingBreakdown view={selected} />}
+          {selected && (
+            <SpendingBreakdown
+              view={selected}
+              entries={entries}
+              charges={charges}
+              month={month}
+            />
+          )}
         </div>
       </section>
       <section className={styles.panel} aria-labelledby="category-title">
         <div className={styles.sectionHeader}>
           <h2 id="category-title">카테고리별 지출</h2>
-          <span className={styles.badge}>공동 · 예시</span>
         </div>
         <div className={styles.categoryList}>
+          {statistics.categories.length === 0 && (
+            <p className={styles.muted}>이번 달 공동 지출이 없습니다.</p>
+          )}
           {statistics.categories.map((category) => (
             <details key={category.name} className={styles.category}>
               <summary>
