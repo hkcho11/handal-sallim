@@ -69,7 +69,16 @@ for (const width of [360, 1280]) {
     await expect(
       actualDetails.getByText("장보기", { exact: true }),
     ).toBeVisible();
-    await expect(actualDetails.getByRole("listitem")).toHaveCount(9);
+    await expect(actualDetails.getByRole("listitem")).toHaveCount(6);
+    await expect(actualDetails.getByText("식사", { exact: true })).toHaveCount(
+      0,
+    );
+    await expect(
+      actualDetails.getByText("대중교통", { exact: true }),
+    ).toHaveCount(0);
+    await expect(
+      actualDetails.getByText("기타 지출", { exact: true }),
+    ).toHaveCount(0);
     await expect(page).toHaveURL("/");
     await remaining.click();
     await expect(actualDetails).toHaveCount(0);
@@ -117,15 +126,15 @@ for (const width of [360, 1280]) {
       page.getByRole("region", { name: "이번 달 결제 현황" }),
     ).toHaveCount(0);
     const statistics = page.getByRole("region", { name: "이번 달 지출 요약" });
-    await expect(statistics.getByText("545,000원")).toBeVisible();
-    await expect(statistics.getByText("1,363,000원")).toBeVisible();
+    await expect(statistics.getByText("419,000원")).toBeVisible();
+    await expect(statistics.getByText("1,237,000원")).toBeVisible();
     const categories = page.getByRole("region", { name: "카테고리별 지출" });
     const food = categories.locator("details").filter({ hasText: "식비" });
     await food.locator("summary").focus();
     await page.keyboard.press("Enter");
     await expect(food).toHaveAttribute("open", "");
     await expect(food.getByText("장보기")).toBeVisible();
-    await expect(food.getByText("식사")).toBeVisible();
+    await expect(food.getByText("식사")).toHaveCount(0);
     await page.keyboard.press("Enter");
     await expect(food.getByText("장보기")).toBeHidden();
     await page.screenshot({

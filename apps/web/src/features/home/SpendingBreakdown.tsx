@@ -1,5 +1,8 @@
 import { MOCK_DASHBOARD } from "./mockDashboard";
-import { MOCK_SPENDING_ENTRIES } from "./spendingStatistics";
+import {
+  MOCK_SPENDING_ENTRIES,
+  selectHomeSpendingEntries,
+} from "./spendingStatistics";
 import styles from "./home-dashboard.module.css";
 
 const won = (amount: number) => `${amount.toLocaleString("ko-KR")}원`;
@@ -9,9 +12,10 @@ export default function SpendingBreakdown({
 }: {
   view: "actual" | "remaining";
 }) {
-  const entries = [...MOCK_SPENDING_ENTRIES].sort((a, b) =>
-    b.date.localeCompare(a.date),
-  );
+  const entries = selectHomeSpendingEntries(
+    MOCK_SPENDING_ENTRIES,
+    "2026-10",
+  ).sort((a, b) => b.date.localeCompare(a.date));
   const pending = MOCK_DASHBOARD.charges
     .filter((charge) => charge.status !== "완료")
     .sort(

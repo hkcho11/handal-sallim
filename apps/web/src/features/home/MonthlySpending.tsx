@@ -67,7 +67,7 @@ export default function MonthlySpending({ remaining }: { remaining: number }) {
       <section className={styles.panel} aria-labelledby="category-title">
         <div className={styles.sectionHeader}>
           <h2 id="category-title">카테고리별 지출</h2>
-          <span className={styles.badge}>예시 · 공동 + 내 개인</span>
+          <span className={styles.badge}>공동 · 예시</span>
         </div>
         <div className={styles.categoryList}>
           {statistics.categories.map((category) => (

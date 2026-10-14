@@ -22,9 +22,9 @@ test("홈은 핵심 요약을 표시하고 중복 일정과 설명을 표시하�
   const spending = within(
     screen.getByRole("region", { name: "이번 달 지출 요약" }),
   );
-  expect(spending.getByText("545,000원")).toBeTruthy();
+  expect(spending.getByText("419,000원")).toBeTruthy();
   expect(spending.getByText("818,000원")).toBeTruthy();
   expect(spending.getByText("예시 데이터")).toBeTruthy();
-  expect(spending.getByText("1,363,000원")).toBeTruthy();
+  expect(spending.getByText("1,237,000원")).toBeTruthy();
   expect(screen.getByRole("region", { name: "카테고리별 지출" })).toBeTruthy();
 });
