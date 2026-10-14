@@ -28,6 +28,16 @@ export default function BottomNavigation() {
           </svg>
           고정비
         </Link>
+        <Link
+          href="/personal-expenses"
+          aria-current={pathname === "/personal-expenses" ? "page" : undefined}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="7" r="3" />
+            <path d="M5 21v-3a7 7 0 0 1 14 0v3M9 17h6" />
+          </svg>
+          개인 지출
+        </Link>
       </div>
     </nav>
   );
