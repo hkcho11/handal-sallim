@@ -11,6 +11,9 @@ export default function HomeDashboard() {
   const [data, setData] = useState<DashboardResponse | null>(null);
   const [error, setError] = useState("");
   const [attempt, setAttempt] = useState(0);
+  const [paymentView, setPaymentView] = useState<"actual" | "expected">(
+    "actual",
+  );
   useEffect(() => {
     let active = true;
     getDashboard()
@@ -38,9 +41,16 @@ export default function HomeDashboard() {
     <main className={styles.page}>
       <div className={styles.container}>
         <header className={styles.header}>
-          <h1>한달살림</h1>
+          <h1>
+            <span className={styles.brandMark} aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M5 10 12 4l7 6v9H5zM9 19v-7h6v7" />
+              </svg>
+            </span>
+            한달살림
+          </h1>
           <Link className={styles.add} href="/entries/new">
-            + 내역 추가
+            + 고정비 추가
           </Link>
         </header>
         {error ? (
@@ -62,6 +72,7 @@ export default function HomeDashboard() {
         ) : (
           <>
             <div className={styles.month}>
+              <p className={styles.scope}>함께 쓰는 생활비</p>
               <h2>
                 {data.month.slice(0, 4)}년 {Number(data.month.slice(5))}월
               </h2>
@@ -75,15 +86,31 @@ export default function HomeDashboard() {
               charges={data.charges}
               month={data.month}
             />
-            <RegisteredExpenses compact />
             <section className={styles.panel} aria-labelledby="methods-title">
-              <h2 id="methods-title">결제수단별 금액</h2>
-              <div className={styles.paymentTable}>
-                <div className={styles.paymentHead}>
-                  <span>결제수단</span>
-                  <span>예상</span>
-                  <span>확정</span>
+              <div className={styles.sectionHeader}>
+                <h2 id="methods-title">결제수단별 금액</h2>
+                <div
+                  className={styles.segmented}
+                  role="group"
+                  aria-label="결제수단 금액 기준"
+                >
+                  <button
+                    type="button"
+                    aria-pressed={paymentView === "actual"}
+                    onClick={() => setPaymentView("actual")}
+                  >
+                    실제
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={paymentView === "expected"}
+                    onClick={() => setPaymentView("expected")}
+                  >
+                    예상
+                  </button>
                 </div>
+              </div>
+              <div className={styles.paymentTable}>
                 {methods.map((method) => {
                   const confirmed = data.entries
                     .filter((entry) => (entry.paymentMethod ?? null) === method)
@@ -100,9 +127,22 @@ export default function HomeDashboard() {
                       key={method ?? "unassigned"}
                       className={styles.paymentRow}
                     >
-                      <span>{method ?? "미지정"}</span>
-                      <strong>{won(confirmed + remaining)}</strong>
-                      <strong>{won(confirmed)}</strong>
+                      <span className={styles.paymentName}>
+                        <span className={styles.paymentIcon} aria-hidden="true">
+                          <svg viewBox="0 0 24 24">
+                            <rect x="3" y="5" width="18" height="14" rx="3" />
+                            <path d="M3 10h18M7 15h3" />
+                          </svg>
+                        </span>
+                        {method ?? "미지정"}
+                      </span>
+                      <strong>
+                        {won(
+                          paymentView === "actual"
+                            ? confirmed
+                            : confirmed + remaining,
+                        )}
+                      </strong>
                     </div>
                   );
                 })}
@@ -111,6 +151,7 @@ export default function HomeDashboard() {
                 )}
               </div>
             </section>
+            <RegisteredExpenses compact />
           </>
         )}
       </div>

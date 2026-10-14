@@ -79,7 +79,7 @@ export default function RegisteredExpenses({
             원
           </p>
           <ul className={styles.timeline}>
-            {expenses.map((expense) => (
+            {(compact ? expenses.slice(0, 3) : expenses).map((expense) => (
               <li
                 key={expense.id}
                 className={compact ? styles.registeredRow : styles.charge}
@@ -92,7 +92,14 @@ export default function RegisteredExpenses({
                 )}
                 <div className={styles.chargeInfo}>
                   <div className={styles.chargeTitle}>
-                    <h3>{expense.name}</h3>
+                    <h3>
+                      <Link
+                        className={styles.registeredLink}
+                        href={`/fixed-costs/${expense.id}`}
+                      >
+                        {expense.name}
+                      </Link>
+                    </h3>
                     <span
                       className={`${styles.badge} ${expense.firstChargeStatus === "OVERDUE" ? styles.overdue : expense.firstChargeStatus === "COMPLETED" ? styles.completed : styles.pending}`}
                     >

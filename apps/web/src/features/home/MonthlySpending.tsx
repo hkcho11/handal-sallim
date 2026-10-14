@@ -8,6 +8,7 @@ import {
 import { summarizeCharges, type DashboardCharge } from "./dashboard";
 import styles from "./home-dashboard.module.css";
 import SpendingBreakdown from "./SpendingBreakdown";
+import CategorySpending from "./CategorySpending";
 
 const won = (amount: number) => `${amount.toLocaleString("ko-KR")}원`;
 
@@ -38,13 +39,16 @@ export default function MonthlySpending({
   const statistics = calculateSpendingStatistics(entries, remaining, month);
   return (
     <>
-      <section aria-labelledby="spending-title">
+      <section
+        className={styles.summarySection}
+        aria-labelledby="spending-title"
+      >
         <div className={styles.sectionHeader}>
           <h2 id="spending-title" className={styles.sectionTitle}>
             이번 달 지출 요약
           </h2>
         </div>
-        <div className={`${styles.panel} ${styles.statGrid}`}>
+        <div className={styles.statGrid}>
           <button
             ref={actualButton}
             type="button"
@@ -96,6 +100,29 @@ export default function MonthlySpending({
             </strong>
           </div>
         </div>
+        <div className={styles.spendingProgress}>
+          <div className={styles.progressTrack} aria-hidden="true">
+            <span
+              style={{
+                width: `${statistics.projected ? (statistics.spent / statistics.projected) * 100 : 0}%`,
+              }}
+            />
+          </div>
+          <div className={styles.progressLegend}>
+            <span>
+              <i />
+              지출 완료{" "}
+              {statistics.projected
+                ? Math.round((statistics.spent / statistics.projected) * 100)
+                : 0}
+              %
+            </span>
+            <span>
+              남은 결제{" "}
+              {charges.filter((charge) => charge.status !== "완료").length}건
+            </span>
+          </div>
+        </div>
         <div
           id="spending-breakdown"
           hidden={selected === null}
@@ -108,6 +135,7 @@ export default function MonthlySpending({
         >
           {selected && (
             <SpendingBreakdown
+              key={selected}
               view={selected}
               entries={entries}
               charges={charges}
@@ -117,51 +145,7 @@ export default function MonthlySpending({
           )}
         </div>
       </section>
-      <section className={styles.panel} aria-labelledby="category-title">
-        <div className={styles.sectionHeader}>
-          <h2 id="category-title">카테고리별 지출</h2>
-        </div>
-        <div className={styles.categoryList}>
-          {statistics.categories.length === 0 && (
-            <p className={styles.muted}>이번 달 공동 지출이 없습니다.</p>
-          )}
-          {statistics.categories.map((category) => (
-            <details key={category.name} className={styles.category}>
-              <summary>
-                <span className={styles.categoryHeading}>
-                  <strong>{category.name}</strong>
-                  <span className={styles.categoryValue}>
-                    <b>{won(category.amount)}</b>
-                    <small>{category.share.toFixed(1)}%</small>
-                  </span>
-                </span>
-                <span className={styles.barTrack} aria-hidden="true">
-                  <span
-                    className={styles.barFill}
-                    style={{ width: `${category.share}%` }}
-                  />
-                </span>
-              </summary>
-              <ul className={styles.categoryEntries}>
-                {category.items.map((entry) => (
-                  <li key={entry.id}>
-                    <span>
-                      {entry.name}
-                      <small>
-                        {entry.date} · {entry.scope}
-                      </small>
-                    </span>
-                    <strong>{won(entry.amount)}</strong>
-                  </li>
-                ))}
-              </ul>
-              {category.items.length === 0 && (
-                <p className={styles.muted}>이번 달 지출이 없습니다.</p>
-              )}
-            </details>
-          ))}
-        </div>
-      </section>
+      <CategorySpending entries={entries} month={month} />
     </>
   );
 }

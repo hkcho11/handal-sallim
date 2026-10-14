@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import type { DashboardCharge } from "./dashboard";
 import {
   selectHomeSpendingEntries,
@@ -21,11 +24,23 @@ export default function SpendingBreakdown({
   month: string;
   onClose: () => void;
 }) {
-  const entries = selectHomeSpendingEntries(allEntries, month).sort((a, b) =>
-    b.date.localeCompare(a.date),
-  );
+  const [query, setQuery] = useState("");
+  const search = query.trim().toLocaleLowerCase("ko-KR");
+  const entries = selectHomeSpendingEntries(allEntries, month)
+    .filter((entry) =>
+      `${entry.name} ${entry.category} ${entry.paymentMethod ?? ""}`
+        .toLocaleLowerCase("ko-KR")
+        .includes(search),
+    )
+    .sort((a, b) => b.date.localeCompare(a.date));
   const pending = charges
-    .filter((charge) => charge.status !== "완료")
+    .filter(
+      (charge) =>
+        charge.status !== "완료" &&
+        `${charge.name} ${charge.paymentMethod ?? ""}`
+          .toLocaleLowerCase("ko-KR")
+          .includes(search),
+    )
     .sort((a, b) => a.dueDay - b.dueDay);
   const groups = new Map<string, SpendingEntry[]>();
   for (const entry of entries)
@@ -55,11 +70,26 @@ export default function SpendingBreakdown({
           닫기 <span aria-hidden="true">×</span>
         </button>
       </div>
+      <div className={styles.searchField}>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="10.5" cy="10.5" r="6.5" />
+          <path d="m16 16 4 4" />
+        </svg>
+        <input
+          type="search"
+          aria-label="지출 내역 검색"
+          placeholder="내역 검색"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+        />
+      </div>
       {count === 0 && (
         <p className={styles.emptyBreakdown}>
-          {view === "actual"
-            ? "아직 지출한 내역이 없어요."
-            : "남은 결제가 없어요."}
+          {search
+            ? "검색한 내역이 없어요."
+            : view === "actual"
+              ? "아직 지출한 내역이 없어요."
+              : "남은 결제가 없어요."}
         </p>
       )}
       {view === "actual"

@@ -7,6 +7,30 @@ test.beforeEach(async ({ page }) => {
   );
 });
 
+test("홈 조회 실패 후 다시 불러오면 빈 통계를 표시한다", async ({ page }) => {
+  let failed = true;
+  await page.route("**/backend/dashboard", (route) =>
+    failed
+      ? route.fulfill({ status: 503 })
+      : route.fulfill({
+          json: { ...DASHBOARD_FIXTURE, entries: [], charges: [] },
+        }),
+  );
+  await page.route("**/backend/recurring-expenses", (route) =>
+    route.fulfill({ json: [] }),
+  );
+  await page.goto("/");
+  await expect(page.getByRole("main").getByRole("alert")).toBeVisible();
+  failed = false;
+  await page.getByRole("button", { name: "다시 불러오기" }).click();
+  await expect(page.getByText("아직 지출이 없어요")).toBeVisible();
+  await expect(page.getByRole("img", { name: /카테고리별 비중/ })).toHaveCount(
+    0,
+  );
+  await page.getByRole("button", { name: /남은 지출/ }).click();
+  await expect(page.getByText("남은 결제가 없어요.")).toBeVisible();
+});
+
 test("등록한 실제 항목을 홈에 표시하고 예시 합계와 구분한다", async ({
   page,
 }) => {
@@ -80,6 +104,16 @@ for (const width of [360, 1280]) {
       actualDetails.getByText("장보기", { exact: true }),
     ).toBeVisible();
     await expect(actualDetails.getByRole("listitem")).toHaveCount(6);
+    const search = actualDetails.getByRole("searchbox", {
+      name: "지출 내역 검색",
+    });
+    await search.fill("장보기");
+    await expect(actualDetails.getByRole("listitem")).toHaveCount(1);
+    await search.fill("없는 내역");
+    await expect(
+      actualDetails.getByText("검색한 내역이 없어요."),
+    ).toBeVisible();
+    await search.fill("");
     await expect(actualDetails.locator("time").first()).toHaveText(
       /10월 \d+일/,
     );
@@ -145,7 +179,9 @@ for (const width of [360, 1280]) {
     await page.goto("/");
     await expect(page.getByRole("heading", { name: "한달살림" })).toBeVisible();
     await page.keyboard.press("Tab");
-    await expect(page.getByRole("link", { name: "+ 내역 추가" })).toBeFocused();
+    await expect(
+      page.getByRole("link", { name: "+ 고정비 추가" }),
+    ).toBeFocused();
     await expect(
       page.getByRole("region", { name: "다가오는 결제·지연 항목" }),
     ).toHaveCount(0);
@@ -155,6 +191,11 @@ for (const width of [360, 1280]) {
     const statistics = page.getByRole("region", { name: "이번 달 지출 요약" });
     await expect(statistics.getByText("419,000원")).toBeVisible();
     await expect(statistics.getByText("1,237,000원")).toBeVisible();
+    const methods = page.getByRole("region", { name: "결제수단별 금액" });
+    await methods.getByRole("button", { name: "예상", exact: true }).click();
+    await expect(methods.getByText("816,000원")).toBeVisible();
+    await methods.getByRole("button", { name: "실제", exact: true }).click();
+    await expect(methods.getByText("118,000원")).toBeVisible();
     const categories = page.getByRole("region", { name: "카테고리별 지출" });
     const food = categories.locator("details").filter({ hasText: "식비" });
     await food.locator("summary").focus();
@@ -182,7 +223,7 @@ for (const width of [360, 1280]) {
     ).toHaveAttribute("aria-current", "page");
     await navigation.getByRole("link", { name: "홈", exact: true }).click();
     await expect(page).toHaveURL("/");
-    await page.getByRole("link", { name: "+ 내역 추가" }).click();
+    await page.getByRole("link", { name: "+ 고정비 추가" }).click();
     await expect(page).toHaveURL(/\/entries\/new$/);
     await expect(
       navigation.getByRole("link", { name: "고정비", exact: true }),
