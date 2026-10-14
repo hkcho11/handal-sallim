@@ -23,7 +23,7 @@ public class LocalDashboardConfiguration {
                 },
                 response);
     var registration = new FilterRegistrationBean<>(filter);
-    registration.addUrlPatterns("/api/dashboard");
+    registration.addUrlPatterns("/api/dashboard", "/api/dashboard/*");
     registration.setName("dashboardLocalPrincipal");
     return registration;
   }

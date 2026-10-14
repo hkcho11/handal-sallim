@@ -24,5 +24,14 @@ public record DashboardView(
       Long actualAmount,
       String payer,
       String paymentMethod,
-      String status) {}
+      String status,
+      UUID categoryId,
+      String categoryName,
+      UUID subcategoryId,
+      String subcategoryName,
+      UUID plannedPaymentMethodId,
+      UUID actualPaymentMethodId,
+      String actualPaymentMethod,
+      LocalDate actualPaidOn,
+      UUID recurringExpenseId) {}
 }

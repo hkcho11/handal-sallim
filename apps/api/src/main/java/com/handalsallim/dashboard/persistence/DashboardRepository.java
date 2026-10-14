@@ -1,6 +1,7 @@
 package com.handalsallim.dashboard.persistence;
 
 import com.handalsallim.dashboard.application.DashboardView;
+import com.handalsallim.dashboard.application.FixedCostDashboardView;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
@@ -52,12 +53,21 @@ public class DashboardRepository {
 
   public List<DashboardView.Charge> charges(
       UUID space, UUID user, YearMonth month, LocalDate today) {
+    return charges(space, user, month, month, today);
+  }
+
+  public List<DashboardView.Charge> charges(
+      UUID space, UUID user, YearMonth firstMonth, YearMonth lastMonth, LocalDate today) {
     return jdbc.query(
         """
-        SELECT sc.*, u.display_name AS payer_name, p.name AS payment_method
+        SELECT sc.*, u.display_name AS payer_name, p.name AS payment_method,
+          c.name AS category_name, sub.name AS subcategory_name, actual.name AS actual_payment_method
         FROM scheduled_charges sc
         LEFT JOIN users u ON u.id=sc.assignee_user_id
         LEFT JOIN payment_methods p ON p.id=sc.planned_payment_method_id AND p.space_id=sc.space_id
+        LEFT JOIN categories c ON c.id=sc.category_id AND c.space_id=sc.space_id
+        LEFT JOIN expense_subcategories sub ON sub.id=sc.subcategory_id AND sub.category_id=sc.category_id AND sub.space_id=sc.space_id
+        LEFT JOIN payment_methods actual ON actual.id=sc.actual_payment_method_id AND actual.space_id=sc.space_id
         WHERE sc.space_id=? AND sc.status<>'CANCELLED' AND sc.due_date>=? AND sc.due_date<?
         ORDER BY sc.due_date, sc.id
         """,
@@ -78,10 +88,61 @@ public class DashboardRepository {
               rs.getObject("actual_amount", Long.class),
               payer,
               rs.getString("payment_method"),
-              status);
+              status,
+              rs.getObject("category_id", UUID.class),
+              rs.getString("category_name"),
+              rs.getObject("subcategory_id", UUID.class),
+              rs.getString("subcategory_name"),
+              rs.getObject("planned_payment_method_id", UUID.class),
+              rs.getObject("actual_payment_method_id", UUID.class),
+              rs.getString("actual_payment_method"),
+              rs.getDate("actual_paid_on") == null
+                  ? null
+                  : rs.getDate("actual_paid_on").toLocalDate(),
+              rs.getObject("recurring_expense_id", UUID.class));
         },
         space,
-        month.atDay(1),
-        month.plusMonths(1).atDay(1));
+        firstMonth.atDay(1),
+        lastMonth.plusMonths(1).atDay(1));
+  }
+
+  public List<FixedCostDashboardView.Classification> classifications(UUID space) {
+    return jdbc.query(
+        """
+      SELECT c.id AS category_id, c.name AS category_name, sub.id AS subcategory_id, sub.name AS subcategory_name
+      FROM expense_subcategories sub JOIN categories c ON c.id=sub.category_id AND c.space_id=sub.space_id
+      WHERE sub.space_id=? ORDER BY c.created_at, c.id, sub.created_at, sub.id
+      """,
+        (rs, row) ->
+            new FixedCostDashboardView.Classification(
+                rs.getObject("category_id", UUID.class),
+                rs.getString("category_name"),
+                rs.getObject("subcategory_id", UUID.class),
+                rs.getString("subcategory_name")),
+        space);
+  }
+
+  public List<FixedCostDashboardView.Unscheduled> unscheduled(UUID space, YearMonth month) {
+    return jdbc.query(
+        """
+      SELECT e.id, r.name, r.default_expected_amount
+      FROM recurring_expenses e JOIN LATERAL (
+        SELECT r.* FROM recurring_expense_revisions r WHERE r.recurring_expense_id=e.id AND r.space_id=e.space_id
+          AND (r.effective_from IS NULL OR r.effective_from<=?)
+          AND (r.created_at AT TIME ZONE 'Asia/Seoul')::date<=?
+        ORDER BY r.effective_from DESC NULLS FIRST, r.created_at DESC LIMIT 1
+      ) r ON true
+      WHERE e.space_id=? AND e.status='ACTIVE'
+        AND (r.anchor_due_date IS NULL OR r.interval_months IS NULL OR r.recurring_day_of_month IS NULL)
+      ORDER BY e.created_at, e.id
+      """,
+        (rs, row) ->
+            new FixedCostDashboardView.Unscheduled(
+                rs.getObject("id", UUID.class),
+                rs.getString("name"),
+                rs.getLong("default_expected_amount")),
+        month.atEndOfMonth(),
+        month.atEndOfMonth(),
+        space);
   }
 }

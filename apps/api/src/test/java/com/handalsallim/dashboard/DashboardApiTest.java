@@ -24,7 +24,7 @@ class DashboardApiTest {
   @Autowired WebApplicationContext context;
   @Autowired JdbcTemplate jdbc;
   MockMvc mvc;
-  UUID user, partner, outsider, space, category, method;
+  UUID user, partner, outsider, space, category, method, chargeId;
   YearMonth month = YearMonth.now(ZoneId.of("Asia/Seoul"));
 
   @BeforeEach
@@ -62,6 +62,7 @@ class DashboardApiTest {
     insertTransaction("SHARED", 9999, month.minusMonths(1).atDay(1), "ACTIVE");
     insertTransaction("SHARED", 9999, month.atDay(1), "VOIDED");
     UUID expense = UUID.randomUUID(), revision = UUID.randomUUID(), charge = UUID.randomUUID();
+    chargeId = charge;
     jdbc.update(
         "INSERT INTO recurring_expenses (id,space_id,created_by,creation_key,status,created_at,updated_at) VALUES (?,?,?,?,'ACTIVE',now(),now())",
         expense,
@@ -123,6 +124,78 @@ class DashboardApiTest {
     mvc.perform(get("/api/dashboard").principal(outsider::toString))
         .andExpect(status().isForbidden());
     mvc.perform(get("/api/dashboard").principal(user::toString).param("month", "2026-13"))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  void fixedCostStatisticsUsesDueMonthAndActualMethodWithoutDuplicatingLinkedTransactions()
+      throws Exception {
+    UUID subcategory = UUID.randomUUID(),
+        actualMethod = UUID.randomUUID(),
+        transaction = UUID.randomUUID();
+    jdbc.update(
+        "INSERT INTO expense_subcategories (id,space_id,category_id,name,status,created_at) VALUES (?,?,?,'전기','ACTIVE',now())",
+        subcategory,
+        space,
+        category);
+    jdbc.update(
+        "INSERT INTO payment_methods (id,space_id,name,type,status,created_at,updated_at) VALUES (?,?,'실제 계좌','ACCOUNT','ACTIVE',now(),now())",
+        actualMethod,
+        space);
+    YearMonth dueMonth = month.minusMonths(1);
+    jdbc.update(
+        "UPDATE scheduled_charges SET due_date=?,category_id=?,subcategory_id=?,planned_payment_method_id=?,status='COMPLETED',actual_amount=65,actual_paid_on=?,actual_payment_method_id=?,completed_by=?,completed_at=now() WHERE id=?",
+        dueMonth.atEndOfMonth(),
+        category,
+        subcategory,
+        method,
+        month.atDay(2),
+        actualMethod,
+        user,
+        chargeId);
+    jdbc.update(
+        "INSERT INTO transactions (id,space_id,created_by,type,amount,occurred_on,category_id,subcategory_id,payment_method_id,visibility,source,scheduled_charge_id,status,created_at,updated_at) VALUES (?,?,?,'EXPENSE',65,?,?,?,?,'SHARED','SCHEDULED_CHARGE',?,'ACTIVE',now(),now())",
+        transaction,
+        space,
+        user,
+        month.atDay(2),
+        category,
+        subcategory,
+        actualMethod,
+        chargeId);
+    for (UUID member : new UUID[] {user, partner})
+      mvc.perform(
+              get("/api/dashboard/fixed-costs")
+                  .principal(member::toString)
+                  .param("month", dueMonth.toString()))
+          .andExpect(status().isOk())
+          .andExpect(header().string("Cache-Control", "no-store"))
+          .andExpect(jsonPath("$.months.length()").value(6))
+          .andExpect(jsonPath("$.months[0]").value(dueMonth.minusMonths(5).toString()))
+          .andExpect(jsonPath("$.charges.length()").value(1))
+          .andExpect(jsonPath("$.charges[0].actualAmount").value(65))
+          .andExpect(jsonPath("$.charges[0].dueDate").value(dueMonth.atEndOfMonth().toString()))
+          .andExpect(jsonPath("$.charges[0].actualPaidOn").value(month.atDay(2).toString()))
+          .andExpect(jsonPath("$.charges[0].plannedPaymentMethodId").value(method.toString()))
+          .andExpect(jsonPath("$.charges[0].actualPaymentMethodId").value(actualMethod.toString()))
+          .andExpect(jsonPath("$.charges[0].subcategoryId").value(subcategory.toString()));
+  }
+
+  @Test
+  void reportsUnscheduledSeparatelyAndRefusesOtherSpaces() throws Exception {
+    jdbc.update(
+        "UPDATE recurring_expense_revisions SET interval_months=NULL,anchor_due_date=NULL WHERE space_id=?",
+        space);
+    jdbc.update("UPDATE scheduled_charges SET status='CANCELLED' WHERE space_id=?", space);
+    mvc.perform(get("/api/dashboard/fixed-costs").principal(user::toString))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.charges.length()").value(0))
+        .andExpect(jsonPath("$.unscheduled.length()").value(1));
+    mvc.perform(get("/api/dashboard/fixed-costs")).andExpect(status().isUnauthorized());
+    mvc.perform(get("/api/dashboard/fixed-costs").principal(outsider::toString))
+        .andExpect(status().isForbidden());
+    mvc.perform(
+            get("/api/dashboard/fixed-costs").principal(user::toString).param("month", "0001-01"))
         .andExpect(status().isBadRequest());
   }
 }

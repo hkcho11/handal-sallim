@@ -36,4 +36,25 @@ public class DashboardService {
   }
 
   public static class NoDashboardSpaceException extends RuntimeException {}
+
+  @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
+  public FixedCostDashboardView readFixedCosts(UUID user, YearMonth requestedMonth) {
+    var spaces = repository.spaces(user);
+    if (spaces.size() != 1) throw new NoDashboardSpaceException();
+    LocalDate today = LocalDate.now(clock.withZone(ZoneId.of("Asia/Seoul")));
+    YearMonth month = requestedMonth == null ? YearMonth.from(today) : requestedMonth;
+    if (month.getYear() < 2 || month.getYear() > 9998) throw new IllegalArgumentException();
+    UUID space = spaces.getFirst();
+    var months =
+        java.util.stream.IntStream.rangeClosed(0, 5)
+            .mapToObj(index -> month.minusMonths(5 - index).toString())
+            .toList();
+    return new FixedCostDashboardView(
+        month.toString(),
+        today,
+        months,
+        repository.charges(space, user, month.minusMonths(5), month, today),
+        repository.classifications(space),
+        repository.unscheduled(space, month));
+  }
 }

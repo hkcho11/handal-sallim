@@ -1,42 +1,13 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { getDashboard } from "./api";
-import { type DashboardResponse } from "./dashboard";
-import styles from "./home-dashboard.module.css";
-import RegisteredExpenses from "./RegisteredExpenses";
-import MonthlySpending from "./MonthlySpending";
-const won = (amount: number) => `${amount.toLocaleString("ko-KR")}원`;
+import { getFixedCostDashboard } from "./fixedCostApi";
+import type { FixedCostDashboard } from "./fixedCostStatistics";
+import FixedCostInsights from "./FixedCostInsights";
+import styles from "./fixed-cost-dashboard.module.css";
+
 export default function HomeDashboard() {
-  const [data, setData] = useState<DashboardResponse | null>(null);
-  const [error, setError] = useState("");
-  const [attempt, setAttempt] = useState(0);
-  const [paymentView, setPaymentView] = useState<"actual" | "expected">(
-    "actual",
-  );
-  useEffect(() => {
-    let active = true;
-    getDashboard()
-      .then((result) => {
-        if (active) setData(result);
-      })
-      .catch(() => {
-        if (active) setError("생활비를 불러오지 못했습니다.");
-      });
-    return () => {
-      active = false;
-    };
-  }, [attempt]);
-  const methods = data
-    ? [
-        ...new Set([
-          ...data.entries.map((entry) => entry.paymentMethod ?? null),
-          ...data.charges
-            .filter((charge) => charge.status !== "완료")
-            .map((charge) => charge.paymentMethod),
-        ]),
-      ]
-    : [];
+  const [month, setMonth] = useState<string>();
   return (
     <main className={styles.page}>
       <div className={styles.container}>
@@ -53,108 +24,117 @@ export default function HomeDashboard() {
             + 고정비 추가
           </Link>
         </header>
-        {error ? (
-          <div role="alert" className={styles.loadError}>
-            <p>{error}</p>
-            <button
-              type="button"
-              onClick={() => {
-                setError("");
-                setData(null);
-                setAttempt((value) => value + 1);
-              }}
-            >
-              다시 불러오기
-            </button>
-          </div>
-        ) : !data ? (
-          <p role="status">생활비를 불러오는 중…</p>
-        ) : (
-          <>
-            <div className={styles.month}>
-              <p className={styles.scope}>함께 쓰는 생활비</p>
-              <h2>
-                {data.month.slice(0, 4)}년 {Number(data.month.slice(5))}월
-              </h2>
-              <span>
-                {Number(data.asOf.slice(5, 7))}월 {Number(data.asOf.slice(8))}일
-                기준
-              </span>
-            </div>
-            <MonthlySpending
-              entries={data.entries}
-              charges={data.charges}
-              month={data.month}
-            />
-            <section className={styles.panel} aria-labelledby="methods-title">
-              <div className={styles.sectionHeader}>
-                <h2 id="methods-title">결제수단별 금액</h2>
-                <div
-                  className={styles.segmented}
-                  role="group"
-                  aria-label="결제수단 금액 기준"
-                >
-                  <button
-                    type="button"
-                    aria-pressed={paymentView === "actual"}
-                    onClick={() => setPaymentView("actual")}
-                  >
-                    실제
-                  </button>
-                  <button
-                    type="button"
-                    aria-pressed={paymentView === "expected"}
-                    onClick={() => setPaymentView("expected")}
-                  >
-                    예상
-                  </button>
-                </div>
-              </div>
-              <div className={styles.paymentTable}>
-                {methods.map((method) => {
-                  const confirmed = data.entries
-                    .filter((entry) => (entry.paymentMethod ?? null) === method)
-                    .reduce((sum, entry) => sum + entry.amount, 0);
-                  const remaining = data.charges
-                    .filter(
-                      (charge) =>
-                        charge.status !== "완료" &&
-                        charge.paymentMethod === method,
-                    )
-                    .reduce((sum, charge) => sum + charge.expectedAmount, 0);
-                  return (
-                    <div
-                      key={method ?? "unassigned"}
-                      className={styles.paymentRow}
-                    >
-                      <span className={styles.paymentName}>
-                        <span className={styles.paymentIcon} aria-hidden="true">
-                          <svg viewBox="0 0 24 24">
-                            <rect x="3" y="5" width="18" height="14" rx="3" />
-                            <path d="M3 10h18M7 15h3" />
-                          </svg>
-                        </span>
-                        {method ?? "미지정"}
-                      </span>
-                      <strong>
-                        {won(
-                          paymentView === "actual"
-                            ? confirmed
-                            : confirmed + remaining,
-                        )}
-                      </strong>
-                    </div>
-                  );
-                })}
-                {methods.length === 0 && (
-                  <p className={styles.muted}>이번 달 결제 내역이 없습니다.</p>
-                )}
-              </div>
-            </section>
-            <RegisteredExpenses compact />
-          </>
-        )}
+        <MonthDashboard
+          key={month ?? "current"}
+          selectedMonth={month}
+          onMonth={setMonth}
+        />
       </div>
     </main>
+  );
+}
+function MonthDashboard({
+  selectedMonth,
+  onMonth,
+}: {
+  selectedMonth?: string;
+  onMonth: (month: string | undefined) => void;
+}) {
+  const [data, setData] = useState<FixedCostDashboard | null>(null);
+  const [error, setError] = useState("");
+  const [attempt, setAttempt] = useState(0);
+  useEffect(() => {
+    let active = true;
+    getFixedCostDashboard(selectedMonth)
+      .then((result) => {
+        if (active) setData(result);
+      })
+      .catch(() => {
+        if (active) setError("고정비 통계를 불러오지 못했습니다.");
+      });
+    return () => {
+      active = false;
+    };
+  }, [selectedMonth, attempt]);
+  function shiftMonth(offset: number) {
+    if (!data) return;
+    const target = new Date(`${data.month}-01T00:00:00Z`);
+    target.setUTCMonth(target.getUTCMonth() + offset);
+    onMonth(target.toISOString().slice(0, 7));
+  }
+  if (error)
+    return (
+      <div role="alert" className={styles.error}>
+        <p>{error}</p>
+        <button
+          type="button"
+          onClick={() => {
+            setError("");
+            setData(null);
+            setAttempt((value) => value + 1);
+          }}
+        >
+          다시 불러오기
+        </button>
+      </div>
+    );
+  if (!data)
+    return (
+      <p role="status" className={styles.loading}>
+        고정비 통계를 불러오는 중…
+      </p>
+    );
+  return (
+    <>
+      <section className={styles.monthSection} aria-label="통계 조회 월">
+        <div className={styles.monthHeading}>
+          <span>고정비 통계</span>
+          <button
+            type="button"
+            className={styles.today}
+            onClick={() => onMonth(undefined)}
+          >
+            이번 달
+          </button>
+        </div>
+        <div className={styles.monthPicker}>
+          <button
+            type="button"
+            aria-label="이전 달"
+            disabled={data.month === "0002-01"}
+            onClick={() => shiftMonth(-1)}
+          >
+            ‹
+          </button>
+          <label className={styles.monthInput}>
+            <span className={styles.srOnly}>조회 월</span>
+            <input
+              type="month"
+              aria-label="조회 월"
+              min="0002-01"
+              max="9998-12"
+              value={data.month}
+              onChange={(event) => {
+                if (/^\d{4}-(0[1-9]|1[0-2])$/.test(event.target.value))
+                  onMonth(event.target.value);
+              }}
+            />
+          </label>
+          <button
+            type="button"
+            aria-label="다음 달"
+            disabled={data.month === "9998-12"}
+            onClick={() => shiftMonth(1)}
+          >
+            ›
+          </button>
+        </div>
+        <p className={styles.asOf}>
+          {Number(data.asOf.slice(5, 7))}월 {Number(data.asOf.slice(8))}일 기준
+          · 예정 결제월로 집계
+        </p>
+      </section>
+      <FixedCostInsights data={data} />
+    </>
   );
 }

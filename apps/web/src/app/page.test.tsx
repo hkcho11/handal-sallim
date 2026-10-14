@@ -1,35 +1,25 @@
 import { render, screen, within } from "@testing-library/react";
 import { expect, test, vi } from "vitest";
-import { DASHBOARD_FIXTURE } from "../test/dashboardFixtures";
+import { FIXED_COST_FIXTURE } from "../test/fixedCostFixture";
 import Home from "./page";
-
-vi.mock("../features/fixed-expenses/api", () => ({
-  listFixedExpenses: vi.fn().mockResolvedValue([]),
+vi.mock("../features/home/fixedCostApi", () => ({
+  getFixedCostDashboard: vi.fn(),
 }));
-vi.mock("../features/home/api", () => ({ getDashboard: vi.fn() }));
-import { getDashboard } from "../features/home/api";
-
-test("홈은 서버 데이터로 요약을 표시하고 예시나 중복 설명을 표시하지 않는다", async () => {
-  vi.mocked(getDashboard).mockResolvedValue(DASHBOARD_FIXTURE);
+import { getFixedCostDashboard } from "../features/home/fixedCostApi";
+test("홈은 고정비 대분류·중분류 변화·결제수단의 세 통계를 순서대로 표시한다", async () => {
+  vi.mocked(getFixedCostDashboard).mockResolvedValue(FIXED_COST_FIXTURE);
   render(<Home />);
-  expect(screen.getByRole("heading", { name: "한달살림" })).toBeTruthy();
-  await screen.findByRole("region", { name: "이번 달 지출 요약" });
+  const major = await screen.findByRole("region", {
+    name: "대분류별 지출 통계",
+  });
+  expect(within(major).getAllByText("205,000원")).toHaveLength(1);
   expect(
-    screen.queryByRole("region", { name: "다가오는 결제·지연 항목" }),
-  ).toBeNull();
+    screen.getByRole("region", { name: "중분류별 월별 변화" }),
+  ).toBeTruthy();
+  expect(screen.getByRole("region", { name: "결제수단별 지출" })).toBeTruthy();
   expect(
-    screen.queryByRole("region", { name: "이번 달 결제 현황" }),
+    screen.queryByRole("region", { name: "이번 달 지출 요약" }),
   ).toBeNull();
-  expect(
-    screen.queryByText(/예시 합계에 실제 등록 금액은 포함되지 않습니다/),
-  ).toBeNull();
-  expect(screen.getByRole("region", { name: "등록한 고정비" })).toBeTruthy();
-  const spending = within(
-    screen.getByRole("region", { name: "이번 달 지출 요약" }),
-  );
-  expect(spending.getByText("419,000원")).toBeTruthy();
-  expect(spending.getByText("818,000원")).toBeTruthy();
-  expect(spending.queryByText("예시 데이터")).toBeNull();
-  expect(spending.getByText("1,237,000원")).toBeTruthy();
-  expect(screen.getByRole("region", { name: "카테고리별 지출" })).toBeTruthy();
+  expect(screen.queryByRole("region", { name: "등록한 고정비" })).toBeNull();
+  expect(screen.getByText("+10,000원 (+22.2%)")).toBeTruthy();
 });
