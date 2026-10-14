@@ -261,6 +261,9 @@
 | `space_id` | `uuid` | Y | FK → `spaces.id` |
 | `created_by` | `uuid` | Y | `(space_id, created_by)` → 공간 멤버 |
 | `type` | `varchar(20)` | Y | `INCOME`, `EXPENSE` |
+| `name` | `varchar(120)` | N | 직접 입력 거래는 필수 지출명, 자동 생성 거래는 NULL 가능 |
+| `creation_key` | `uuid` | N | 직접 입력 거래의 저장 재시도 키. `(space_id, created_by, creation_key)` UNIQUE |
+| `creation_fingerprint` | `varchar(64)` | N | 직접 입력 거래 최초 요청의 정규화된 SHA-256. 수정 이후에도 같은 생성 요청을 식별 |
 | `amount` | `bigint` | Y | CHECK > 0, 원 단위 |
 | `occurred_on` | `date` | Y | 실제 거래일 |
 | `category_id` | `uuid` | N | `(category_id, space_id)` → 공간 카테고리. 직접 입력 거래는 필수, 미분류 고정비의 자동 생성 거래만 NULL 허용 |
@@ -285,6 +288,8 @@
 - INDEX: `(space_id, occurred_on DESC)` — 공동 거래 목록
 - INDEX: `(created_by, occurred_on DESC)` WHERE `visibility = 'PRIVATE'` — 개인 거래 목록
 - 개인 거래 조회는 인증 사용자와 `created_by`가 같은 경우만 허용한다.
+- 2026-10-14 사용자 결정: 직접 입력 개인 지출의 삭제는 확인 후 행을 물리 삭제하며 목록·합계에서도 제외한다. 고정비 자동 거래의 완료 취소·기록 보존 정책은 유지한다.
+- 직접 입력 개인 지출의 수정·삭제는 조회한 `version`을 요구하며 일치하지 않으면 충돌로 처리한다.
 
 ### 4.12 같은 공간 참조 규칙
 

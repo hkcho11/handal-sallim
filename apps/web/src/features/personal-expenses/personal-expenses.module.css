@@ -114,10 +114,13 @@
   font-size: 0.9rem;
 }
 
-.page .addButton {
-  background: #f0f2f0;
-  color: #58665b;
-  cursor: not-allowed;
+.addButton {
+  min-height: 44px;
+  padding: 0.8rem 1rem;
+  border-radius: 0.65rem;
+  background: #225b3e;
+  color: #fff;
+  text-decoration: none;
 }
 
 .emptyState {
@@ -137,4 +140,159 @@
 .emptyState h3 {
   margin: 1rem 0 0.5rem;
   font-size: 1.05rem;
+}
+
+.formContainer {
+  max-width: 640px;
+}
+.back,
+.emptyState a {
+  color: #244d36;
+  text-underline-offset: 0.2em;
+}
+.fields {
+  display: grid;
+  gap: 1.2rem;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.fields label {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.fields input,
+.fields select,
+.fields textarea {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0.75rem;
+  border: 1px solid #a8b5ac;
+  border-radius: 0.6rem;
+  font: inherit;
+  background: #fff;
+  color: #17211b;
+}
+.fields [aria-invalid="true"] {
+  border-color: #b42318;
+}
+.fields .checkbox {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.checkbox input {
+  width: 1.25rem;
+  min-height: 1.25rem;
+}
+.error,
+.fieldError {
+  color: #a12720;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.fieldError {
+  margin: 0;
+  font-size: 0.9rem;
+}
+.page .primary {
+  background: #225b3e;
+  color: #fff;
+}
+.page button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+.dateGroup {
+  margin-top: 1.5rem;
+}
+.dateGroup h3 {
+  font-size: 0.95rem;
+  color: #4c5a50;
+}
+.list {
+  list-style: none;
+  display: grid;
+  gap: 0.75rem;
+  padding: 0;
+}
+.expenseLink {
+  display: block;
+  padding: 1rem;
+  border: 1px solid #d6ded5;
+  border-radius: 0.75rem;
+  text-decoration: none;
+  color: inherit;
+  overflow-wrap: anywhere;
+}
+.expenseLink p {
+  color: #4c5a50;
+  margin: 0.5rem 0 0;
+}
+.itemTop {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.detailAmount {
+  font-size: clamp(1.25rem, 7vw, 1.8rem);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.details {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 1rem;
+}
+.details dt {
+  color: #4c5a50;
+}
+.details dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.memo {
+  white-space: pre-wrap;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+.page .danger {
+  color: #a12720;
+  border-color: #d6a39e;
+}
+.deleteDialog {
+  width: min(90vw, 440px);
+  padding: 1.5rem;
+  border: 1px solid #d6ded5;
+  border-radius: 1rem;
+  color: #17211b;
+  overflow-wrap: anywhere;
+}
+.deleteDialog::backdrop {
+  background: rgb(0 0 0 / 35%);
+}
+.page a:focus-visible,
+.fields input:focus-visible,
+.fields select:focus-visible,
+.fields textarea:focus-visible {
+  outline: 3px solid #d57730;
+  outline-offset: 3px;
+}
+
+@media (max-width: 480px) {
+  .details {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.35rem;
+  }
+  .details dd {
+    margin-bottom: 0.75rem;
+  }
 }

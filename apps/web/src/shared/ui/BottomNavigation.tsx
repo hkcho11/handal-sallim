@@ -30,7 +30,12 @@ export default function BottomNavigation() {
         </Link>
         <Link
           href="/personal-expenses"
-          aria-current={pathname === "/personal-expenses" ? "page" : undefined}
+          aria-current={
+            pathname === "/personal-expenses" ||
+            pathname.startsWith("/personal-expenses/")
+              ? "page"
+              : undefined
+          }
         >
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <circle cx="12" cy="7" r="3" />
