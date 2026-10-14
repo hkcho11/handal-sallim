@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   calculateSpendingStatistics,
   type SpendingEntry,
@@ -22,6 +22,15 @@ export default function MonthlySpending({
 }) {
   const remaining = summarizeCharges(charges).remaining;
   const [selected, setSelected] = useState<"actual" | "remaining" | null>(null);
+  const actualButton = useRef<HTMLButtonElement>(null);
+  const remainingButton = useRef<HTMLButtonElement>(null);
+
+  function handleClose() {
+    const button =
+      selected === "actual" ? actualButton.current : remainingButton.current;
+    setSelected(null);
+    button?.focus();
+  }
 
   function handleSelect(view: "actual" | "remaining") {
     setSelected((current) => (current === view ? null : view));
@@ -37,6 +46,7 @@ export default function MonthlySpending({
         </div>
         <div className={`${styles.panel} ${styles.statGrid}`}>
           <button
+            ref={actualButton}
             type="button"
             className={styles.statItem}
             aria-expanded={selected === "actual"}
@@ -47,8 +57,19 @@ export default function MonthlySpending({
             <strong className={styles.statAmount}>
               {won(statistics.spent)}
             </strong>
+            <span className={styles.statHint}>
+              내역 보기
+              <svg
+                viewBox="0 0 16 16"
+                className={styles.statChevron}
+                aria-hidden="true"
+              >
+                <path d="m4 6 4 4 4-4" />
+              </svg>
+            </span>
           </button>
           <button
+            ref={remainingButton}
             type="button"
             className={styles.statItem}
             aria-expanded={selected === "remaining"}
@@ -57,6 +78,16 @@ export default function MonthlySpending({
           >
             <span className={styles.statLabel}>남은 지출</span>
             <strong className={styles.statAmount}>{won(remaining)}</strong>
+            <span className={styles.statHint}>
+              내역 보기
+              <svg
+                viewBox="0 0 16 16"
+                className={styles.statChevron}
+                aria-hidden="true"
+              >
+                <path d="m4 6 4 4 4-4" />
+              </svg>
+            </span>
           </button>
           <div className={styles.statItem}>
             <span className={styles.statLabel}>월 예상 지출</span>
@@ -65,13 +96,23 @@ export default function MonthlySpending({
             </strong>
           </div>
         </div>
-        <div id="spending-breakdown" hidden={selected === null}>
+        <div
+          id="spending-breakdown"
+          hidden={selected === null}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              event.stopPropagation();
+              handleClose();
+            }
+          }}
+        >
           {selected && (
             <SpendingBreakdown
               view={selected}
               entries={entries}
               charges={charges}
               month={month}
+              onClose={handleClose}
             />
           )}
         </div>
@@ -89,8 +130,9 @@ export default function MonthlySpending({
               <summary>
                 <span className={styles.categoryHeading}>
                   <strong>{category.name}</strong>
-                  <span>
-                    {won(category.amount)} · {category.share.toFixed(1)}%
+                  <span className={styles.categoryValue}>
+                    <b>{won(category.amount)}</b>
+                    <small>{category.share.toFixed(1)}%</small>
                   </span>
                 </span>
                 <span className={styles.barTrack} aria-hidden="true">

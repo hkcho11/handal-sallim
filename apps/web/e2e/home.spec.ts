@@ -51,6 +51,8 @@ for (const width of [360, 1280]) {
     const actual = summary.getByRole("button", { name: /실제 지출/ });
     const remaining = summary.getByRole("button", { name: /남은 지출/ });
     await expect(actual).toBeVisible();
+    await expect(actual.getByText("내역 보기")).toBeVisible();
+    await expect(remaining.getByText("내역 보기")).toBeVisible();
     const labels = summary
       .locator("span")
       .filter({ hasText: /^(실제 지출|남은 지출|월 예상 지출)$/ });
@@ -78,6 +80,13 @@ for (const width of [360, 1280]) {
       actualDetails.getByText("장보기", { exact: true }),
     ).toBeVisible();
     await expect(actualDetails.getByRole("listitem")).toHaveCount(6);
+    await expect(actualDetails.locator("time").first()).toHaveText(
+      /10월 \d+일/,
+    );
+    await actualDetails.getByRole("button", { name: "지출 내역 닫기" }).click();
+    await expect(actualDetails).toHaveCount(0);
+    await expect(actual).toBeFocused();
+    await page.keyboard.press("Enter");
     await expect(actualDetails.getByText("식사", { exact: true })).toHaveCount(
       0,
     );
@@ -95,6 +104,9 @@ for (const width of [360, 1280]) {
       name: "남은 지출 내역",
     });
     await expect(remainingDetails.getByRole("listitem")).toHaveCount(4);
+    await expect(
+      remainingDetails.getByRole("heading", { name: /결제 예정/ }),
+    ).toBeVisible();
     await expect(remainingDetails.getByRole("listitem").first()).toContainText(
       "전기요금",
     );
@@ -104,6 +116,13 @@ for (const width of [360, 1280]) {
     await remaining.click();
     await expect(remainingDetails).toHaveCount(0);
     await expect(remaining).toHaveAttribute("aria-expanded", "false");
+    await remaining.click();
+    await remainingDetails
+      .getByRole("button", { name: "지출 내역 닫기" })
+      .focus();
+    await page.keyboard.press("Escape");
+    await expect(remainingDetails).toHaveCount(0);
+    await expect(remaining).toBeFocused();
     await page.evaluate(() => {
       document.documentElement.style.fontSize = "200%";
     });
