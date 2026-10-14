@@ -7,6 +7,7 @@ import {
   deletePersonalExpense,
   errorMessage,
   getPersonalExpense,
+  PersonalExpenseApiError,
   type PersonalExpense,
 } from "./api";
 import PersonalExpenseForm from "./PersonalExpenseForm";
@@ -15,6 +16,7 @@ import styles from "./personal-expenses.module.css";
 export default function PersonalExpenseDetail({ id }: { id: string }) {
   const [expense, setExpense] = useState<PersonalExpense | null>(null);
   const [error, setError] = useState("");
+  const [notFound, setNotFound] = useState(false);
   const [retry, setRetry] = useState(0);
   const [editing, setEditing] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -27,7 +29,15 @@ export default function PersonalExpenseDetail({ id }: { id: string }) {
         if (active) setExpense(data);
       })
       .catch((failure: unknown) => {
-        if (active) setError(errorMessage(failure));
+        if (!active) return;
+        if (
+          failure instanceof PersonalExpenseApiError &&
+          failure.status === 404
+        ) {
+          setNotFound(true);
+        } else {
+          setError(errorMessage(failure));
+        }
       });
     return () => {
       active = false;
@@ -71,7 +81,20 @@ export default function PersonalExpenseDetail({ id }: { id: string }) {
             </h1>
           </div>
         </header>
-        {!expense && !error && <p role="status">지출을 불러오는 중…</p>}
+        {!expense && !error && !notFound && (
+          <p role="status">지출을 불러오는 중…</p>
+        )}
+        {notFound && (
+          <section className={styles.panel} aria-label="지출 내역 없음">
+            <div className={styles.emptyState}>
+              <h2>등록된 지출 내역이 없어요</h2>
+              <p>
+                개인 지출 목록에서 다른 내역을 확인하거나 새로 등록해 주세요.
+              </p>
+              <Link href="/personal-expenses/new">지출 추가하기</Link>
+            </div>
+          </section>
+        )}
         {error && (
           <div role="alert" className={styles.error}>
             <p>{error}</p>

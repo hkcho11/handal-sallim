@@ -167,7 +167,7 @@ function MonthExpenses({ month }: { month: string }) {
         )}
         {result && !error && result.items.length === 0 && (
           <div className={styles.emptyState}>
-            <h3>이달에 등록한 개인 지출이 없어요</h3>
+            <h3>등록한 개인 지출이 없어요</h3>
             <p>사용한 금액을 기록해 보세요.</p>
             <Link href="/personal-expenses/new">첫 지출 추가하기</Link>
           </div>

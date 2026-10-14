@@ -6,5 +6,5 @@ export default async function PersonalExpenseDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  return <PersonalExpenseDetail id={id} />;
+  return <PersonalExpenseDetail key={id} id={id} />;
 }

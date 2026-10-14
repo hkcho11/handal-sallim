@@ -97,6 +97,37 @@ async function fillExpense(page: Page) {
   await page.getByLabel("메모 (선택)", { exact: true }).fill("테스트 메모");
 }
 
+test("빈 목록과 존재하지 않는 상세는 오류 경고 대신 내역 없음으로 표시한다", async ({
+  page,
+}) => {
+  await mockApi(page);
+  await page.goto("/personal-expenses?month=2026-10");
+  const main = page.getByRole("main");
+  await expect(
+    main.getByText("등록한 개인 지출이 없어요", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    main
+      .getByRole("region", { name: "월간 개인 지출", exact: true })
+      .getByText("0원", { exact: true }),
+  ).toBeVisible();
+  await expect(main.getByRole("alert")).toHaveCount(0);
+  await expect(
+    main.getByRole("button", { name: "다시 시도", exact: true }),
+  ).toHaveCount(0);
+  await page.goto(`/personal-expenses/${expenseId}`);
+  await expect(
+    main.getByText("등록된 지출 내역이 없어요", { exact: true }),
+  ).toBeVisible();
+  await expect(main.getByRole("alert")).toHaveCount(0);
+  await expect(
+    main.getByRole("button", { name: "다시 시도", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    main.getByRole("link", { name: "← 개인 지출 목록", exact: true }),
+  ).toBeVisible();
+});
+
 for (const width of [360, 1280]) {
   test(`개인 지출 등록·조회·수정·영구 삭제 (${width}px)`, async ({ page }) => {
     const errors: string[] = [];
@@ -129,9 +160,7 @@ for (const width of [360, 1280]) {
     await expect(
       page.getByRole("heading", { name: "2027년 1월" }),
     ).toBeVisible();
-    await expect(
-      page.getByText("이달에 등록한 개인 지출이 없어요"),
-    ).toBeVisible();
+    await expect(page.getByText("등록한 개인 지출이 없어요")).toBeVisible();
     await page.getByRole("link", { name: "+ 지출 추가", exact: true }).click();
     await expect(page.getByLabel("지출명", { exact: true })).toBeVisible();
     await page.getByRole("button", { name: "지출 저장", exact: true }).click();
@@ -199,9 +228,7 @@ for (const width of [360, 1280]) {
     await expect(dialog.getByText(/서버에서도 완전히 삭제/)).toBeVisible();
     await dialog.getByRole("button", { name: "삭제", exact: true }).click();
     await expect(page).toHaveURL("/personal-expenses?month=2026-11");
-    await expect(
-      page.getByText("이달에 등록한 개인 지출이 없어요"),
-    ).toBeVisible();
+    await expect(page.getByText("등록한 개인 지출이 없어요")).toBeVisible();
     await expect(
       page
         .getByRole("region", { name: "월간 개인 지출", exact: true })
@@ -220,9 +247,7 @@ test("함께 관리에서 개인 등록 확인과 실패 후 재시도를 지원
   await page.goto("/personal-expenses?month=2026-10");
   await expect(page.getByRole("main").getByRole("alert")).toBeVisible();
   await page.getByRole("button", { name: "다시 시도", exact: true }).click();
-  await expect(
-    page.getByText("이달에 등록한 개인 지출이 없어요"),
-  ).toBeVisible();
+  await expect(page.getByText("등록한 개인 지출이 없어요")).toBeVisible();
   await page.getByRole("link", { name: "+ 지출 추가", exact: true }).click();
   await fillExpense(page);
   await page.getByRole("button", { name: "지출 저장", exact: true }).click();
@@ -246,7 +271,5 @@ test("함께 관리에서 개인 등록 확인과 실패 후 재시도를 지원
   await expect(dialog.getByRole("alert")).toBeVisible();
   expect(state.saved).not.toBeNull();
   await dialog.getByRole("button", { name: "삭제", exact: true }).click();
-  await expect(
-    page.getByText("이달에 등록한 개인 지출이 없어요"),
-  ).toBeVisible();
+  await expect(page.getByText("등록한 개인 지출이 없어요")).toBeVisible();
 });

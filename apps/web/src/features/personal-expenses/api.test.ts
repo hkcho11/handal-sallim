@@ -25,6 +25,14 @@ function respond(data: unknown, status = 200) {
     vi.fn().mockResolvedValue(new Response(JSON.stringify(data), { status })),
   );
 }
+test("내역이 없는 월은 오류 없이 빈 목록과 0원 합계를 반환한다", async () => {
+  respond({ month: "2026-10", totalAmount: "0", items: [] });
+  await expect(listPersonalExpenses("2026-10")).resolves.toEqual({
+    month: "2026-10",
+    totalAmount: "0",
+    items: [],
+  });
+});
 test("월이 다른 내역과 합계 불일치, 잘못된 날짜를 거부한다", async () => {
   for (const data of [
     {
