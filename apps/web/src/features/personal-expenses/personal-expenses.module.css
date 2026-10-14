@@ -1,0 +1,140 @@
+.page {
+  min-height: 100vh;
+  padding: clamp(1rem, 4vw, 3rem);
+  background: #f6f7f4;
+  color: #17211b;
+  font-variant-numeric: tabular-nums;
+}
+
+.container {
+  width: min(100%, 960px);
+  margin-inline: auto;
+  display: grid;
+  gap: 1.25rem;
+}
+
+.header,
+.sectionHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.header h1 {
+  margin: 0.35rem 0 0;
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
+  letter-spacing: -0.05em;
+}
+
+.eyebrow,
+.intro,
+.summary p,
+.emptyState p {
+  margin: 0;
+  color: #4c5a50;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.eyebrow,
+.badge {
+  font-size: 0.85rem;
+}
+
+.badge {
+  padding: 0.4rem 0.65rem;
+  border-radius: 0.5rem;
+  background: #e5f3e9;
+  color: #1b5231;
+}
+
+.panel {
+  min-width: 0;
+  padding: clamp(1rem, 3vw, 1.75rem);
+  border: 1px solid #d6ded5;
+  border-radius: 1rem;
+  background: #fff;
+}
+
+.panel h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.monthNavigation {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: center;
+}
+
+.page button {
+  min-height: 44px;
+  padding: 0.6rem;
+  border: 1px solid #d6ded5;
+  border-radius: 0.65rem;
+  background: #fff;
+  color: #244d36;
+  font: inherit;
+  cursor: pointer;
+}
+
+.page button:focus-visible {
+  outline: 3px solid #d57730;
+  outline-offset: 3px;
+}
+
+.page button:hover:not(:disabled) {
+  background: #e5f3e9;
+}
+
+.page .today {
+  display: block;
+  margin: 0.75rem auto 0;
+  padding-inline: 1rem;
+}
+
+.summary {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #e0e6df;
+  text-align: center;
+}
+
+.summary strong {
+  font-size: 2rem;
+}
+
+.summary p {
+  font-size: 0.9rem;
+}
+
+.page .addButton {
+  background: #f0f2f0;
+  color: #58665b;
+  cursor: not-allowed;
+}
+
+.emptyState {
+  padding: 2rem 0;
+  text-align: center;
+}
+
+.emptyState svg {
+  width: 48px;
+  height: 48px;
+  fill: none;
+  stroke: #819789;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.emptyState h3 {
+  margin: 1rem 0 0.5rem;
+  font-size: 1.05rem;
+}

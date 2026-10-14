@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import BottomNavigation from "@/shared/ui/BottomNavigation";
 
 export const metadata: Metadata = {
   title: "한달살림",
@@ -11,7 +12,10 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="ko">
-      <body>{children}</body>
+      <body>
+        <div className="app-content">{children}</div>
+        <BottomNavigation />
+      </body>
     </html>
   );
 }

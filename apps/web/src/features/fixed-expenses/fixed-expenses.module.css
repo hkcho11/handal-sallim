@@ -1,0 +1,169 @@
+.page {
+  min-height: 100vh;
+  padding: clamp(1rem, 4vw, 3rem);
+  background: #f6f7f4;
+  color: #17211b;
+}
+
+.header,
+.columns {
+  width: min(100%, 1100px);
+  margin-inline: auto;
+}
+
+.header {
+  margin-bottom: 1.5rem;
+}
+
+.header h1 {
+  margin: 1rem 0 0.4rem;
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
+}
+
+.header p,
+.muted,
+.hint {
+  color: #4c5a50;
+}
+
+.back {
+  color: #244d36;
+  text-underline-offset: 0.2em;
+}
+
+.columns {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  align-items: start;
+}
+
+.panel {
+  min-width: 0;
+  border: 1px solid #d6ded5;
+  border-radius: 1rem;
+  background: #fff;
+  padding: clamp(1rem, 3vw, 1.75rem);
+}
+
+.panel h2 {
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.6rem;
+  margin-top: 1.5rem;
+}
+
+.form label {
+  font-weight: 650;
+  margin-top: 0.5rem;
+}
+
+.form input,
+.form select,
+.form button,
+.error button {
+  min-height: 44px;
+  width: 100%;
+  border-radius: 0.55rem;
+  font: inherit;
+}
+
+.form input,
+.form select {
+  min-width: 0;
+  border: 1px solid #9aa99c;
+  background: #fff;
+  color: inherit;
+  padding: 0.65rem 0.8rem;
+}
+
+.form button,
+.error button {
+  border: 0;
+  background: #225b3e;
+  color: #fff;
+  font-weight: 650;
+  cursor: pointer;
+  margin-top: 0.5rem;
+}
+
+.form button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.hint {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.error,
+.notice {
+  margin: 0.5rem 0;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+}
+
+.error {
+  background: #fff0ed;
+  color: #8b2619;
+}
+
+.notice {
+  background: #e5f3e9;
+  color: #1b5231;
+}
+
+.list {
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.8rem;
+}
+
+.item {
+  border: 1px solid #e0e6df;
+  border-radius: 0.7rem;
+  padding: 1rem;
+  overflow-wrap: anywhere;
+}
+
+.itemTop,
+.itemMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+  justify-content: space-between;
+}
+
+.itemTop {
+  font-size: 1.1rem;
+}
+
+.itemMeta {
+  margin-top: 0.7rem;
+  color: #435347;
+  font-size: 0.9rem;
+}
+
+.item p {
+  margin-bottom: 0;
+  font-size: 0.9rem;
+}
+
+:is(a, button, input, select):focus-visible {
+  outline: 3px solid #d57730;
+  outline-offset: 3px;
+}
+
+@media (max-width: 767px) {
+  .columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
