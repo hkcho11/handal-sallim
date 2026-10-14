@@ -1,0 +1,298 @@
+.page {
+  min-height: 100vh;
+  padding: clamp(1rem, 4vw, 3rem);
+  background: #f6f7f4;
+  color: #17211b;
+  font-variant-numeric: tabular-nums;
+}
+
+.container {
+  width: min(100%, 960px);
+  margin-inline: auto;
+  display: grid;
+  gap: 1.25rem;
+}
+
+.header,
+.sectionHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.header h1 {
+  margin: 0.35rem 0 0;
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
+  letter-spacing: -0.05em;
+}
+
+.eyebrow,
+.intro,
+.summary p,
+.emptyState p {
+  margin: 0;
+  color: #4c5a50;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.eyebrow,
+.badge {
+  font-size: 0.85rem;
+}
+
+.badge {
+  padding: 0.4rem 0.65rem;
+  border-radius: 0.5rem;
+  background: #e5f3e9;
+  color: #1b5231;
+}
+
+.panel {
+  min-width: 0;
+  padding: clamp(1rem, 3vw, 1.75rem);
+  border: 1px solid #d6ded5;
+  border-radius: 1rem;
+  background: #fff;
+}
+
+.panel h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.monthNavigation {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: center;
+}
+
+.page button {
+  min-height: 44px;
+  padding: 0.6rem;
+  border: 1px solid #d6ded5;
+  border-radius: 0.65rem;
+  background: #fff;
+  color: #244d36;
+  font: inherit;
+  cursor: pointer;
+}
+
+.page button:focus-visible {
+  outline: 3px solid #d57730;
+  outline-offset: 3px;
+}
+
+.page button:hover:not(:disabled) {
+  background: #e5f3e9;
+}
+
+.page .today {
+  display: block;
+  margin: 0.75rem auto 0;
+  padding-inline: 1rem;
+}
+
+.summary {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #e0e6df;
+  text-align: center;
+}
+
+.summary strong {
+  font-size: 2rem;
+}
+
+.summary p {
+  font-size: 0.9rem;
+}
+
+.addButton {
+  min-height: 44px;
+  padding: 0.8rem 1rem;
+  border-radius: 0.65rem;
+  background: #225b3e;
+  color: #fff;
+  text-decoration: none;
+}
+
+.emptyState {
+  padding: 2rem 0;
+  text-align: center;
+}
+
+.emptyState svg {
+  width: 48px;
+  height: 48px;
+  fill: none;
+  stroke: #819789;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.emptyState h3 {
+  margin: 1rem 0 0.5rem;
+  font-size: 1.05rem;
+}
+
+.formContainer {
+  max-width: 640px;
+}
+.back,
+.emptyState a {
+  color: #244d36;
+  text-underline-offset: 0.2em;
+}
+.fields {
+  display: grid;
+  gap: 1.2rem;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.fields label {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.fields input,
+.fields select,
+.fields textarea {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0.75rem;
+  border: 1px solid #a8b5ac;
+  border-radius: 0.6rem;
+  font: inherit;
+  background: #fff;
+  color: #17211b;
+}
+.fields [aria-invalid="true"] {
+  border-color: #b42318;
+}
+.fields .checkbox {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.checkbox input {
+  width: 1.25rem;
+  min-height: 1.25rem;
+}
+.error,
+.fieldError {
+  color: #a12720;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.fieldError {
+  margin: 0;
+  font-size: 0.9rem;
+}
+.page .primary {
+  background: #225b3e;
+  color: #fff;
+}
+.page button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+.dateGroup {
+  margin-top: 1.5rem;
+}
+.dateGroup h3 {
+  font-size: 0.95rem;
+  color: #4c5a50;
+}
+.list {
+  list-style: none;
+  display: grid;
+  gap: 0.75rem;
+  padding: 0;
+}
+.expenseLink {
+  display: block;
+  padding: 1rem;
+  border: 1px solid #d6ded5;
+  border-radius: 0.75rem;
+  text-decoration: none;
+  color: inherit;
+  overflow-wrap: anywhere;
+}
+.expenseLink p {
+  color: #4c5a50;
+  margin: 0.5rem 0 0;
+}
+.itemTop {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.detailAmount {
+  font-size: clamp(1.25rem, 7vw, 1.8rem);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.details {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 1rem;
+}
+.details dt {
+  color: #4c5a50;
+}
+.details dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.memo {
+  white-space: pre-wrap;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+.page .danger {
+  color: #a12720;
+  border-color: #d6a39e;
+}
+.deleteDialog {
+  width: min(90vw, 440px);
+  padding: 1.5rem;
+  border: 1px solid #d6ded5;
+  border-radius: 1rem;
+  color: #17211b;
+  overflow-wrap: anywhere;
+}
+.deleteDialog::backdrop {
+  background: rgb(0 0 0 / 35%);
+}
+.page a:focus-visible,
+.fields input:focus-visible,
+.fields select:focus-visible,
+.fields textarea:focus-visible {
+  outline: 3px solid #d57730;
+  outline-offset: 3px;
+}
+
+@media (max-width: 480px) {
+  .details {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.35rem;
+  }
+  .details dd {
+    margin-bottom: 0.75rem;
+  }
+}

@@ -43,7 +43,7 @@ cd apps/api
 .\gradlew.bat bootRun
 ```
 
-웹은 `http://localhost:3000`, API는 `http://localhost:8080`에서 실행됩니다. 현재 API에는 제품 엔드포인트가 없습니다. PostgreSQL 중지 시 `docker compose -f infra/compose.yaml down`을 사용하면 데이터 볼륨은 유지됩니다.
+웹은 `http://localhost:3000`, API는 `http://localhost:8080`에서 실행됩니다. 고정비 등록·목록 API는 `/api/recurring-expenses`에 있습니다. 인증 공급자와 공간 생성 기능이 아직 없어 일반 브라우저 요청은 401로 거부됩니다. 이 API는 서버가 제공하는 내부 사용자 UUID `Principal`과 활성 공간 멤버십을 요구하며, 개발용 고정 사용자나 공간은 만들지 않습니다. PostgreSQL 중지 시 `docker compose -f infra/compose.yaml down`을 사용하면 데이터 볼륨은 유지됩니다.
 
 ## 검사
 
@@ -64,3 +64,5 @@ cd apps/api
 ```
 
 웹 E2E는 Playwright Chromium 설치가 필요합니다. 처음 한 번 `npx --yes pnpm@12.10.1 --dir apps/web exec playwright install chromium`을 실행합니다. 실제 iPhone Safari의 핵심 흐름은 기능 구현 후 별도로 확인합니다.
+
+웹 E2E는 프로덕션 빌드 결과를 실행하므로 `test:e2e` 전에 `build`를 실행합니다.
