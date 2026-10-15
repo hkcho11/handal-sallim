@@ -159,3 +159,50 @@ test("새로고침으로 DB 조회 결과가 바뀌면 차트에 반영한다", 
     page.getByText("이 달에 등록된 고정비 청구가 없어요."),
   ).toBeVisible();
 });
+
+test("이번 달은 처음과 월 이동 후 모두 중복 선택할 수 없다", async ({
+  page,
+}) => {
+  let requests = 0;
+  await page.route("**/backend/dashboard/fixed-costs*", (route) => {
+    requests++;
+    const month =
+      new URL(route.request().url()).searchParams.get("month") ?? "2026-10";
+    const end = new Date(`${month}-01T00:00:00Z`);
+    return route.fulfill({
+      json: {
+        ...FIXED_COST_FIXTURE,
+        month,
+        asOf: "2026-10-15",
+        months: Array.from({ length: 6 }, (_, index) => {
+          const date = new Date(end);
+          date.setUTCMonth(date.getUTCMonth() - 5 + index);
+          return date.toISOString().slice(0, 7);
+        }),
+        charges: [],
+        unscheduled: [],
+      },
+    });
+  });
+  await page.goto("/");
+  const current = page.getByRole("button", { name: "이번 달", exact: true });
+  const month = page.getByLabel("조회 월", { exact: true });
+  await expect(current).toBeDisabled();
+  await page.getByRole("button", { name: "이전 달", exact: true }).click();
+  await expect(month).toHaveValue("2026-09");
+  await expect(current).toBeEnabled();
+  await page.getByRole("button", { name: "다음 달", exact: true }).click();
+  await expect(month).toHaveValue("2026-10");
+  await expect(current).toBeDisabled();
+  expect(requests).toBe(3);
+  await page.getByRole("button", { name: "이전 달", exact: true }).click();
+  await expect(month).toHaveValue("2026-09");
+  await current.click();
+  await expect(month).toHaveValue("2026-10");
+  await expect(current).toBeDisabled();
+  expect(requests).toBe(5);
+  await month.fill("2026-12");
+  await expect(current).toBeEnabled();
+  await month.fill("2026-10");
+  await expect(current).toBeDisabled();
+});

@@ -83,6 +83,10 @@
   flex-wrap: wrap;
   justify-content: flex-end;
 }
+.today:disabled {
+  color: var(--text-secondary);
+  opacity: 0.55;
+}
 .monthPicker {
   display: grid;
   grid-template-columns: 44px minmax(0, 1fr) 44px;

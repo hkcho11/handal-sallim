@@ -103,6 +103,7 @@ function MonthDashboard({
             <button
               type="button"
               className={styles.today}
+              disabled={data.month === data.asOf.slice(0, 7)}
               onClick={() => onMonth(undefined)}
             >
               이번 달
