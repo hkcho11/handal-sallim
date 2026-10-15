@@ -345,12 +345,12 @@ test("전월 대비 증가·감소에 색과 화살표를 적용하고 변동 �
   await page.goto("/");
   const trend = page.getByRole("region", { name: "중분류별 월별 변화" });
   const decrease = trend.getByText("감소", { exact: true }).locator("..");
-  await expect(decrease).toContainText("↓");
+  await expect(decrease).toContainText("▼");
   await expect(decrease).toContainText("10,000원 (50.0%)");
   await expect(decrease).toHaveCSS("color", "rgb(49, 91, 235)");
   await trend.getByRole("button", { name: /2026년 9월, 20,000원/ }).click();
   const increase = trend.getByText("증가", { exact: true }).locator("..");
-  await expect(increase).toContainText("↑");
+  await expect(increase).toContainText("▲");
   await expect(increase).toContainText("10,000원 (100.0%)");
   await expect(increase).toHaveCSS("color", "rgb(196, 61, 72)");
   await trend.getByRole("button", { name: /2026년 8월, 10,000원/ }).click();
@@ -358,8 +358,8 @@ test("전월 대비 증가·감소에 색과 화살표를 적용하고 변동 �
     .getByText("0원 (0.0%)", { exact: true })
     .locator("..");
   await expect(unchanged).toHaveCSS("color", "rgb(104, 113, 130)");
-  await expect(unchanged).not.toContainText("↑");
-  await expect(unchanged).not.toContainText("↓");
+  await expect(unchanged).not.toContainText("▲");
+  await expect(unchanged).not.toContainText("▼");
   await trend.getByRole("button", { name: /2026년 5월, 기록 없음/ }).click();
   await expect(trend.getByText("비교 기록 없음")).toBeVisible();
   await expect(trend.getByText("증가", { exact: true })).toHaveCount(0);

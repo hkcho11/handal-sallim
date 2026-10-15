@@ -319,7 +319,7 @@ export default function FixedCostInsights({
               {selectedPoint.change !== null && selectedPoint.change !== 0 && (
                 <>
                   <span className={styles.changeArrow} aria-hidden="true">
-                    {selectedPoint.change > 0 ? "↑" : "↓"}
+                    {selectedPoint.change > 0 ? "▲" : "▼"}
                   </span>
                   <span className={styles.srOnly}>
                     {selectedPoint.change > 0 ? "증가 " : "감소 "}
