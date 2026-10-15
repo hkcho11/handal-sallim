@@ -418,7 +418,7 @@ export default function FixedCostInsights({
           완료 건은 실제 결제수단, 미결제 건은 예정 결제수단에 집계합니다.
         </p>
       </section>
-      <details className={styles.panel}>
+      <details className={styles.panel} open>
         <summary className={styles.scheduleSummary}>
           결제 일정·미결제 내역
           <span>
