@@ -515,43 +515,6 @@
 .paymentRow > :not(:first-child) {
   text-align: right;
 }
-.scheduleSummary {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-  min-height: 44px;
-  font-size: 0.9rem;
-  font-weight: 650;
-  cursor: pointer;
-  list-style: none;
-}
-.scheduleSummary::-webkit-details-marker {
-  display: none;
-}
-.scheduleSummary > span {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-  font-weight: 500;
-}
-.scheduleChevron {
-  width: 1rem;
-  height: 1rem;
-  flex-shrink: 0;
-  transition: transform 180ms ease;
-}
-.panel[open] > .scheduleSummary .scheduleChevron {
-  transform: rotate(180deg);
-}
-@media (prefers-reduced-motion: reduce) {
-  .scheduleChevron {
-    transition: none;
-  }
-}
 .unscheduled {
   margin: 0.5rem 0;
   padding: 0.5rem;

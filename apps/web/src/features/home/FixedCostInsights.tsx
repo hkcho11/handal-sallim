@@ -418,56 +418,6 @@ export default function FixedCostInsights({
           완료 건은 실제 결제수단, 미결제 건은 예정 결제수단에 집계합니다.
         </p>
       </section>
-      <details className={styles.panel} open>
-        <summary className={styles.scheduleSummary}>
-          결제 일정·미결제 내역
-          <span>
-            미결제 {pending.length}건
-            <svg
-              className={styles.scheduleChevron}
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="m6 9 6 6 6-6" />
-            </svg>
-          </span>
-        </summary>
-        <ul className={styles.entryList}>
-          {[...statistics.charges]
-            .sort(
-              (a, b) =>
-                Number(b.status === "지연") - Number(a.status === "지연") ||
-                a.dueDate.localeCompare(b.dueDate),
-            )
-            .map((charge) => (
-              <li key={charge.id}>
-                <Link href={`/fixed-costs/${charge.recurringExpenseId}`}>
-                  <span>
-                    {charge.name}
-                    <small>
-                      {charge.dueDate} · {charge.status}
-                    </small>
-                  </span>
-                  <b>
-                    {won(
-                      charge.status === "완료"
-                        ? (charge.actualAmount ?? 0)
-                        : charge.expectedAmount,
-                    )}
-                  </b>
-                </Link>
-              </li>
-            ))}
-        </ul>
-        {!statistics.charges.length && (
-          <p className={styles.empty}>등록된 결제 일정이 없어요.</p>
-        )}
-      </details>
       {data.unscheduled.length > 0 && (
         <section className={styles.unscheduled} aria-label="일정 미정 고정비">
           <strong>일정 미정 {data.unscheduled.length}건</strong>
