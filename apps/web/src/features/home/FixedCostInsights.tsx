@@ -19,9 +19,20 @@ const compactWon = new Intl.NumberFormat("ko-KR", {
 });
 const signedWon = (amount: number) =>
   `${amount > 0 ? "+" : amount < 0 ? "−" : ""}${won(Math.abs(amount))}`;
-function changeLabel(change: number | null, percentage: number | null) {
+function changeLabel(
+  change: number | null,
+  percentage: number | null,
+  showSign = true,
+) {
   if (change === null) return "비교 기록 없음";
-  return `${signedWon(change)} (${percentage === null ? "—" : `${percentage > 0 ? "+" : ""}${percentage.toFixed(1)}%`})`;
+  const amount = showSign ? signedWon(change) : won(Math.abs(change));
+  const rate =
+    percentage === null
+      ? "—"
+      : showSign
+        ? `${percentage > 0 ? "+" : ""}${percentage.toFixed(1)}%`
+        : `${Math.abs(percentage).toFixed(1)}%`;
+  return `${amount} (${rate})`;
 }
 function chargeLabel(charge: FixedCostCharge) {
   return charge.status === "완료"
@@ -295,7 +306,34 @@ export default function FixedCostInsights({
           </strong>
           <p>
             전월 대비{" "}
-            <b>{changeLabel(selectedPoint.change, selectedPoint.percentage)}</b>
+            <span
+              className={styles.change}
+              data-direction={
+                selectedPoint.change === null || selectedPoint.change === 0
+                  ? "neutral"
+                  : selectedPoint.change > 0
+                    ? "increase"
+                    : "decrease"
+              }
+            >
+              {selectedPoint.change !== null && selectedPoint.change !== 0 && (
+                <>
+                  <span className={styles.changeArrow} aria-hidden="true">
+                    {selectedPoint.change > 0 ? "↑" : "↓"}
+                  </span>
+                  <span className={styles.srOnly}>
+                    {selectedPoint.change > 0 ? "증가 " : "감소 "}
+                  </span>
+                </>
+              )}
+              <b>
+                {changeLabel(
+                  selectedPoint.change,
+                  selectedPoint.percentage,
+                  false,
+                )}
+              </b>
+            </span>
           </p>
           {selectedPoint.pendingCount > 0 && (
             <p>

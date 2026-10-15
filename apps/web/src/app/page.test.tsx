@@ -34,7 +34,7 @@ test("홈은 고정비 대분류·중분류 변화·결제수단의 세 통계�
   expect(
     screen.queryByRole("region", { name: "선택 월 지출 요약" }),
   ).toBeNull();
-  expect(screen.getByText("+10,000원 (+22.2%)")).toBeTruthy();
+  expect(screen.getByText("10,000원 (22.2%)")).toBeTruthy();
 });
 test("DB 변경 후 새로고침하면 선택 월의 통계를 다시 조회한다", async () => {
   vi.mocked(getFixedCostDashboard).mockResolvedValue(FIXED_COST_FIXTURE);
@@ -82,7 +82,7 @@ test("월별 막대를 선택하면 정확한 금액과 증감이 바뀌고 기�
   fireEvent.click(trend.getByRole("button", { name: /2026년 8월, 기록 없음/ }));
   expect(trend.getByText("기록 없음")).toBeTruthy();
   fireEvent.click(october);
-  expect(trend.getByText("+10,000원 (+22.2%)")).toBeTruthy();
+  expect(trend.getByText("10,000원 (22.2%)")).toBeTruthy();
 });
 test("미결제 0원과 전월 0원의 증감률을 선택한 달 기준으로 표시한다", async () => {
   vi.mocked(getFixedCostDashboard).mockResolvedValue({
@@ -96,7 +96,7 @@ test("미결제 0원과 전월 0원의 증감률을 선택한 달 기준으로 �
   const trend = within(
     await screen.findByRole("region", { name: "중분류별 월별 변화" }),
   );
-  expect(trend.getByText("+10,000원 (—)")).toBeTruthy();
+  expect(trend.getByText("10,000원 (—)")).toBeTruthy();
   fireEvent.click(trend.getByRole("button", { name: /2026년 9월, 0원/ }));
   expect(trend.getByText("0원")).toBeTruthy();
   expect(trend.getByText("미결제 1건 · 예정 30,000원")).toBeTruthy();

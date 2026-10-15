@@ -409,8 +409,26 @@
   line-height: 1.6;
 }
 .trendHeadline b {
-  color: var(--text);
+  color: inherit;
   font-weight: 550;
+}
+.change {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  vertical-align: middle;
+  color: var(--text-secondary);
+}
+.change[data-direction="increase"] {
+  color: #c43d48;
+}
+.change[data-direction="decrease"] {
+  color: #315beb;
+}
+.changeArrow {
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1;
 }
 .trendChart {
   display: grid;
