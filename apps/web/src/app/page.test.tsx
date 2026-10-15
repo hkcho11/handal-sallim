@@ -6,7 +6,7 @@ import {
   within,
 } from "@testing-library/react";
 import { afterEach, expect, test, vi } from "vitest";
-import { FIXED_COST_FIXTURE } from "../test/fixedCostFixture";
+import { FIXED_COST_FIXTURE, charge } from "../test/fixedCostFixture";
 import Home from "./page";
 afterEach(() => {
   cleanup();
@@ -73,4 +73,41 @@ test("새로고침 실패를 알리고 재시도하면 통계를 다시 표시�
   expect(
     await screen.findByRole("region", { name: "선택 월 지출 요약" }),
   ).toBeTruthy();
+});
+test("월별 막대를 선택하면 정확한 금액과 증감이 바뀌고 기록 없는 달도 확인한다", async () => {
+  vi.mocked(getFixedCostDashboard).mockResolvedValue(FIXED_COST_FIXTURE);
+  render(<Home />);
+  const trend = within(
+    await screen.findByRole("region", { name: "중분류별 월별 변화" }),
+  );
+  const october = trend.getByRole("button", { name: /2026년 10월, 55,000원/ });
+  expect(october.getAttribute("aria-pressed")).toBe("true");
+  expect(trend.getByText("5.5만")).toBeTruthy();
+  expect(trend.queryByText("월별 금액·증감 보기")).toBeNull();
+  fireEvent.click(trend.getByRole("button", { name: /2026년 9월, 45,000원/ }));
+  expect(trend.getByText("전기 · 2026년 9월")).toBeTruthy();
+  expect(trend.getByText("45,000원")).toBeTruthy();
+  expect(october.getAttribute("aria-pressed")).toBe("false");
+  expect(trend.getByText("비교 기록 없음")).toBeTruthy();
+  fireEvent.click(trend.getByRole("button", { name: /2026년 8월, 기록 없음/ }));
+  expect(trend.getByText("기록 없음")).toBeTruthy();
+  fireEvent.click(october);
+  expect(trend.getByText("+10,000원 (+22.2%)")).toBeTruthy();
+});
+test("미결제 0원과 전월 0원의 증감률을 선택한 달 기준으로 표시한다", async () => {
+  vi.mocked(getFixedCostDashboard).mockResolvedValue({
+    ...FIXED_COST_FIXTURE,
+    charges: [
+      charge("pending", "2026-09", null),
+      charge("paid", "2026-10", 10000),
+    ],
+  });
+  render(<Home />);
+  const trend = within(
+    await screen.findByRole("region", { name: "중분류별 월별 변화" }),
+  );
+  expect(trend.getByText("+10,000원 (—)")).toBeTruthy();
+  fireEvent.click(trend.getByRole("button", { name: /2026년 9월, 0원/ }));
+  expect(trend.getByText("0원")).toBeTruthy();
+  expect(trend.getByText("미결제 1건 · 예정 30,000원")).toBeTruthy();
 });

@@ -13,6 +13,10 @@ import {
 import styles from "./fixed-cost-dashboard.module.css";
 import ExpenseSummary from "./ExpenseSummary";
 const unknown = "unclassified";
+const compactWon = new Intl.NumberFormat("ko-KR", {
+  notation: "compact",
+  maximumFractionDigits: 1,
+});
 const signedWon = (amount: number) =>
   `${amount > 0 ? "+" : amount < 0 ? "−" : ""}${won(Math.abs(amount))}`;
 function changeLabel(change: number | null, percentage: number | null) {
@@ -40,6 +44,7 @@ export default function FixedCostInsights({
     data.classifications[0];
   const [parent, setParent] = useState(first?.categoryId ?? unknown);
   const [sub, setSub] = useState(first?.subcategoryId ?? unknown);
+  const [trendMonth, setTrendMonth] = useState(data.month);
   const [amountView, setAmountView] = useState<"actual" | "expected">(
     "expected",
   );
@@ -79,7 +84,9 @@ export default function FixedCostInsights({
   );
   const selectedName =
     subcategories.find((c) => c.id === selectedSub)?.name ?? "중분류 미지정";
-  const latest = changes[changes.length - 1];
+  const selectedPoint =
+    changes.find((point) => point.month === trendMonth) ??
+    changes[changes.length - 1];
   const methods = paymentStatistics(data);
   const total =
     amountView === "actual" ? statistics.actual : statistics.expected;
@@ -254,42 +261,56 @@ export default function FixedCostInsights({
             </select>
           </label>
         </div>
-        <div className={styles.trendHeadline}>
+        <div
+          className={styles.trendHeadline}
+          aria-live="polite"
+          aria-atomic="true"
+        >
           <span>
-            {selectedName} · {Number(data.month.slice(5))}월
+            {selectedName} · {Number(selectedPoint.month.slice(0, 4))}년{" "}
+            {Number(selectedPoint.month.slice(5))}월
           </span>
           <strong>
-            {latest.amount === null ? "기록 없음" : won(latest.amount)}
+            {selectedPoint.amount === null
+              ? "기록 없음"
+              : won(selectedPoint.amount)}
           </strong>
           <p>
-            전월 대비 <b>{changeLabel(latest.change, latest.percentage)}</b>
+            전월 대비{" "}
+            <b>{changeLabel(selectedPoint.change, selectedPoint.percentage)}</b>
           </p>
-          {latest.pendingCount > 0 && (
+          {selectedPoint.pendingCount > 0 && (
             <p>
-              미결제 {latest.pendingCount}건 · 예정 {won(latest.expected)}
+              미결제 {selectedPoint.pendingCount}건 · 예정{" "}
+              {won(selectedPoint.expected)}
             </p>
           )}
         </div>
         <p className={styles.chartUnit}>단위: 원</p>
         <div
           className={styles.trendChart}
-          role="img"
-          aria-label={`${selectedName} 최근 6개월 실제 결제액: ${changes.map((point) => `${point.month} ${point.amount === null ? "기록 없음" : won(point.amount)}`).join(", ")}`}
+          role="group"
+          aria-label={`${selectedName} 최근 6개월 실제 결제액`}
         >
           {changes.map((point) => (
-            <div className={styles.trendColumn} key={point.month}>
-              <span className={styles.trendValue}>
-                {point.amount === null
-                  ? "—"
-                  : point.amount.toLocaleString("ko-KR")}
+            <button
+              type="button"
+              className={styles.trendColumn}
+              key={point.month}
+              aria-pressed={point.month === selectedPoint.month}
+              aria-label={`${Number(point.month.slice(0, 4))}년 ${Number(point.month.slice(5))}월, ${point.amount === null ? "기록 없음" : won(point.amount)}, 전월 대비 ${changeLabel(point.change, point.percentage)}${point.pendingCount ? `, 미결제 ${point.pendingCount}건` : ""}`}
+              onClick={() => setTrendMonth(point.month)}
+            >
+              <span className={styles.trendValue} aria-hidden="true">
+                {point.amount === null ? "—" : compactWon.format(point.amount)}
               </span>
-              <div className={styles.trendTrack}>
+              <span className={styles.trendTrack} aria-hidden="true">
                 {point.amount === null ? (
                   <span className={styles.noRecord}>·</span>
                 ) : (
                   <span
                     className={styles.trendBar}
-                    data-current={point.month === data.month}
+                    data-current={point.month === selectedPoint.month}
                     style={{
                       height:
                         point.amount === 0
@@ -298,34 +319,16 @@ export default function FixedCostInsights({
                     }}
                   />
                 )}
-              </div>
-              <span>{Number(point.month.slice(5))}월</span>
-            </div>
+              </span>
+              <span className={styles.trendMonth} aria-hidden="true">
+                {Number(point.month.slice(5))}월
+              </span>
+            </button>
           ))}
         </div>
-        <details className={styles.monthDetails}>
-          <summary>
-            월별 금액·증감 보기 <span aria-hidden="true">⌄</span>
-          </summary>
-          <div className={styles.monthRows}>
-            {changes.map((point) => (
-              <div key={point.month}>
-                <span>
-                  {Number(point.month.slice(0, 4))}.{point.month.slice(5)}
-                </span>
-                <strong>
-                  {point.amount === null ? "기록 없음" : won(point.amount)}
-                </strong>
-                <small>
-                  {changeLabel(point.change, point.percentage)}
-                  {point.pendingCount > 0
-                    ? ` · 미결제 ${point.pendingCount}건`
-                    : ""}
-                </small>
-              </div>
-            ))}
-          </div>
-        </details>
+        <p className={styles.note}>
+          막대를 누르면 정확한 금액과 증감을 볼 수 있어요.
+        </p>
         <p className={styles.note}>예정 결제월 기준 · 실제 결제액 비교</p>
       </section>
       <section className={styles.panel} aria-labelledby="payments-title">

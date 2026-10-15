@@ -38,17 +38,35 @@ for (const width of [360, 1280]) {
       trend.getByText("+10,000원 (+22.2%)", { exact: true }),
     ).toBeVisible();
     await trend.getByLabel("중분류", { exact: true }).selectOption("sub-gas");
-    await expect(trend.getByRole("img")).toHaveAttribute(
-      "aria-label",
-      /가스.*기록 없음/,
-    );
+    await expect(
+      trend.getByRole("button", { name: /2026년 10월, 기록 없음/ }),
+    ).toHaveAttribute("aria-pressed", "true");
     await trend
       .getByLabel("중분류", { exact: true })
       .selectOption("sub-electric");
-    await trend.locator("summary").focus();
+    const september = trend.getByRole("button", {
+      name: /2026년 9월, 45,000원/,
+    });
+    await september.focus();
     await page.keyboard.press("Enter");
-    await expect(trend.getByText("2026.09", { exact: true })).toBeVisible();
+    await expect(september).toHaveAttribute("aria-pressed", "true");
+    await expect(
+      trend.getByText("전기 · 2026년 9월", { exact: true }),
+    ).toBeVisible();
     await expect(trend.getByText("45,000원", { exact: true })).toBeVisible();
+    await expect(
+      trend.getByText("비교 기록 없음", { exact: true }),
+    ).toBeVisible();
+    await expect(trend.locator("details")).toHaveCount(0);
+    const october = trend.getByRole("button", {
+      name: /2026년 10월, 55,000원/,
+    });
+    await october.click();
+    await expect(october).toHaveAttribute("aria-pressed", "true");
+    await expect(
+      trend.getByText("+10,000원 (+22.2%)", { exact: true }),
+    ).toBeVisible();
+    await expect(trend.getByText("5.5만", { exact: true })).toBeVisible();
     await expect(
       payments.getByText("실제 계좌", { exact: true }),
     ).toBeVisible();
