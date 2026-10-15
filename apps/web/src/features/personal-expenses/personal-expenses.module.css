@@ -1,0 +1,251 @@
+.page {
+  min-height: calc(100dvh - 6rem);
+  padding: 1.5rem 1.25rem;
+  background: var(--canvas);
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.container {
+  width: min(100%, 640px);
+  margin-inline: auto;
+  display: grid;
+  gap: 1.25rem;
+}
+
+.header,
+.sectionHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.header h1 {
+  margin: 0.35rem 0 0;
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
+  letter-spacing: -0.05em;
+}
+
+.eyebrow,
+.intro,
+.summary p,
+.emptyState p {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.eyebrow,
+.badge {
+  font-size: 0.85rem;
+}
+
+.badge {
+  padding: 0.4rem 0.65rem;
+  border-radius: 0.5rem;
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.panel {
+  min-width: 0;
+  padding: clamp(1rem, 3vw, 1.75rem);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: #fff;
+}
+
+.panel h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.monthNavigation {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: center;
+}
+
+.page button {
+  min-height: 44px;
+  padding: 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 0.65rem;
+  background: #fff;
+  color: var(--primary);
+  font: inherit;
+  cursor: pointer;
+}
+
+.page button:focus-visible {
+  outline: 3px solid #90a8fb;
+  outline-offset: 3px;
+}
+
+.page button:hover:not(:disabled) {
+  background: var(--primary-soft);
+}
+
+.page .today {
+  display: block;
+  margin: 0.75rem auto 0;
+  padding-inline: 1rem;
+}
+
+.summary {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
+
+.summary strong {
+  font-size: 2rem;
+}
+
+.summary p {
+  font-size: 0.9rem;
+}
+
+.page .addButton {
+  background: #f1f3f7;
+  color: var(--text-secondary);
+  cursor: not-allowed;
+}
+
+.emptyState {
+  padding: 2rem 0;
+  text-align: center;
+}
+
+.emptyState svg {
+  width: 48px;
+  height: 48px;
+  fill: none;
+  stroke: #819789;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.emptyState h3 {
+  margin: 1rem 0 0.5rem;
+  font-size: 1.05rem;
+}
+
+/* A single mobile column for month navigation, totals, and dated entries. */
+.header h1 {
+  font-size: 1.7rem;
+}
+.eyebrow,
+.intro {
+  font-size: 0.8rem;
+}
+.panel {
+  border: 0;
+  border-radius: 24px;
+  padding: 1.4rem;
+}
+.panel h2 {
+  font-size: 1.05rem;
+}
+.summary {
+  border: 0;
+  margin: 0;
+  padding: 0.5rem 0;
+  text-align: left;
+  gap: 0.8rem;
+}
+.summary h2 {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+.summary strong {
+  color: var(--primary);
+  font-size: 2.2rem;
+  letter-spacing: -0.05em;
+  overflow-wrap: anywhere;
+}
+.summary p {
+  font-size: 0.8rem;
+}
+.addButton {
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 12px;
+}
+.list {
+  gap: 0;
+}
+.list > li + li {
+  border-top: 1px solid var(--border);
+}
+.expenseLink {
+  border: 0;
+  padding: 1rem 0.15rem;
+  border-radius: 8px;
+}
+.expenseLink:hover {
+  background: var(--primary-soft);
+}
+.expenseLink p {
+  font-size: 0.78rem;
+}
+.itemTop {
+  font-size: 0.95rem;
+}
+.dateGroup h3 {
+  font-size: 0.78rem;
+  font-weight: 500;
+  margin-bottom: 0;
+}
+.fields input,
+.fields select,
+.fields textarea {
+  min-height: 52px;
+  border-radius: 12px;
+  background: #fafbfe;
+}
+.fields label {
+  font-size: 0.9rem;
+}
+.fields input:focus,
+.fields select:focus,
+.fields textarea:focus {
+  background: white;
+  border-color: var(--primary);
+  outline: 2px solid #dbe5ff;
+  outline-offset: 1px;
+}
+.page .primary {
+  min-height: 52px;
+  border-radius: 14px;
+  font-weight: 650;
+}
+.page .primary:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+.back {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+@media (max-width: 390px) {
+  .page {
+    padding-inline: 1rem;
+  }
+  .panel {
+    padding: 1.15rem;
+  }
+}

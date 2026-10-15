@@ -1,14 +1,78 @@
+@import "../shared/ui/form-controls.css";
+
 :root {
   color-scheme: light;
-  background: #fff;
-  color: #171717;
-  font-family: Arial, Helvetica, sans-serif;
+  --primary: #315beb;
+  --primary-hover: #2447c4;
+  --primary-soft: #edf2ff;
+  --text: #202632;
+  --text-secondary: #687182;
+  --border: #e9ecf2;
+  --surface: #fff;
+  --canvas: #f5f6fa;
+  --danger: #c43d48;
+  background: #e9ecf2;
+  color: var(--text);
+  font-family:
+    var(--font-app),
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  font-synthesis: none;
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
 }
-
 * {
   box-sizing: border-box;
 }
-
 body {
-  margin: 0;
+  margin: 0 auto;
+  max-width: 720px;
+  background: var(--canvas);
+  min-height: 100dvh;
+}
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+button,
+a {
+  touch-action: manipulation;
+}
+button {
+  -webkit-appearance: none;
+}
+button:disabled {
+  cursor: not-allowed;
+}
+input,
+select,
+textarea {
+  font-size: 1rem;
+}
+::selection {
+  background: #dbe5ff;
+}
+.app-content {
+  padding-bottom: calc(6rem + env(safe-area-inset-bottom, 0px));
+}
+html {
+  scroll-padding-bottom: calc(7rem + env(safe-area-inset-bottom, 0px));
+}
+:focus-visible {
+  outline: 3px solid #90a8fb;
+  outline-offset: 3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
