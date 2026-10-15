@@ -171,6 +171,7 @@ export default function FixedExpensesScreen() {
             <label htmlFor="expense-interval">반복 주기</label>
             <select
               id="expense-interval"
+              data-align="center"
               disabled={isSaving}
               value={interval}
               onChange={(event) => {

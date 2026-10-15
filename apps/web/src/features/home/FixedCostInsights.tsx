@@ -265,6 +265,7 @@ export default function FixedCostInsights({
             대분류
             <select
               aria-label="대분류"
+              data-align="center"
               value={parent}
               onChange={(event) => selectParent(event.target.value)}
             >
@@ -279,6 +280,7 @@ export default function FixedCostInsights({
             중분류
             <select
               aria-label="중분류"
+              data-align="center"
               value={selectedSub}
               onChange={(event) => setSub(event.target.value)}
             >

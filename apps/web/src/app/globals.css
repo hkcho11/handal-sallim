@@ -1,3 +1,5 @@
+@import "../shared/ui/form-controls.css";
+
 :root {
   color-scheme: light;
   --primary: #315beb;

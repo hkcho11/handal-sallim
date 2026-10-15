@@ -426,8 +426,9 @@
   color: #315beb;
 }
 .changeArrow {
-  font-size: 1rem;
-  font-weight: 800;
+  flex: none;
+  font-size: 0.7em;
+  font-weight: 400;
   line-height: 1;
 }
 .trendChart {
