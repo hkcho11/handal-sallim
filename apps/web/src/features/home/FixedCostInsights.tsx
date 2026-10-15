@@ -420,7 +420,22 @@ export default function FixedCostInsights({
       </section>
       <details className={styles.panel}>
         <summary className={styles.scheduleSummary}>
-          결제 일정·미결제 내역 <span>미결제 {pending.length}건 ⌄</span>
+          결제 일정·미결제 내역
+          <span>
+            미결제 {pending.length}건
+            <svg
+              className={styles.scheduleChevron}
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          </span>
         </summary>
         <ul className={styles.entryList}>
           {[...statistics.charges]
