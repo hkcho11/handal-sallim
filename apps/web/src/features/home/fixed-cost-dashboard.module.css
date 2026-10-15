@@ -89,7 +89,7 @@
   align-items: center;
   gap: 0.5rem;
   max-width: 330px;
-  margin: 0.5rem 0;
+  margin: 0.5rem auto;
 }
 .monthPicker > button {
   height: 44px;
@@ -114,6 +114,20 @@
   font: inherit;
   font-size: 1.35rem;
   font-weight: 750;
+  text-align: center;
+  appearance: none;
+}
+.monthInput input::-webkit-calendar-picker-indicator {
+  display: none;
+}
+.monthInput input::-webkit-datetime-edit {
+  display: inline-flex;
+  justify-content: center;
+  width: 100%;
+  padding: 0;
+}
+.monthInput input::-webkit-date-and-time-value {
+  text-align: center;
 }
 .asOf {
   margin: 0.5rem 0 0;

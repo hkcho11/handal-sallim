@@ -11,7 +11,6 @@ import {
   type FixedCostCharge,
 } from "./fixedCostStatistics";
 import styles from "./fixed-cost-dashboard.module.css";
-import ExpenseSummary from "./ExpenseSummary";
 const unknown = "unclassified";
 const compactWon = new Intl.NumberFormat("ko-KR", {
   notation: "compact",
@@ -110,7 +109,6 @@ export default function FixedCostInsights({
   }
   return (
     <>
-      <ExpenseSummary data={data} />
       <section className={styles.panel} aria-labelledby="major-title">
         <div className={styles.sectionHeader}>
           <h2 id="major-title">대분류별 지출 통계</h2>

@@ -9,17 +9,13 @@ for (const width of [360, 1280]) {
   test(`세 통계와 중분류 선택·내역 펼침 (${width}px)`, async ({ page }) => {
     await page.setViewportSize({ width, height: 844 });
     await page.goto("/");
-    const summary = page.getByRole("region", { name: "선택 월 지출 요약" });
-    await expect(summary.getByText("155,000원", { exact: true })).toBeVisible();
-    await expect(summary.getByText("45,000원", { exact: true })).toBeVisible();
-    await expect(summary.getByRole("progressbar")).toHaveAttribute(
-      "value",
-      "2",
-    );
     const major = page.getByRole("region", { name: "대분류별 지출 통계" });
     const trend = page.getByRole("region", { name: "중분류별 월별 변화" });
     const payments = page.getByRole("region", { name: "결제수단별 지출" });
     await expect(major.getByText("205,000원", { exact: true })).toBeVisible();
+    await expect(
+      page.getByRole("region", { name: "선택 월 지출 요약" }),
+    ).toHaveCount(0);
     await expect(
       page.getByRole("region", { name: "이번 달 지출 요약" }),
     ).toHaveCount(0);
@@ -149,24 +145,16 @@ test("조회 월 변경과 실패 후 재시도·빈 기록을 지원한다", as
     "2026-10",
   );
 });
-test("새로고침으로 DB 조회 결과가 바뀌면 요약과 차트에 함께 반영한다", async ({
-  page,
-}) => {
+test("새로고침으로 DB 조회 결과가 바뀌면 차트에 반영한다", async ({ page }) => {
   await page.goto("/");
-  const summary = page.getByRole("region", { name: "선택 월 지출 요약" });
-  await expect(summary.getByText("155,000원", { exact: true })).toBeVisible();
+  const major = page.getByRole("region", { name: "대분류별 지출 통계" });
+  await expect(major.getByText("205,000원", { exact: true })).toBeVisible();
   await page.route("**/backend/dashboard/fixed-costs*", (route) =>
     route.fulfill({
       json: { ...FIXED_COST_FIXTURE, charges: [], unscheduled: [] },
     }),
   );
   await page.getByRole("button", { name: "통계 새로고침" }).click();
-  await expect(
-    summary.getByText("이 달에 예정된 지출이 없어요."),
-  ).toBeVisible();
-  await expect(
-    summary.getByRole("link", { name: "고정비 등록하기" }),
-  ).toHaveAttribute("href", "/entries/new");
   await expect(
     page.getByText("이 달에 등록된 고정비 청구가 없어요."),
   ).toBeVisible();
