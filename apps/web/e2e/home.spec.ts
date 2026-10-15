@@ -297,3 +297,30 @@ test("선택 분류의 예정·지연·당일 디데이와 모션 줄이기를 �
   await category.click();
   await expect(major.getByRole("link", { name: /예정 전기/ })).toBeHidden();
 });
+
+test("실제·예상 전환 시 각 금액순으로 정렬하고 열린 분류를 유지한다", async ({
+  page,
+}) => {
+  await page.route("**/backend/dashboard/fixed-costs*", (route) =>
+    route.fulfill({
+      json: {
+        ...FIXED_COST_FIXTURE,
+        charges: FIXED_COST_FIXTURE.charges.map((item) =>
+          item.id === "current" ? { ...item, expectedAmount: 600000 } : item,
+        ),
+      },
+    }),
+  );
+  await page.goto("/");
+  const major = page.getByRole("region", { name: "대분류별 지출 통계" });
+  const categories = major.locator("button[aria-expanded] strong");
+  await expect(categories).toHaveText(["주거", "공과금", "대분류 미지정"]);
+  const utilities = major.getByRole("button", { name: /공과금/ });
+  await utilities.click();
+  await major.getByRole("button", { name: "예상", exact: true }).click();
+  await expect(categories).toHaveText(["공과금", "주거", "대분류 미지정"]);
+  await expect(utilities).toHaveAttribute("aria-expanded", "true");
+  await major.getByRole("button", { name: "실제", exact: true }).click();
+  await expect(categories).toHaveText(["주거", "공과금", "대분류 미지정"]);
+  await expect(utilities).toHaveAttribute("aria-expanded", "true");
+});

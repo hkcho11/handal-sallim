@@ -34,7 +34,10 @@ export const confirmedAmount = (charge: FixedCostCharge) =>
   charge.status === "완료" ? (charge.actualAmount ?? 0) : 0;
 export const inMonth = (charge: FixedCostCharge, month: string) =>
   charge.dueDate.startsWith(`${month}-`);
-export function categoryStatistics(data: FixedCostDashboard) {
+export function categoryStatistics(
+  data: FixedCostDashboard,
+  amountView: "actual" | "expected" = "actual",
+) {
   const charges = data.charges.filter((charge) => inMonth(charge, data.month));
   const categories = [...new Set(charges.map((charge) => charge.categoryId))]
     .map((id) => {
@@ -47,7 +50,7 @@ export function categoryStatistics(data: FixedCostDashboard) {
         expected: items.reduce((sum, charge) => sum + charge.expectedAmount, 0),
       };
     })
-    .sort((a, b) => b.expected - a.expected);
+    .sort((a, b) => b[amountView] - a[amountView]);
   return {
     categories,
     charges,

@@ -16,6 +16,28 @@ test("대분류 ID로 고정비만 묶고 일정 미정과 다른 달을 합산�
     55000,
   );
 });
+
+test("실제·예상 보기는 각각의 분류 합계 내림차순으로 정렬한다", () => {
+  const differing = {
+    ...data,
+    charges: data.charges.map((item) =>
+      item.id === "current" ? { ...item, expectedAmount: 600000 } : item,
+    ),
+  };
+  expect(
+    categoryStatistics(differing, "actual").categories.map(
+      (category) => category.id,
+    ),
+  ).toEqual(["cat-housing", "cat-utilities", null]);
+  expect(
+    categoryStatistics(differing, "expected").categories.map(
+      (category) => category.id,
+    ),
+  ).toEqual(["cat-utilities", "cat-housing", null]);
+  expect(
+    categoryStatistics(differing).categories.map((category) => category.id),
+  ).toEqual(["cat-housing", "cat-utilities", null]);
+});
 test("늦게 결제해도 예정월에 합산하고 미결제 0원과 기록 없는 달을 구분한다", () => {
   const points = monthlyChanges(data, "sub-electric", "cat-utilities");
   expect(points[0].amount).toBeNull();

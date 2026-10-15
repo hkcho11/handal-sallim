@@ -33,7 +33,8 @@ export default function FixedCostInsights({
 }: {
   data: FixedCostDashboard;
 }) {
-  const statistics = categoryStatistics(data);
+  const [amountView, setAmountView] = useState<"actual" | "expected">("actual");
+  const statistics = categoryStatistics(data, amountView);
   const first =
     data.classifications.find((c) => c.subcategoryName === "전기") ??
     data.classifications.find((c) =>
@@ -45,7 +46,6 @@ export default function FixedCostInsights({
   const [parent, setParent] = useState(first?.categoryId ?? unknown);
   const [sub, setSub] = useState(first?.subcategoryId ?? unknown);
   const [trendMonth, setTrendMonth] = useState(data.month);
-  const [amountView, setAmountView] = useState<"actual" | "expected">("actual");
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const parents = [
     ...new Map(
