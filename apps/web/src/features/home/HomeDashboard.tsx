@@ -89,13 +89,25 @@ function MonthDashboard({
       <section className={styles.monthSection} aria-label="통계 조회 월">
         <div className={styles.monthHeading}>
           <span>고정비 통계</span>
-          <button
-            type="button"
-            className={styles.today}
-            onClick={() => onMonth(undefined)}
-          >
-            이번 달
-          </button>
+          <div className={styles.monthActions}>
+            <button
+              type="button"
+              className={styles.today}
+              onClick={() => {
+                setData(null);
+                setAttempt((value) => value + 1);
+              }}
+            >
+              통계 새로고침
+            </button>
+            <button
+              type="button"
+              className={styles.today}
+              onClick={() => onMonth(undefined)}
+            >
+              이번 달
+            </button>
+          </div>
         </div>
         <div className={styles.monthPicker}>
           <button

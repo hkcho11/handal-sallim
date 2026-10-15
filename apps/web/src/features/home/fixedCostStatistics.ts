@@ -34,6 +34,19 @@ export const confirmedAmount = (charge: FixedCostCharge) =>
   charge.status === "완료" ? (charge.actualAmount ?? 0) : 0;
 export const inMonth = (charge: FixedCostCharge, month: string) =>
   charge.dueDate.startsWith(`${month}-`);
+export function monthlySummary(data: FixedCostDashboard) {
+  const charges = data.charges.filter((charge) => inMonth(charge, data.month));
+  const pending = charges.filter((charge) => charge.status !== "완료");
+  return {
+    count: charges.length,
+    completedCount: charges.length - pending.length,
+    pendingCount: pending.length,
+    overdueCount: pending.filter((charge) => charge.status === "지연").length,
+    actual: charges.reduce((sum, charge) => sum + confirmedAmount(charge), 0),
+    expected: charges.reduce((sum, charge) => sum + charge.expectedAmount, 0),
+    remaining: pending.reduce((sum, charge) => sum + charge.expectedAmount, 0),
+  };
+}
 export function categoryStatistics(data: FixedCostDashboard) {
   const charges = data.charges.filter((charge) => inMonth(charge, data.month));
   const categories = [...new Set(charges.map((charge) => charge.categoryId))]

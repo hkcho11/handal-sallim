@@ -77,6 +77,12 @@
   font-size: 0.75rem;
   cursor: pointer;
 }
+.monthActions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
 .monthPicker {
   display: grid;
   grid-template-columns: 44px minmax(0, 1fr) 44px;

@@ -6,8 +6,49 @@ import {
 import {
   categoryStatistics,
   monthlyChanges,
+  monthlySummary,
   paymentStatistics,
 } from "./fixedCostStatistics";
+test("월 요약은 실제 지출과 미결제 예정액을 분리하고 완료 건수와 지연을 센다", () => {
+  expect(monthlySummary(data)).toEqual({
+    count: 4,
+    completedCount: 2,
+    pendingCount: 2,
+    overdueCount: 0,
+    actual: 155000,
+    expected: 205000,
+    remaining: 45000,
+  });
+  expect(
+    monthlySummary({
+      ...data,
+      charges: [
+        ...data.charges,
+        charge("overdue", data.month, null, { status: "지연" }),
+      ],
+    }),
+  ).toMatchObject({ overdueCount: 1, pendingCount: 3, remaining: 75000 });
+});
+test("빈 달과 미결제만 있는 달을 완료한 달로 표시하지 않는다", () => {
+  expect(monthlySummary({ ...data, charges: [] })).toEqual({
+    count: 0,
+    completedCount: 0,
+    pendingCount: 0,
+    overdueCount: 0,
+    actual: 0,
+    expected: 0,
+    remaining: 0,
+  });
+  expect(
+    monthlySummary({ ...data, charges: [charge("pending", data.month, null)] }),
+  ).toMatchObject({
+    count: 1,
+    completedCount: 0,
+    pendingCount: 1,
+    actual: 0,
+    remaining: 30000,
+  });
+});
 test("대분류 ID로 고정비만 묶고 일정 미정과 다른 달을 합산하지 않는다", () => {
   const stats = categoryStatistics(data);
   expect(stats.actual).toBe(155000);
