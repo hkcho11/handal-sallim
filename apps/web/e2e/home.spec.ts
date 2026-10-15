@@ -14,6 +14,19 @@ for (const width of [360, 1280]) {
     const payments = page.getByRole("region", { name: "결제수단별 지출" });
     await expect(major.getByText("155,000원", { exact: true })).toBeVisible();
     await expect(
+      major.getByText("전체 실제 지출 대비 분류별 비중"),
+    ).toBeVisible();
+    const housingBar = major
+      .getByRole("button", { name: /주거/ })
+      .locator(":scope > span[aria-hidden='true'] > span");
+    expect(
+      await housingBar.evaluate(
+        (element) =>
+          element.getBoundingClientRect().width /
+          element.parentElement!.getBoundingClientRect().width,
+      ),
+    ).toBeCloseTo(0.645, 2);
+    await expect(
       page.getByRole("region", { name: "선택 월 지출 요약" }),
     ).toHaveCount(0);
     await expect(
@@ -33,6 +46,14 @@ for (const width of [360, 1280]) {
     ).toHaveAttribute("aria-pressed", "true");
     await major.getByRole("button", { name: "예상", exact: true }).click();
     await expect(major.getByText("205,000원", { exact: true })).toBeVisible();
+    await expect(major.getByText("전체 예정액 대비 분류별 비중")).toBeVisible();
+    expect(
+      await housingBar.evaluate(
+        (element) =>
+          element.getBoundingClientRect().width /
+          element.parentElement!.getBoundingClientRect().width,
+      ),
+    ).toBeCloseTo(0.488, 2);
     await major.getByRole("button", { name: "실제", exact: true }).click();
     await expect(major.getByText("155,000원", { exact: true })).toBeVisible();
     await expect(
@@ -80,7 +101,7 @@ for (const width of [360, 1280]) {
     const category = major.getByRole("button", { name: /공과금/ });
     await category.click();
     await expect(category).toHaveAttribute("aria-expanded", "true");
-    await expect(category.getByText("상세 보는 중")).toBeVisible();
+    await expect(category.getByText("상세 보는 중")).toHaveCount(0);
     await expect(
       major.getByText("결제일 2026-11-02", { exact: true }),
     ).toBeVisible();

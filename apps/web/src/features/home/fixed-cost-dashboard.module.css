@@ -213,11 +213,11 @@
 .categoryButton[aria-expanded="true"] .categoryHeading > strong {
   color: var(--primary);
 }
-.expandedBadge {
-  display: block;
-  margin-top: 0.35rem;
-  font-size: 0.65rem;
-  font-weight: 550;
+.distributionLabel {
+  margin: 0 0 0.35rem;
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  line-height: 1.6;
 }
 .categoryDetails {
   display: grid;

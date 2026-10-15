@@ -88,10 +88,6 @@ export default function FixedCostInsights({
   const methods = paymentStatistics(data);
   const total =
     amountView === "actual" ? statistics.actual : statistics.expected;
-  const maximum = Math.max(
-    1,
-    ...statistics.categories.map((c) => c[amountView]),
-  );
   const trendMaximum = Math.max(
     1,
     ...changes.map((point) => point.amount ?? 0),
@@ -143,6 +139,10 @@ export default function FixedCostInsights({
         </div>
         {statistics.categories.length ? (
           <div className={styles.categoryList}>
+            <p className={styles.distributionLabel}>
+              {amountView === "actual" ? "전체 실제 지출" : "전체 예정액"} 대비
+              분류별 비중
+            </p>
             {statistics.categories.map((category) => {
               const key = category.id ?? unknown;
               return (
@@ -164,14 +164,7 @@ export default function FixedCostInsights({
                     }}
                   >
                     <span className={styles.categoryHeading}>
-                      <strong>
-                        {category.name}
-                        {expandedCategory === key && (
-                          <span className={styles.expandedBadge}>
-                            상세 보는 중
-                          </span>
-                        )}
-                      </strong>
+                      <strong>{category.name}</strong>
                       <span>
                         <b>{won(category[amountView])}</b>
                         <small>
@@ -188,7 +181,7 @@ export default function FixedCostInsights({
                     <span className={styles.bar} aria-hidden="true">
                       <span
                         style={{
-                          width: `${(category[amountView] / maximum) * 100}%`,
+                          width: `${total > 0 ? (category[amountView] / total) * 100 : 0}%`,
                         }}
                       />
                     </span>
