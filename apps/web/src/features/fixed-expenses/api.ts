@@ -2,10 +2,14 @@ export interface FixedExpense {
   id: string;
   name: string;
   expectedAmount: number;
-  intervalMonths: 1 | 2 | 3 | 12;
-  firstDueDate: string;
-  firstChargeId: string;
-  firstChargeStatus: "PENDING" | "OVERDUE" | "COMPLETED";
+  intervalMonths: 1 | 2 | 3 | 12 | null;
+  recurringDayOfMonth?: number | null;
+  firstDueDate: string | null;
+  firstChargeId: string | null;
+  firstChargeStatus: "PENDING" | "OVERDUE" | "COMPLETED" | null;
+  payer?: "ME" | "PARTNER" | null;
+  paymentMethodId?: string | null;
+  paymentMethodName?: string | null;
 }
 
 export interface NewFixedExpense {
@@ -54,12 +58,22 @@ function isFixedExpense(value: unknown): value is FixedExpense {
     typeof value.name === "string" &&
     Number.isSafeInteger(value.expectedAmount) &&
     Number(value.expectedAmount) > 0 &&
-    [1, 2, 3, 12].includes(Number(value.intervalMonths)) &&
-    isIsoDate(value.firstDueDate) &&
-    isUuid(value.firstChargeId) &&
-    ["PENDING", "OVERDUE", "COMPLETED"].includes(
-      String(value.firstChargeStatus),
-    )
+    (value.intervalMonths === null ||
+      [1, 2, 3, 12].includes(Number(value.intervalMonths))) &&
+    (value.firstDueDate === null || isIsoDate(value.firstDueDate)) &&
+    (value.firstChargeId === null || isUuid(value.firstChargeId)) &&
+    (value.firstChargeStatus === null ||
+      ["PENDING", "OVERDUE", "COMPLETED"].includes(
+        String(value.firstChargeStatus),
+      )) &&
+    (value.recurringDayOfMonth == null ||
+      (Number.isInteger(value.recurringDayOfMonth) &&
+        Number(value.recurringDayOfMonth) >= 1 &&
+        Number(value.recurringDayOfMonth) <= 31)) &&
+    (value.payer == null || ["ME", "PARTNER"].includes(String(value.payer))) &&
+    (value.paymentMethodId == null || isUuid(value.paymentMethodId)) &&
+    (value.paymentMethodName == null ||
+      typeof value.paymentMethodName === "string")
   );
 }
 
