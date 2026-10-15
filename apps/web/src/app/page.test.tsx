@@ -22,7 +22,7 @@ test("홈은 고정비 대분류·중분류 변화·결제수단의 세 통계�
   const major = await screen.findByRole("region", {
     name: "대분류별 지출 통계",
   });
-  expect(within(major).getAllByText("205,000원")).toHaveLength(1);
+  expect(within(major).getAllByText("155,000원")).toHaveLength(1);
   expect(
     screen.getByRole("region", { name: "중분류별 월별 변화" }),
   ).toBeTruthy();

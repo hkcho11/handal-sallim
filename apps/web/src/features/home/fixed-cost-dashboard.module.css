@@ -201,6 +201,53 @@
 .category + .category {
   border-top: 1px solid #f1f3f7;
 }
+.category {
+  padding-inline: 0.75rem;
+  margin-inline: -0.75rem;
+  border-radius: 14px;
+  transition: background-color 220ms ease;
+}
+.category[data-expanded="true"] {
+  background: var(--primary-soft);
+}
+.categoryButton[aria-expanded="true"] .categoryHeading > strong {
+  color: var(--primary);
+}
+.expandedBadge {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.65rem;
+  font-weight: 550;
+}
+.categoryDetails {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    grid-template-rows 240ms ease,
+    opacity 180ms ease,
+    visibility 0s 240ms;
+}
+.categoryDetails[data-expanded="true"] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0s;
+}
+.categoryDetailsInner {
+  min-height: 0;
+  overflow: hidden;
+}
+.entryList .overdueDate {
+  color: var(--danger);
+}
+@media (prefers-reduced-motion: reduce) {
+  .category,
+  .categoryDetails {
+    transition: none;
+  }
+}
 .categoryButton {
   width: 100%;
   min-height: 60px;

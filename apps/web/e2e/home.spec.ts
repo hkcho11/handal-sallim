@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { FIXED_COST_FIXTURE } from "../src/test/fixedCostFixture";
+import { FIXED_COST_FIXTURE, charge } from "../src/test/fixedCostFixture";
 test.beforeEach(async ({ page }) => {
   await page.route("**/backend/dashboard/fixed-costs*", (route) =>
     route.fulfill({ json: FIXED_COST_FIXTURE }),
@@ -12,7 +12,7 @@ for (const width of [360, 1280]) {
     const major = page.getByRole("region", { name: "대분류별 지출 통계" });
     const trend = page.getByRole("region", { name: "중분류별 월별 변화" });
     const payments = page.getByRole("region", { name: "결제수단별 지출" });
-    await expect(major.getByText("205,000원", { exact: true })).toBeVisible();
+    await expect(major.getByText("155,000원", { exact: true })).toBeVisible();
     await expect(
       page.getByRole("region", { name: "선택 월 지출 요약" }),
     ).toHaveCount(0);
@@ -28,6 +28,11 @@ for (const width of [360, 1280]) {
         items.map((item) => item.getAttribute("aria-labelledby")),
       );
     expect(order).toEqual(["major-title", "trend-title", "payments-title"]);
+    await expect(
+      major.getByRole("button", { name: "실제", exact: true }),
+    ).toHaveAttribute("aria-pressed", "true");
+    await major.getByRole("button", { name: "예상", exact: true }).click();
+    await expect(major.getByText("205,000원", { exact: true })).toBeVisible();
     await major.getByRole("button", { name: "실제", exact: true }).click();
     await expect(major.getByText("155,000원", { exact: true })).toBeVisible();
     await expect(
@@ -75,10 +80,23 @@ for (const width of [360, 1280]) {
     const category = major.getByRole("button", { name: /공과금/ });
     await category.click();
     await expect(category).toHaveAttribute("aria-expanded", "true");
+    await expect(category.getByText("상세 보는 중")).toBeVisible();
+    await expect(
+      major.getByText("결제일 2026-11-02", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      major.getByRole("link", { name: /전기.*D\+23 · 23일 지연/ }),
+    ).toBeVisible();
     await expect(
       major.getByRole("link", { name: /전기.*55,000원/ }),
     ).toBeVisible();
+    await major.screenshot({
+      path: `test-results/expanded-category-${width}.png`,
+    });
     await category.click();
+    await expect(
+      major.getByRole("link", { name: /전기.*55,000원/ }),
+    ).toBeHidden();
     await page.screenshot({
       path: `test-results/fixed-statistics-${width}.png`,
       fullPage: true,
@@ -148,7 +166,7 @@ test("조회 월 변경과 실패 후 재시도·빈 기록을 지원한다", as
 test("새로고침으로 DB 조회 결과가 바뀌면 차트에 반영한다", async ({ page }) => {
   await page.goto("/");
   const major = page.getByRole("region", { name: "대분류별 지출 통계" });
-  await expect(major.getByText("205,000원", { exact: true })).toBeVisible();
+  await expect(major.getByText("155,000원", { exact: true })).toBeVisible();
   await page.route("**/backend/dashboard/fixed-costs*", (route) =>
     route.fulfill({
       json: { ...FIXED_COST_FIXTURE, charges: [], unscheduled: [] },
@@ -205,4 +223,56 @@ test("이번 달은 처음과 월 이동 후 모두 중복 선택할 수 없다"
   await expect(current).toBeEnabled();
   await month.fill("2026-10");
   await expect(current).toBeDisabled();
+});
+
+test("선택 분류의 예정·지연·당일 디데이와 모션 줄이기를 지원한다", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.route("**/backend/dashboard/fixed-costs*", (route) =>
+    route.fulfill({
+      json: {
+        ...FIXED_COST_FIXTURE,
+        asOf: "2026-10-15",
+        charges: [
+          charge("future", "2026-10", null, {
+            name: "예정 전기",
+            dueDate: "2026-10-20",
+          }),
+          charge("late", "2026-10", null, {
+            name: "지연 전기",
+            dueDate: "2026-10-12",
+            status: "지연",
+          }),
+          charge("today", "2026-10", null, {
+            name: "당일 전기",
+            dueDate: "2026-10-15",
+          }),
+        ],
+      },
+    }),
+  );
+  await page.goto("/");
+  const major = page.getByRole("region", { name: "대분류별 지출 통계" });
+  const category = major.getByRole("button", { name: /공과금/ });
+  await category.click();
+  await expect(
+    major.getByRole("link", { name: /예정 전기.*D-5 · 5일 남음/ }),
+  ).toBeVisible();
+  await expect(
+    major.getByRole("link", { name: /지연 전기.*D\+3 · 3일 지연/ }),
+  ).toBeVisible();
+  await expect(
+    major.getByRole("link", { name: /당일 전기.*D-Day · 오늘 결제/ }),
+  ).toBeVisible();
+  const detailsId = await category.getAttribute("aria-controls");
+  expect(
+    parseFloat(
+      await page
+        .locator(`[id="${detailsId}"]`)
+        .evaluate((element) => getComputedStyle(element).transitionDuration),
+    ),
+  ).toBeLessThanOrEqual(0.001);
+  await category.click();
+  await expect(major.getByRole("link", { name: /예정 전기/ })).toBeHidden();
 });

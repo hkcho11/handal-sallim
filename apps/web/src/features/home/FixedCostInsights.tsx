@@ -11,6 +11,7 @@ import {
   type FixedCostCharge,
 } from "./fixedCostStatistics";
 import styles from "./fixed-cost-dashboard.module.css";
+import { chargeTiming } from "./chargeTiming";
 const unknown = "unclassified";
 const compactWon = new Intl.NumberFormat("ko-KR", {
   notation: "compact",
@@ -44,9 +45,7 @@ export default function FixedCostInsights({
   const [parent, setParent] = useState(first?.categoryId ?? unknown);
   const [sub, setSub] = useState(first?.subcategoryId ?? unknown);
   const [trendMonth, setTrendMonth] = useState(data.month);
-  const [amountView, setAmountView] = useState<"actual" | "expected">(
-    "expected",
-  );
+  const [amountView, setAmountView] = useState<"actual" | "expected">("actual");
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const parents = [
     ...new Map(
@@ -147,7 +146,11 @@ export default function FixedCostInsights({
             {statistics.categories.map((category) => {
               const key = category.id ?? unknown;
               return (
-                <div key={key} className={styles.category}>
+                <div
+                  key={key}
+                  className={styles.category}
+                  data-expanded={expandedCategory === key}
+                >
                   <button
                     type="button"
                     className={styles.categoryButton}
@@ -161,7 +164,14 @@ export default function FixedCostInsights({
                     }}
                   >
                     <span className={styles.categoryHeading}>
-                      <strong>{category.name}</strong>
+                      <strong>
+                        {category.name}
+                        {expandedCategory === key && (
+                          <span className={styles.expandedBadge}>
+                            상세 보는 중
+                          </span>
+                        )}
+                      </strong>
                       <span>
                         <b>{won(category[amountView])}</b>
                         <small>
@@ -183,24 +193,41 @@ export default function FixedCostInsights({
                       />
                     </span>
                   </button>
-                  <div id={`category-${key}`} hidden={expandedCategory !== key}>
-                    <ul className={styles.entryList}>
-                      {category.items.map((charge) => (
-                        <li key={charge.id}>
-                          <Link
-                            href={`/fixed-costs/${charge.recurringExpenseId}`}
-                          >
-                            <span>
-                              {charge.name}
-                              <small>
-                                {charge.subcategoryName ?? "중분류 미지정"}
-                              </small>
-                            </span>
-                            <b>{chargeLabel(charge)}</b>
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
+                  <div
+                    id={`category-${key}`}
+                    className={styles.categoryDetails}
+                    data-expanded={expandedCategory === key}
+                    aria-hidden={expandedCategory !== key}
+                    inert={expandedCategory !== key}
+                  >
+                    <div className={styles.categoryDetailsInner}>
+                      <ul className={styles.entryList}>
+                        {category.items.map((charge) => (
+                          <li key={charge.id}>
+                            <Link
+                              href={`/fixed-costs/${charge.recurringExpenseId}`}
+                            >
+                              <span>
+                                {charge.name}
+                                <small>
+                                  {charge.subcategoryName ?? "중분류 미지정"}
+                                </small>
+                                <small
+                                  className={
+                                    charge.status === "지연"
+                                      ? styles.overdueDate
+                                      : undefined
+                                  }
+                                >
+                                  {chargeTiming(charge, data.asOf)}
+                                </small>
+                              </span>
+                              <b>{chargeLabel(charge)}</b>
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   </div>
                 </div>
               );
