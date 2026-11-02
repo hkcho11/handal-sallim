@@ -179,7 +179,13 @@ public class FixedExpenseService {
     if (preserveRevision) {
       revision =
           new RecurringExpenseRevisionEntity(
-              UUID.randomUUID(), spaceId, expenseId, userId, details, assigneeId, now);
+              UUID.randomUUID(),
+              spaceId,
+              expenseId,
+              userId,
+              details,
+              assigneeId,
+              nextRevisionTime(revision, now));
       revision.setEffectiveFrom(nextDue);
     } else {
       revision.updateDetails(details, assigneeId);
@@ -237,6 +243,12 @@ public class FixedExpenseService {
                 .findFirst()
                 .orElse(null),
         userId);
+  }
+
+  private static Instant nextRevisionTime(RecurringExpenseRevisionEntity previous, Instant now) {
+    // PostgreSQL stores microseconds; UUID ordering cannot identify the newest revision.
+    Instant minimum = previous.getCreatedAt().plusNanos(1_000);
+    return now.isBefore(minimum) ? minimum : now;
   }
 
   private LocalDate nextDueDate(FixedExpenseDetails details, LocalDate lastCompleted) {
@@ -384,7 +396,7 @@ public class FixedExpenseService {
                   userId,
                   details,
                   revision.getAssigneeUserId(),
-                  clock.instant());
+                  nextRevisionTime(revision, clock.instant()));
           revision.setEffectiveFrom(next);
         } else {
           revision.updateDetails(details, revision.getAssigneeUserId());

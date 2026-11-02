@@ -411,6 +411,12 @@ class FixedExpenseApiTest {
             UUID.class,
             id));
     assertCount("scheduled_charges", 2);
+    assertEquals(
+        1,
+        jdbc.queryForObject(
+            "SELECT count(*) FROM recurring_expense_revisions r JOIN scheduled_charges completed ON completed.recurring_expense_id = r.recurring_expense_id AND completed.status = 'COMPLETED' JOIN recurring_expense_revisions snapshot ON snapshot.id = completed.recurring_expense_revision_id WHERE r.recurring_expense_id = ? AND r.created_at > snapshot.created_at",
+            Integer.class,
+            id));
   }
 
   @Test

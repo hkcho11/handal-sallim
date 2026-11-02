@@ -62,6 +62,10 @@ public class RecurringExpenseRevisionEntity {
     return id;
   }
 
+  public Instant getCreatedAt() {
+    return createdAt;
+  }
+
   public UUID getRecurringExpenseId() {
     return recurringExpenseId;
   }
