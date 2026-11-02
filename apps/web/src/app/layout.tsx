@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import BottomNavigation from "@/shared/ui/BottomNavigation";
@@ -19,6 +19,20 @@ const pretendard = localFont({
 export const metadata: Metadata = {
   title: "한달살림",
   description: "반복 생활비 관리",
+  applicationName: "한달살림",
+  appleWebApp: {
+    capable: true,
+    title: "한달살림",
+    statusBarStyle: "default",
+  },
+  other: {
+    "apple-mobile-web-app-capable": "yes",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#f5f6fa",
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
