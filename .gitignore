@@ -13,3 +13,4 @@ test-results/
 *.pem
 *.p12
 *.pfx
+__pycache__/

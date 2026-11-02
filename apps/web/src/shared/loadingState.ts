@@ -45,6 +45,13 @@ export function focusWhenReady(
   if (!element) return;
   const focus = () =>
     requestAnimationFrame(() => {
+      const overlay = document.querySelector<HTMLDialogElement>(
+        "[data-blocking-loading][open]",
+      );
+      if (overlay) {
+        overlay.addEventListener("close", focus, { once: true });
+        return;
+      }
       if (element.isConnected && !element.hasAttribute("disabled"))
         element.focus(options);
     });

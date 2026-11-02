@@ -10,6 +10,14 @@ permissions:
   contents: read
 
 jobs:
+  deployment-tools:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m unittest discover -s scripts/deploy -p 'test_*.py'
+      - run: python3 -m py_compile scripts/deploy/nightly_api.py scripts/deploy/package_candidate.py
+      - run: sh -n scripts/deploy/install_server.sh
+
   web:
     runs-on: ubuntu-latest
     steps:
@@ -53,3 +61,37 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - run: ./gradlew spotlessCheck test build
         working-directory: apps/api
+
+  publish-api:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [api, web, deployment-tools]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: api-candidate-publish
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: gradle/actions/setup-gradle@v4
+      - run: ./gradlew bootJar
+        working-directory: apps/api
+      - name: Publish verified API candidate
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Never replace a newer main candidate with an older workflow run.
+          test "$(gh api repos/$GITHUB_REPOSITORY/commits/main --jq .sha)" = "$GITHUB_SHA" || exit 0
+          mkdir candidate
+          cp apps/api/build/libs/api-0.0.1-SNAPSHOT.jar candidate/api.jar
+          python3 scripts/deploy/package_candidate.py candidate/api.jar "$GITHUB_SHA" candidate/candidate.json
+          if ! gh release view backend-nightly >/dev/null 2>&1; then
+            gh release create backend-nightly --target "$GITHUB_SHA" --prerelease --title "Verified backend candidate" --notes "CI-verified build for the 04:00 KST server pull. No environment secrets are included."
+          fi
+          gh release upload backend-nightly candidate/api.jar --clobber
+          # Publish the manifest last; mismatched or partial downloads are rejected.
+          gh release upload backend-nightly candidate/candidate.json --clobber

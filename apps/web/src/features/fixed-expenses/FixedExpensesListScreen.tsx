@@ -1,4 +1,5 @@
 "use client";
+import { focusWhenReady } from "@/shared/loadingState";
 
 import { useEffect, useRef, useState } from "react";
 import Link from "@/shared/ui/AppLink";
@@ -297,7 +298,7 @@ export default function FixedExpensesListScreen() {
             setDeletingExpense(null);
             setRevealedId(null);
             setNotice("고정비를 삭제했습니다.");
-            requestAnimationFrame(() => headingRef.current?.focus());
+            focusWhenReady(headingRef.current);
           }}
         />
       )}
