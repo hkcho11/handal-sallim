@@ -30,10 +30,11 @@ export default function BlockingLoading() {
       aria-busy="true"
       onCancel={(event) => event.preventDefault()}
     >
-      <div className={styles.content} aria-live="polite">
+      <div className={styles.content} aria-hidden="true">
+        {/* The dialog keeps its accessible label without visible reading text. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/icons/app-192.png" width="64" height="64" alt="" />
         <span className={styles.spinner} aria-hidden="true" />
-        <p>처리 중이에요</p>
-        <small>잠시만 기다려 주세요.</small>
       </div>
     </dialog>
   );
