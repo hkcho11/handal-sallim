@@ -96,14 +96,28 @@ for (const width of [360, 1280]) {
     await expect(page.getByText("35,000")).toBeVisible();
     await expect(page.getByText("일정 미정", { exact: true })).toBeVisible();
     await expect(page.getByRole("textbox")).toHaveCount(0);
+    const firstOptions = page.waitForResponse(
+      "**/backend/recurring-expenses/options",
+    );
     await page.getByRole("button", { name: "정보 수정" }).click();
+    await firstOptions;
+    await expect(
+      page.getByRole("dialog", { name: "처리 중", exact: true }),
+    ).toBeHidden();
     await expect(page.getByLabel("메모 (선택)")).toBeEnabled();
     await page.getByLabel("반복주기").selectOption("1");
     await page.getByLabel("첫 결제일").fill("2026-11-15");
     await page.getByRole("button", { name: "정보 저장" }).click();
     await expect(page.getByText("고정비 정보를 수정했습니다.")).toBeVisible();
     await expect(page.getByText("2026-11-15", { exact: true })).toBeVisible();
+    const nextOptions = page.waitForResponse(
+      "**/backend/recurring-expenses/options",
+    );
     await page.getByRole("button", { name: "정보 수정" }).click();
+    await nextOptions;
+    await expect(
+      page.getByRole("dialog", { name: "처리 중", exact: true }),
+    ).toBeHidden();
     await page.getByLabel("메모 (선택)").fill("통신비");
     await page.getByLabel("금액 (원)").fill("42000");
     await expect(page.getByLabel("금액 (원)")).toHaveValue("42,000");
