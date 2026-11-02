@@ -32,6 +32,12 @@ for (const width of [360, 1280]) {
     const loading = page.getByRole("dialog", { name: "처리 중", exact: true });
     try {
       await expect(loading).toBeVisible();
+      await expect(loading).toHaveText("");
+      await expect(loading.locator("img")).toHaveAttribute(
+        "src",
+        "/icons/app-192.png",
+      );
+      await expect(loading.locator("img")).toBeVisible();
       await page.keyboard.press("Escape");
       await expect(loading).toBeVisible();
       await email.evaluate((element) => element.focus());
