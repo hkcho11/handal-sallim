@@ -8,3 +8,8 @@ node_modules/
 coverage/
 playwright-report/
 test-results/
+.local/
+*.key
+*.pem
+*.p12
+*.pfx

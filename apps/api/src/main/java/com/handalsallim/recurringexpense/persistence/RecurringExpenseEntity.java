@@ -5,6 +5,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Entity
@@ -17,6 +18,8 @@ public class RecurringExpenseEntity {
   private String status;
   private Instant createdAt;
   private Instant updatedAt;
+  private Instant endedAt;
+  private LocalDate endedFromDueDate;
   @Version private long version;
 
   protected RecurringExpenseEntity() {}
@@ -42,5 +45,17 @@ public class RecurringExpenseEntity {
 
   public UUID getCreationKey() {
     return creationKey;
+  }
+
+  public boolean isEnded() {
+    return "ENDED".equals(status);
+  }
+
+  public void end(LocalDate fromDueDate, Instant now) {
+    if (isEnded()) return;
+    status = "ENDED";
+    endedFromDueDate = fromDueDate;
+    endedAt = now;
+    updatedAt = now;
   }
 }

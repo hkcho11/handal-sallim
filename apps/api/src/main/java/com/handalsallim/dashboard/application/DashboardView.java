@@ -20,7 +20,7 @@ public record DashboardView(
       String name,
       LocalDate dueDate,
       int dueDay,
-      long expectedAmount,
+      Long expectedAmount,
       Long actualAmount,
       String payer,
       String paymentMethod,

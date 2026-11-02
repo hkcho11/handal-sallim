@@ -12,9 +12,9 @@
 }
 .tabs {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.5rem;
-  max-width: 480px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.15rem;
+  max-width: 640px;
   margin: auto;
 }
 .tabs a {
@@ -24,7 +24,7 @@
   align-items: center;
   gap: 0.35rem;
   min-height: 3.6rem;
-  padding: 0.4rem;
+  padding: 0.4rem 0;
   border-radius: 12px;
   color: #7e8796;
   text-decoration: none;

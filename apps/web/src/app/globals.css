@@ -1,4 +1,5 @@
 @import "../shared/ui/form-controls.css";
+@import "../shared/ui/disclosure.css";
 
 :root {
   color-scheme: light;

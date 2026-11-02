@@ -1,5 +1,5 @@
-import FixedExpensesScreen from "@/features/fixed-expenses/FixedExpensesScreen";
+import FixedExpensesListScreen from "@/features/fixed-expenses/FixedExpensesListScreen";
 
 export default function FixedCostsPage() {
-  return <FixedExpensesScreen />;
+  return <FixedExpensesListScreen />;
 }

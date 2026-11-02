@@ -7,27 +7,31 @@ import java.time.YearMonth;
 import java.time.ZoneId;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class DashboardService {
   private final DashboardRepository repository;
   private final Clock clock;
+  private final com.handalsallim.recurringexpense.application.ScheduledChargeService scheduled;
 
-  public DashboardService(DashboardRepository repository, Clock clock) {
+  public DashboardService(
+      DashboardRepository repository,
+      Clock clock,
+      com.handalsallim.recurringexpense.application.ScheduledChargeService scheduled) {
     this.repository = repository;
     this.clock = clock;
+    this.scheduled = scheduled;
   }
 
-  @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
+  @Transactional
   public DashboardView read(UUID user, YearMonth requestedMonth) {
     var spaces = repository.spaces(user);
     if (spaces.size() != 1) throw new NoDashboardSpaceException();
     LocalDate today = LocalDate.now(clock.withZone(ZoneId.of("Asia/Seoul")));
     YearMonth month = requestedMonth == null ? YearMonth.from(today) : requestedMonth;
     if (month.getYear() < 1 || month.getYear() > 9998) throw new IllegalArgumentException();
-    UUID space = spaces.getFirst();
+    UUID space = scheduled.ensure(user, month);
     return new DashboardView(
         month.toString(),
         today,
@@ -37,14 +41,14 @@ public class DashboardService {
 
   public static class NoDashboardSpaceException extends RuntimeException {}
 
-  @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
+  @Transactional
   public FixedCostDashboardView readFixedCosts(UUID user, YearMonth requestedMonth) {
     var spaces = repository.spaces(user);
     if (spaces.size() != 1) throw new NoDashboardSpaceException();
     LocalDate today = LocalDate.now(clock.withZone(ZoneId.of("Asia/Seoul")));
     YearMonth month = requestedMonth == null ? YearMonth.from(today) : requestedMonth;
     if (month.getYear() < 2 || month.getYear() > 9998) throw new IllegalArgumentException();
-    UUID space = spaces.getFirst();
+    UUID space = scheduled.ensure(user, month);
     var months =
         java.util.stream.IntStream.rangeClosed(0, 5)
             .mapToObj(index -> month.minusMonths(5 - index).toString())

@@ -7,16 +7,17 @@
 }
 .container {
   display: grid;
-  gap: 1rem;
+  gap: 0.75rem;
   max-width: 640px;
   margin: auto;
 }
 .header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  min-height: 80px;
+  gap: 0.25rem 0.75rem;
+  min-height: 60px;
 }
 .header h1 {
   display: flex;
@@ -28,21 +29,14 @@
   letter-spacing: -0.055em;
 }
 .brandMark {
-  display: grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 10px;
-  background: var(--primary);
-  color: white;
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  margin-inline: -8px -4px;
 }
-.brandMark svg {
-  width: 21px;
-  height: 21px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.7;
-  stroke-linejoin: round;
+.dashboardLabel {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
 }
 .add {
   display: inline-flex;
@@ -57,9 +51,14 @@
   text-decoration: none;
 }
 .monthSection {
-  padding: 0.5rem 0.25rem 0.75rem;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  padding: 0 0 0.5rem;
 }
 .monthHeading {
+  order: 2;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -88,18 +87,20 @@
   opacity: 0.55;
 }
 .monthPicker {
+  order: 1;
+  flex: 1;
   display: grid;
   grid-template-columns: 44px minmax(0, 1fr) 44px;
   align-items: center;
   gap: 0.5rem;
-  max-width: 330px;
-  margin: 0.5rem auto;
+  min-width: min(100%, 190px);
+  margin: 0;
 }
 .monthPicker > button {
   height: 44px;
   border: 0;
   border-radius: 12px;
-  background: white;
+  background: transparent;
   color: var(--text);
   font-size: 1.7rem;
   cursor: pointer;
@@ -116,7 +117,7 @@
   background: transparent;
   color: var(--text);
   font: inherit;
-  font-size: 1.35rem;
+  font-size: 1rem;
   font-weight: 750;
   text-align: center;
   appearance: none;
@@ -132,11 +133,6 @@
 }
 .monthInput input::-webkit-date-and-time-value {
   text-align: center;
-}
-.asOf {
-  margin: 0.5rem 0 0;
-  color: var(--text-secondary);
-  font-size: 0.72rem;
 }
 .panel {
   padding: 1.4rem;
@@ -181,7 +177,7 @@
 .total {
   display: grid;
   gap: 0.5rem;
-  padding: 1.5rem 0 1.15rem;
+  padding: 0 0 1.15rem;
 }
 .total > span {
   font-size: 0.8rem;
@@ -213,12 +209,6 @@
 .categoryButton[aria-expanded="true"] .categoryHeading > strong {
   color: var(--primary);
 }
-.distributionLabel {
-  margin: 0 0 0.35rem;
-  color: var(--text-secondary);
-  font-size: 0.72rem;
-  line-height: 1.6;
-}
 .categoryDetails {
   display: grid;
   grid-template-rows: 0fr;
@@ -249,6 +239,9 @@
   }
 }
 .categoryButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   width: 100%;
   min-height: 60px;
   padding: 0.85rem 0;
@@ -263,7 +256,7 @@
   display: flex;
   justify-content: space-between;
   gap: 0.75rem;
-  align-items: start;
+  align-items: center;
 }
 .categoryHeading > strong {
   font-size: 0.9rem;
@@ -271,35 +264,78 @@
   overflow-wrap: anywhere;
 }
 .categoryHeading > span {
-  display: grid;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
   gap: 0.3rem;
+  margin-left: auto;
   text-align: right;
 }
-.categoryHeading b {
-  font-size: 0.9rem;
+.categoryHeading > span > b {
+  font-size: calc(0.9rem + 1pt);
   font-weight: 650;
   overflow-wrap: anywhere;
 }
 .categoryHeading small {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.2rem;
   color: var(--text-secondary);
   font-size: 0.7rem;
+  font-weight: 400;
 }
-.bar {
-  display: block;
-  height: 5px;
+.categoryHeading small b {
+  font-size: inherit;
+  font-weight: inherit;
+}
+.distributionBar {
+  display: flex;
+  height: 12px;
+  overflow: hidden;
   border-radius: 6px;
   background: #eff2fa;
-  margin-top: 0.75rem;
-  overflow: hidden;
 }
-.bar > span {
-  display: block;
+.distributionBar > span {
+  flex: none;
   height: 100%;
-  border-radius: inherit;
-  background: var(--primary);
 }
-.category:not(:first-child) .bar > span {
-  background: #8ca4f5;
+.distributionLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem 1rem;
+  list-style: none;
+  padding: 0;
+  margin: 0.8rem 0 1.1rem;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
+.distributionLegend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  overflow-wrap: anywhere;
+}
+.legendDot {
+  flex: none;
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+}
+.categoryChevron {
+  display: flex;
+  align-items: center;
+  flex: none;
+  color: var(--text-secondary);
+}
+.categoryHeading {
+  flex: 1;
+  min-width: 0;
+}
+.categoryHeading small .change {
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 .entryList {
   list-style: none;
@@ -331,19 +367,6 @@
 .entryList b {
   font-size: 0.8rem;
   font-weight: 600;
-}
-.pendingNote {
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border);
-  color: var(--text-secondary);
-  font-size: 0.78rem;
-}
-.pendingNote b {
-  font-weight: 550;
 }
 .note {
   color: var(--text-secondary);
@@ -427,9 +450,10 @@
 }
 .changeArrow {
   flex: none;
-  font-size: 0.7em;
-  font-weight: 400;
-  line-height: 1;
+  display: block;
+  width: 0.75rem;
+  height: 0.75rem;
+  fill: currentColor;
 }
 .trendChart {
   display: grid;
@@ -580,9 +604,6 @@
 @media (min-width: 600px) {
   .page {
     padding-inline: 2rem;
-  }
-  .header {
-    min-height: 96px;
   }
 }
 @media (max-width: 480px) {

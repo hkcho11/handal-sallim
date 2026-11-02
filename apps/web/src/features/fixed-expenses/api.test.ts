@@ -1,51 +1,25 @@
 import { afterEach, expect, test, vi } from "vitest";
-import { createFixedExpense, listFixedExpenses } from "./api";
+import {
+  createFixedExpense,
+  deleteFixedExpense,
+  listFixedExpenses,
+} from "./api";
 
 afterEach(() => vi.unstubAllGlobals());
 
-const unscheduled = {
-  id: "11111111-1111-4111-8111-111111111111",
-  name: "일정 미정 고정비",
-  expectedAmount: 42000,
-  intervalMonths: null,
-  recurringDayOfMonth: null,
-  firstDueDate: null,
-  firstChargeId: null,
-  firstChargeStatus: null,
-  payer: "ME",
-  paymentMethodId: "22222222-2222-4222-8222-222222222222",
-  paymentMethodName: "테스트 계좌",
-};
-
-test("일정 미정과 선택 결제 정보가 포함된 목록 응답을 검증한다", async () => {
-  vi.stubGlobal(
-    "fetch",
-    vi
-      .fn()
-      .mockResolvedValue(
-        new Response(JSON.stringify([unscheduled]), { status: 200 }),
-      ),
+test("삭제의 빈 성공 응답을 처리하고 권한 오류 원문을 숨긴다", async () => {
+  const fetchMock = vi
+    .fn()
+    .mockResolvedValueOnce(new Response(null, { status: 204 }))
+    .mockResolvedValueOnce(new Response("internal details", { status: 403 }));
+  vi.stubGlobal("fetch", fetchMock);
+  await expect(deleteFixedExpense("expense-id")).resolves.toBeUndefined();
+  expect(fetchMock).toHaveBeenCalledWith(
+    "/backend/recurring-expenses/expense-id",
+    expect.objectContaining({ method: "DELETE" }),
   );
-  await expect(listFixedExpenses()).resolves.toEqual([unscheduled]);
-});
-
-test.each([
-  { payer: "INVALID" },
-  { paymentMethodId: "invalid" },
-  { recurringDayOfMonth: 32 },
-  { recurringDayOfMonth: 1.5 },
-  { paymentMethodName: 123 },
-])("잘못된 선택 결제 정보도 화면에 전달하지 않는다: %j", async (invalid) => {
-  vi.stubGlobal(
-    "fetch",
-    vi.fn().mockResolvedValue(
-      new Response(JSON.stringify([{ ...unscheduled, ...invalid }]), {
-        status: 200,
-      }),
-    ),
-  );
-  await expect(listFixedExpenses()).rejects.toThrow(
-    "목록 응답을 확인할 수 없습니다",
+  await expect(deleteFixedExpense("expense-id")).rejects.toThrow(
+    "사용할 수 있는 공간이 없습니다.",
   );
 });
 
@@ -78,10 +52,15 @@ test("인증 실패 응답에서 서버 원문을 노출하지 않는다", async
   await expect(
     createFixedExpense(
       {
-        name: "월세",
+        memo: null,
+        categoryId: "11111111-1111-4111-8111-111111111111",
+        subcategoryId: "22222222-2222-4222-8222-222222222222",
         expectedAmount: 650000,
         intervalMonths: 1,
+        recurringDayOfMonth: 15,
         firstDueDate: "2026-10-15",
+        payer: null,
+        paymentMethodId: null,
       },
       "request-key",
     ),

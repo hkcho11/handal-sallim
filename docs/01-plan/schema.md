@@ -2,11 +2,28 @@
 
 > 상태: Approved — 인증 상세 필드와 UX를 제외한 MVP 도메인·데이터 기준
 >
-> 기준: `SERVICE_PLAN.md` 0.4
+> 기준: `SERVICE_PLAN.md` 1.4. 아래 기존 필드 정의에는 아직 미구현인 변경이 있으며 2026-10-14 변경 기준을 우선한다.
 >
 > 목적: 핵심 용어, 엔티티, 관계, 필드와 데이터베이스 불변 조건을 구현 전에 합의한다.
 
 자체 이메일·비밀번호 인증의 데이터 구조는 별도 [인증 스키마 초안](auth-schema.md)에서 검토한다. 이 초안은 본 문서의 승인 범위를 자동으로 넓히지 않는다.
+
+## 2026-10-14 계층형 고정비 분류 변경 기준
+
+이 절은 서비스 변경에 따른 데이터 요구사항이며 DB migration 완료를 의미하지 않는다. 기존 단일 카테고리·필수 지출명 규칙과 충돌할 때 이 절과 `SERVICE_PLAN.md` 1.4를 우선한다.
+
+- 고정비 입력은 필수 대분류·중분류와 선택 메모로 구성한다. 별도의 소분류 엔티티는 만들지 않는다. 메모가 없으면 중분류명으로 표시하며 통계는 메모가 아닌 분류 ID로 집계한다.
+- 분류는 공간별 데이터이며 중분류는 정확히 하나의 대분류에 속한다. 중분류가 한 개뿐인 대분류도 허용한다. DB 제약과 서버 검증으로 공간 일치와 부모·자식 관계를 보호한다.
+- 같은 공간의 활성 대분류명, 같은 대분류의 활성 중분류명 중복을 각각 방지한다. 설정에서 추가한 분류는 배포 없이 입력 선택지에 반영한다.
+- 반복 설정 revision, 예정 청구와 완료 연결 거래에는 당시 대분류·중분류를 추적할 수 있는 참조와 이력 정보가 필요하다. 완료된 기록은 현재 분류 이름·부모 변경에 따라 소급 재분류하지 않는다.
+- 기존 고정비 이름과 단일 카테고리를 삭제하거나 모호한 새 분류에 자동 매핑하지 않는다. 이름을 메모로 옮기는 방법과 분류 대응표, 미분류 기존 데이터의 보완 흐름은 실제 migration 전에 검토한다. 참조 중인 분류는 보관하며 완료 이력을 유지한다.
+- 금액과 반복 설정·예정 청구·실제 거래의 분리, 멱등성과 서버 권한 경계는 유지한다. 반복주기·반복 결제일·첫 결제일이 미정인 고정비는 저장하되 예정 청구를 생성하지 않는다.
+- 수입 탭의 정기 수입은 지출 청구와 분리한다. 상세 엔티티와 반복·입금 정책은 수입 구현 시 정한다. 저축은 준비중 화면만 제공하므로 이번 변경만으로 저축 테이블을 만들지 않는다.
+- 홈의 대분류 집계와 중분류 월간 비교는 같은 ID 기준으로 수행한다. 실제 금액과 예상 금액, 기록 없음과 0원을 구분한다. 월 기준과 비교 금액의 확정은 통계 구현 전에 필요하다.
+
+2026-10-14 구현: V5 migration은 기존 `categories`를 대분류로 유지하고 `expense_subcategories`를 추가한다. 중분류에는 `space_id`, `category_id`, 이름과 활성·보관 상태를 저장한다. 활성 이름은 같은 공간·대분류 내에서 유일하다. `recurring_expense_revisions`와 `scheduled_charges`에 nullable `subcategory_id`, `memo varchar(120)`를 추가하고, `transactions`에도 nullable `subcategory_id`를 추가한다. `(subcategory_id, category_id, space_id)` 복합 FK로 부모와 공간을 함께 검증한다. 기존 행은 값을 강제로 매핑하거나 삭제하지 않는다. 신규·수정 API는 대분류와 중분류를 필수로 받고 서버에서 활성 상태와 소속을 검사한다. 내부 `name`은 메모 또는 중분류명으로 생성하며 기존 이름 입력은 제거한다. 아래 필드 정의의 단일 카테고리·필수 이름 규칙은 변경 전 기준으로 참조한다.
+
+기존 데이터 초기화와 새 임의 데이터 저장은 변경 완료에 대한 사용자 승인 후 실행한다. migration이나 서버 시작 시 자동 초기화하지 않는다.
 
 ## 1. 설계 원칙
 
@@ -261,6 +278,9 @@
 | `space_id` | `uuid` | Y | FK → `spaces.id` |
 | `created_by` | `uuid` | Y | `(space_id, created_by)` → 공간 멤버 |
 | `type` | `varchar(20)` | Y | `INCOME`, `EXPENSE` |
+| `name` | `varchar(120)` | N | 직접 입력 거래는 필수 지출명, 자동 생성 거래는 NULL 가능 |
+| `creation_key` | `uuid` | N | 직접 입력 거래의 저장 재시도 키. `(space_id, created_by, creation_key)` UNIQUE |
+| `creation_fingerprint` | `varchar(64)` | N | 직접 입력 거래 최초 요청의 정규화된 SHA-256. 수정 이후에도 같은 생성 요청을 식별 |
 | `amount` | `bigint` | Y | CHECK > 0, 원 단위 |
 | `occurred_on` | `date` | Y | 실제 거래일 |
 | `category_id` | `uuid` | N | `(category_id, space_id)` → 공간 카테고리. 직접 입력 거래는 필수, 미분류 고정비의 자동 생성 거래만 NULL 허용 |
@@ -285,6 +305,8 @@
 - INDEX: `(space_id, occurred_on DESC)` — 공동 거래 목록
 - INDEX: `(created_by, occurred_on DESC)` WHERE `visibility = 'PRIVATE'` — 개인 거래 목록
 - 개인 거래 조회는 인증 사용자와 `created_by`가 같은 경우만 허용한다.
+- 2026-10-14 사용자 결정: 직접 입력 개인 지출의 삭제는 확인 후 행을 물리 삭제하며 목록·합계에서도 제외한다. 고정비 자동 거래의 완료 취소·기록 보존 정책은 유지한다.
+- 직접 입력 개인 지출의 수정·삭제는 조회한 `version`을 요구하며 일치하지 않으면 충돌로 처리한다.
 
 ### 4.12 같은 공간 참조 규칙
 
@@ -445,3 +467,75 @@ MVP에는 금융 연동 테이블을 생성하지 않는다. 카드·은행 거�
 1. Phase 3에서 핵심 화면 흐름과 저충실도 와이어프레임을 승인한다.
 2. Phase 4에서 승인된 흐름을 API 계약으로 변환한다.
 3. 인증 정책을 별도 확정한 뒤 프로젝트 소스와 Flyway migration을 초기화한다.
+
+## 12. 월별 수입 (`incomes`, 2026-10-15)
+
+단순한 월별 수입은 `transactions`의 필수 결제수단·분류와 분리하여 `incomes`에 저장한다. 예정 수입이나 반복 설정은 만들지 않으며 고정비 지출 집계에 포함하지 않는다.
+
+- `id` UUID PK, `space_id` 공간 FK, `created_by` 작성자, `name` 공백 제거 후 1~120자, `amount` 1~9,007,199,254,740,991원의 정수.
+- `income_month`는 0001-01~9999-12의 월 첫날로 저장한다. 실제 입금 일자는 수집하지 않는다.
+- 사용자 확정에 따라 공간 활성 멤버에게 공유하며 서버에서 활성 사용자·공간·멤버십을 검증한다. 개인 거래 테이블의 권한 정책은 유지한다.
+- `creation_key`와 최초 요청 SHA-256 `creation_fingerprint`로 등록 재시도를 확인한다. `(space_id, created_by, creation_key)`는 유일하다. 같은 키로 다른 내용을 요청하면 충돌이며 삭제한 내역은 재생성하지 않는다.
+- `version`은 수정·삭제 시 증가하고 요청 버전 불일치는 충돌로 거부한다.
+- 삭제는 `deleted_at`·`deleted_by`를 함께 기록하고 월별 목록·합계에서 제외한다. 생성자와 삭제자는 `(space_id, user_id)` 복합 FK로 보호한다.
+- 월별 조회 인덱스는 `(space_id, income_month, created_at DESC, id) WHERE deleted_at IS NULL`이다. 합계는 서버에서 정수로 계산해 십진 문자열로 전달하고 웹은 BigInt로 검증·표시한다.
+- API: `GET /api/incomes?month=YYYY-MM`, `GET /api/incomes/{id}`, `POST /api/incomes` (`Idempotency-Key`), `PUT /api/incomes/{id}`, `DELETE /api/incomes/{id}?version=N`. 쓰기 본문은 `name`, `amount`, `month`이며 수정은 `version`도 필수다.
+
+## 13. 예적금 저축 (`savings`, 2026-10-15)
+
+기존 준비중 범위를 사용자 요청에 따라 확장한다. 저축은 직접 입력하는 잔액 기록이며 실제 입출금 거래나 반복 납입 일정은 생성하지 않는다.
+
+- `id` UUID PK, `space_id` 공간 FK, `created_by` 작성자. 공간의 활성 멤버가 공유하며 서버에서 사용자·공간·멤버 상태를 확인한다.
+- `name`: 공백 제거 후 1~120자. `type`: `DEPOSIT`(예금), `INSTALLMENT`(적금).
+- `deposit_amount`: 예금의 예치 금액 또는 적금의 월 납입액. 1~9,007,199,254,740,991원의 정수.
+- `current_amount`: 직접 입력한 현재 모은 금액. 0~9,007,199,254,740,991원의 정수. 기존 저축도 현재 잔액으로 시작하고 납입액과 독립적으로 수정한다.
+- 현재 합계는 모든 저축의 `current_amount`, 월 납입 합계는 적금의 `deposit_amount`만 합산한다. 합계는 BigInteger로 계산해 십진 문자열로 반환하고 웹에서 BigInt로 검증한다.
+- `creation_key`, 최초 요청 SHA-256 `creation_fingerprint`, UNIQUE `(space_id, created_by, creation_key)`로 재시도를 처리한다. 삭제한 내역의 재시도는 복구하거나 새로 생성하지 않는다.
+- 수정·삭제 시 요청 `version`을 비교하고 증가시킨다. 삭제는 `deleted_at`, `deleted_by`를 함께 기록하여 목록·합계에서 제외한다. 작성자·삭제자는 공간 멤버 복합 FK로 검증한다.
+- 인덱스: `(space_id, created_at DESC, id) WHERE deleted_at IS NULL`.
+- API: `GET /api/savings`, `GET /api/savings/{id}`, `POST /api/savings` (`Idempotency-Key`), `PUT /api/savings/{id}`, `DELETE /api/savings/{id}?version=N`. 본문: `name`, `type`, `depositAmount`, `currentAmount`; 수정은 `version` 필수.
+
+## V15: 분류 표시 순서와 상위 분류 이동 (2026-10-29)
+
+- categories·expense_subcategories에 sort_order를 추가한다. 활성 공간의 기존 created_at·name 순서를 초기 순서로 보존하고, 보존 공간은 보호 트리거를 우회하거나 수정하지 않는다.
+- spaces.classification_initialized는 기본 분류·세부 분류를 한 번만 채우는 표식이다. 기본 이름을 수정하거나 세부 분류를 옮긴 뒤에 원래 기본값이 재생성되지 않게 한다.
+- recurring_expense_revisions·scheduled_charges·transactions의 (subcategory_id,category_id,space_id) FK는 ON UPDATE CASCADE를 사용한다. 사용자 확정에 따라 같은 활성 공간 내 세부 분류의 상위를 바꾸면 해당 ID를 참조한 과거·현재 내역의 category_id만 원자적으로 함께 바뀐다. ID·금액·날짜·공유/개인 구분·소유권을 변경하지 않는다.
+- 서버는 활성 공간·대상 상위 분류·동명 충돌·이전 상위 ID를 확인하고 공간 잠금 아래 이동한다. 이름 수정은 이전 이름, 전체 순서 수정은 이전 형제 ID 순서를 확인해 충돌을 거부한다. 동명 세부 분류는 병합하지 않는다.
+
+## 14. 수입·저축 소유자 (`owner_user_id`, 2026-10-15)
+
+- `incomes`, `savings`에 `owner_user_id uuid NOT NULL`을 추가한다. `(space_id, owner_user_id)`는 `space_members(space_id, user_id)` 복합 FK로 보호하고 삭제하지 않는 과거 멤버십을 참조할 수 있다.
+- 기존 행의 소유자는 `created_by`로 이전하며 금액·상태·작성자는 변경하지 않는다. API의 `created_by`는 실제 인증된 요청자로 유지하고 소유자 선택과 분리한다.
+- 등록에서 `ownerUserId` 누락·NULL은 작성자 본인으로, 수정에서 누락·NULL은 기존 소유자로 처리한다. 정규화한 실제 소유자 ID를 최초 생성 fingerprint에도 포함한다.
+- 새 소유자 지정·변경은 같은 공간의 활성 멤버·활성 사용자인지 서버에서 검사하고 해당 멤버십·사용자 행에 공유 잠금을 건다. 권한·트랜잭션 경계는 각 수입·저축 서비스에 둔다.
+- 응답은 `ownerUserId`, `ownerName`을 제공한다. 이름은 사용자 ID로 조회하며 소유자가 달라도 공간 공유와 기존 목록·합계 범위는 유지한다.
+- `GET /api/incomes/members`, `GET /api/savings/members`는 권한 확인 후 `{ currentUserId, members: [{ id, name }] }`를 반환한다. 웹은 응답을 검증하고 작성자 본인을 기본 선택한다.
+
+## 15. 회원코드 공유 연결 (V10, 2026-10-26)
+
+### V12: 금액 미정 반복 회차와 결제 완료 (2026-10-27)
+
+- `scheduled_charges.expected_amount`를 nullable로 변경한다. 기존 값은 보존하고 이후 생성한 반복 회차는 NULL로 저장한다. NULL은 0원 결제가 아닌 미확정 금액이다. 반복 설정의 `default_expected_amount`는 등록 금액으로 유지하며 직전 실제액을 이월하지 않는다.
+- 완료는 기존 실제 금액·결제일·수단·완료자·시각 필드와 `transactions.source='SCHEDULED_CHARGE'`, `scheduled_charge_id` UNIQUE/FK를 사용한다. 기존 스키마의 1:1 거래 연결과 완료 필드 CHECK를 유지하며 회차와 거래 쓰기를 한 트랜잭션으로 묶는다.
+- 현재 사용자·공간 잠금 후 청구 버전과 상태, 실제 결제일/금액 범위와 활성 결제수단을 검증한다. 동일 확정 내용의 재시도만 멱등 성공하며 서로 다른 확정 내용은 409로 거부한다.
+- 회차 생성은 활성 공간과 활성 반복 설정의 최신 revision, 첫 결제일·반복 주기·반복 결제일, revision 적용 시작일을 사용한다. 동일 반복 설정/예정일 UNIQUE와 ON CONFLICT DO NOTHING으로 중복과 취소된 회차 재생성을 막는다. 등록·조회·완료 시 생성하며 보관·종료 공간을 쓰지 않는다.
+- 조회 응답·공유 기록 보존 응답의 회차 금액도 nullable을 유지한다. 홈 집계는 완료 actual_amount만 사용하고 미결제 금액을 임의 보충하거나 실제 0원으로 비교하지 않는다.
+
+### V11: 양쪽 동의 해제와 공유 기록 보존 (2026-10-27)
+
+- `sharing_connections.ended_at`: 종료 시각. 사용자별 유일성은 종료되지 않은 연결에만 적용하며 종료 행과 당시 사용자 FK는 보존한다. 모든 현재 연결 조회는 `ended_at IS NULL`을 검사한다. 사용자 쌍 잠금으로 반대 열에 같은 사용자가 중복 연결되는 것도 방지한다.
+- `sharing_disconnect_requests`: 연결 공간 FK, 요청자·상대 FK, 상태 PENDING/ACCEPTED/REJECTED/CANCELLED/EXPIRED, 생성·24시간 만료·처리 시각. 공간별 PENDING 부분 UNIQUE. 두 멤버를 UUID 순으로 잠그고 현재 연결·역할·만료를 재확인한다.
+- `shared_space_archives`: `(space_id,user_id)` PK, 종료된 공유 연결 FK와 당시 멤버 FK, 보존 시각. 당시 두 멤버에게만 읽기 전용으로 허용하며 기존 `private_space_archives`의 개인 권한을 확장하지 않는다.
+- 수락 시 공간을 쓰기 잠금하고 ARCHIVED, 양쪽 멤버십을 LEFT 처리한 뒤 각자 새로운 SOLO 공간을 기본 분류/현금으로 생성한다. 금융 기록과 반복 설정을 복제하지 않는다. 권한 전환과 보존·새 공간·요청 처리는 같은 트랜잭션이다. V10의 금융 쓰기 보호 트리거가 종료된 공유 공간에도 적용된다.
+- 이전 수락 재시도는 중복 공간을 만들거나 새 연결을 해제하지 않는다. 종료 공간 ID로 해제를 다시 요청하면 409, 제3자는 404, 본인 요청 수락/거절 또는 상대 요청 취소는 403이다.
+
+최신 서비스 정책은 `SERVICE_PLAN.md` 1.1.4를 따른다. 앞선 `invitations` 설계 대신 회원코드 기반 `sharing_requests`를 사용한다. 기존 개인 거래 테이블은 과거 데이터 보호를 위해 유지하지만 새 개인 지출 기능으로 노출하지 않는다.
+
+- `member_codes`: `code varchar(8)` PK, 사용자 FK, 발급·폐기 시각. 사용자별 미폐기 코드 1개 부분 UNIQUE. 폐기 행은 남겨 다른 사용자에게 같은 코드를 재발급하지 않는다.
+- `sharing_requests`: 요청자·수신자 사용자 FK, PENDING/ACCEPTED/REJECTED/CANCELLED/EXPIRED, 생성·24시간 만료·처리 시각, 수락한 공유 공간 FK. 자기 요청 CHECK와 방향을 무시한 사용자 쌍별 대기 요청 UNIQUE.
+- `sharing_connections`: 새 공간 PK/FK, 두 사용자 FK, 공유 시작 시각. 사용자 행을 UUID 순으로 잠근 뒤 기존 연결·공간·인증을 다시 확인한다. 수락 경쟁은 한 연결만 만들며 이미 수락한 같은 요청의 재시도는 기존 연결을 반환한다.
+- `private_space_archives`: 이전 공간 PK/FK, 기존 사용자 FK, 보존 시각과 새 공유 공간 FK. 조회는 인증된 기존 사용자 ID로만 제한한다. 기존 공간·멤버십 행과 금융 FK는 보존한다.
+- 수락은 기존 개인 공간·멤버십을 잠근 뒤 보관/LEFT 처리, 새 공유 공간·멤버십 생성, 보존 접근 경계와 향후 반복 설정 생성, 요청 상태 갱신을 한 트랜잭션으로 수행한다. 중간 실패 시 모두 롤백한다.
+- 보관 공간의 금융 테이블에는 INSERT/UPDATE/DELETE 보호 트리거를 둔다. 진행 중 쓰기는 보관 전에 완료되거나 현재 공간에서 재시도하도록 거부된다. 연동 전 데이터를 후속 요청이 덮어쓰지 않는다.
+- 반복 설정은 새 카테고리·세부 분류·참조 중인 활성 결제수단으로 매핑하며 원래 기록을 수정하지 않는다. 완료 거래·기존 예정 청구·수입·저축은 복제하지 않는다.
+- 월이나 거래 날짜 대신 활성 공간의 전환으로 신규 공유 기록을 구분한다. 모든 금융 API는 현재 활성 멤버십을 기준으로 하며 개인 보존 공간에는 기존 API의 쓰기 권한을 부여하지 않는다.

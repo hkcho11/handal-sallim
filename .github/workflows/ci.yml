@@ -31,6 +31,16 @@ jobs:
       - run: pnpm --dir apps/web run build
       - run: pnpm --dir apps/web exec playwright install --with-deps chromium
       - run: pnpm --dir apps/web run test:e2e
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: gradle/actions/setup-gradle@v4
+      - run: ./gradlew bootJar
+        working-directory: apps/api
+      - name: Real signup, SMTP, verification and login flow
+        shell: pwsh
+        run: ./scripts/test-auth-flow.ps1 -SkipBuild
 
   api:
     runs-on: ubuntu-latest
@@ -39,7 +49,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: "21"
       - uses: gradle/actions/setup-gradle@v4
       - run: ./gradlew spotlessCheck test build
         working-directory: apps/api

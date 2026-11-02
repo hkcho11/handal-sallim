@@ -92,14 +92,19 @@ export default function RegisteredExpenses({
                 )}
                 <div className={styles.chargeInfo}>
                   <div className={styles.chargeTitle}>
-                    <h3>
-                      <Link
-                        className={styles.registeredLink}
-                        href={`/fixed-costs/${expense.id}`}
-                      >
-                        {expense.name}
-                      </Link>
-                    </h3>
+                    <div className={styles.registeredIdentity}>
+                      <span className={styles.registeredCategory}>
+                        {expense.categoryName ?? "미지정"}
+                      </span>
+                      <h3>
+                        <Link
+                          className={styles.registeredLink}
+                          href={`/fixed-costs/${expense.id}`}
+                        >
+                          {expense.subcategoryName ?? expense.name}
+                        </Link>
+                      </h3>
+                    </div>
                     <span
                       className={`${styles.badge} ${expense.firstChargeStatus === "OVERDUE" ? styles.overdue : expense.firstChargeStatus === "COMPLETED" ? styles.completed : styles.pending}`}
                     >

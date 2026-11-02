@@ -1,3 +1,4 @@
+import { apiFetch } from "../../shared/api/apiFetch";
 import type { DashboardResponse } from "./dashboard";
 
 const object = (value: unknown): value is Record<string, unknown> =>
@@ -44,7 +45,7 @@ function valid(value: unknown): value is DashboardResponse {
         date(charge.dueDate) &&
         charge.dueDate.startsWith(`${month}-`) &&
         charge.dueDay === Number(charge.dueDate.slice(-2)) &&
-        amount(charge.expectedAmount) &&
+        (charge.expectedAmount === null || amount(charge.expectedAmount)) &&
         (charge.actualAmount === null || amount(charge.actualAmount)) &&
         nullableText(charge.payer) &&
         nullableText(charge.paymentMethod) &&
@@ -54,7 +55,7 @@ function valid(value: unknown): value is DashboardResponse {
 }
 
 export async function getDashboard(): Promise<DashboardResponse> {
-  const response = await fetch("/backend/dashboard", {
+  const response = await apiFetch("/backend/dashboard", {
     cache: "no-store",
     credentials: "same-origin",
   });
@@ -70,7 +71,7 @@ export async function getDashboard(): Promise<DashboardResponse> {
     data.entries.reduce((sum, entry) => sum + entry.amount, 0) +
     data.charges
       .filter((charge) => charge.status !== "완료")
-      .reduce((sum, charge) => sum + charge.expectedAmount, 0);
+      .reduce((sum, charge) => sum + (charge.expectedAmount ?? 0), 0);
   if (!Number.isSafeInteger(total))
     throw new Error("금액 합계를 표시할 수 없습니다.");
   return data;

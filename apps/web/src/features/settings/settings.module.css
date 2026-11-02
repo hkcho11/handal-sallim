@@ -1,0 +1,438 @@
+.screen {
+  padding: 1.75rem 1.25rem 2rem;
+  max-width: 640px;
+  margin: auto;
+}
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.header h1 {
+  font-size: 1.5rem;
+  margin: 0.5rem 0;
+}
+.screen h2 {
+  font-size: 1rem;
+  margin: 1.5rem 0 0.75rem;
+}
+.screen p {
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+.back {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+.card {
+  padding: 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  margin-bottom: 0.75rem;
+  overflow-wrap: anywhere;
+}
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  color: var(--text);
+  text-decoration: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  margin-bottom: 0.5rem;
+  min-height: 64px;
+}
+.row strong,
+.row small {
+  display: block;
+}
+.row small {
+  color: var(--text-secondary);
+  margin-top: 0.3rem;
+  line-height: 1.5;
+}
+.row:hover {
+  border-color: var(--primary);
+}
+.badge {
+  display: inline-block;
+  padding: 0.3rem 0.5rem;
+  background: var(--primary-soft);
+  border-radius: 6px;
+  font-size: 0.75rem;
+}
+.primary,
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+.primary {
+  border: 0;
+  background: var(--primary);
+  color: white;
+}
+.secondary {
+  border: 1px solid var(--border);
+  background: white;
+  color: var(--text);
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+.statusFilters button[aria-pressed="true"] {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+}
+.statusFilters button[aria-pressed="false"] {
+  background: #f0f2f6;
+  color: var(--text-secondary);
+}
+.form {
+  display: grid;
+  gap: 1.25rem;
+}
+.field {
+  display: grid;
+  gap: 0.5rem;
+}
+.field input,
+.field select {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid #cbd0d9;
+  border-radius: 10px;
+  padding: 0.75rem;
+  background: white;
+  color: var(--text);
+}
+.field input[aria-invalid="true"],
+.field select[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+.error {
+  color: var(--danger) !important;
+  margin: 0;
+  font-size: 0.875rem;
+}
+.details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+.details dt {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+.details dd {
+  margin: 0.4rem 0 0;
+  overflow-wrap: anywhere;
+}
+.swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 0.5rem;
+  border: 1px solid rgb(0 0 0 / 15%);
+}
+.colors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.colors button {
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  cursor: pointer;
+}
+.colors button[aria-pressed="true"] {
+  outline: 3px solid var(--text);
+  outline-offset: 2px;
+}
+.dialog {
+  border: 0;
+  border-radius: 20px;
+  padding: 1.5rem;
+  width: min(90vw, 400px);
+  color: var(--text);
+}
+.dialog::backdrop {
+  background: rgb(0 0 0 / 40%);
+}
+.dialog h2 {
+  margin-top: 0;
+}
+.dialog p {
+  line-height: 1.6;
+}
+.classificationList {
+  display: grid;
+  gap: 0;
+  background: var(--surface);
+  border-radius: 16px;
+  padding: 0 16px;
+}
+.classificationList:empty {
+  padding: 0;
+}
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.classificationGroup {
+  border-bottom: 1px solid var(--border);
+  padding: 10px 0 16px;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease;
+}
+.classificationGroup:last-child {
+  border-bottom: 0;
+}
+.groupHeading {
+  justify-content: flex-start;
+  gap: 6px;
+}
+.groupHeading h3 {
+  flex: 0 1 auto;
+}
+.classificationCount {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
+.classificationHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.classificationHeading h3 {
+  flex: 1;
+  margin: 0;
+  min-width: 0;
+}
+.dragName {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
+  min-width: 0;
+  min-height: 44px;
+  max-width: 100%;
+  padding: 8px 12px;
+  background: var(--canvas);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font: inherit;
+  color: var(--text);
+  text-align: left;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  overflow-wrap: anywhere;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+.dragName span {
+  min-width: 0;
+}
+.categoryName {
+  font-weight: 600;
+  border-color: transparent;
+  background: transparent;
+  padding: 8px 4px;
+  font-size: 0.9rem;
+}
+.subcategoryName {
+  font-size: 0.875rem;
+  justify-content: flex-start;
+}
+.dragName:active {
+  border-color: var(--primary);
+  box-shadow: 0 2px 8px rgb(49 91 235 / 12%);
+}
+@media (hover: hover) {
+  .dragName:hover {
+    border-color: #90a8fb;
+    background: var(--primary-soft);
+  }
+}
+.dragName[data-dragging="true"] {
+  cursor: grabbing;
+}
+.classificationGroup[data-drag-source="true"],
+.subcategoryList li[data-drag-source="true"] {
+  opacity: 0.35;
+}
+.classificationGroup[data-drag-source="true"] .dragName:focus-visible,
+.dragName[data-dragging="true"]:focus-visible {
+  outline: none;
+}
+.dragFloating {
+  position: fixed;
+  z-index: 1000;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 8px 24px rgb(32 38 50 / 22%);
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+.subcategoryList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.subcategoryList li {
+  display: flex;
+  max-width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  padding: 0;
+  border-radius: 10px;
+}
+.classificationList[data-searching="true"] .dragName {
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.searchPath {
+  color: var(--text-secondary);
+  font: inherit;
+}
+.classificationSearch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+.classificationSearch svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  fill: none;
+  stroke: var(--text-secondary);
+  stroke-width: 1.8;
+}
+.classificationSearch input {
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+}
+.classificationSearch button {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+.searchResultCount,
+.emptyClassifications {
+  font-size: 0.875rem;
+}
+.dialog .field + .field {
+  margin-top: 16px;
+}
+.categoryHeader {
+  flex-wrap: wrap;
+}
+.creationNotice:empty {
+  margin: 0;
+}
+.createDialog {
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.createDialog .actions {
+  justify-content: flex-end;
+  margin-top: 0;
+}
+.closeDialog {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+.creationTypes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding: 4px;
+  gap: 4px;
+  border-radius: 12px;
+  background: var(--canvas);
+}
+.creationTypes button {
+  min-height: 44px;
+  min-width: 0;
+  padding: 8px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.creationTypes button[aria-pressed="true"] {
+  background: var(--surface);
+  color: var(--primary);
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgb(32 38 50 / 8%);
+}
+.createDialog button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

@@ -7,4 +7,7 @@ public interface RecurringExpenseRevisionRepository
     extends JpaRepository<RecurringExpenseRevisionEntity, UUID> {
   RecurringExpenseRevisionEntity findFirstByRecurringExpenseIdOrderByEffectiveFromAsc(
       UUID recurringExpenseId);
+
+  RecurringExpenseRevisionEntity findFirstByRecurringExpenseIdOrderByCreatedAtDescIdDesc(
+      UUID recurringExpenseId);
 }

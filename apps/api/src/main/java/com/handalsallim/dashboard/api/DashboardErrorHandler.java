@@ -8,6 +8,16 @@ import org.springframework.web.bind.annotation.*;
 
 @RestControllerAdvice(assignableTypes = DashboardController.class)
 public class DashboardErrorHandler {
+  @ExceptionHandler(com.handalsallim.recurringexpense.application.ChargeFailure.class)
+  ResponseEntity<?> charge(com.handalsallim.recurringexpense.application.ChargeFailure failure) {
+    return error(failure.status(), failure.getMessage());
+  }
+
+  @ExceptionHandler(org.springframework.dao.ConcurrencyFailureException.class)
+  ResponseEntity<?> concurrent() {
+    return error(409, "다른 변경이 진행 중입니다. 새로고침한 뒤 다시 시도해 주세요.");
+  }
+
   @ExceptionHandler(AuthenticationRequiredException.class)
   ResponseEntity<?> unauthorized() {
     return error(401, "로그인이 필요합니다.");

@@ -1,4 +1,6 @@
+import { apiFetch } from "../../shared/api/apiFetch";
 import type { FixedCostDashboard } from "./fixedCostStatistics";
+import { SERVICE_UNAVAILABLE_MESSAGE } from "../../shared/api/serviceAvailability";
 const object = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 const text = (value: unknown): value is string =>
@@ -48,8 +50,9 @@ export function validFixedCostDashboard(
         text(charge.name) &&
         date(charge.dueDate) &&
         months.includes(charge.dueDate.slice(0, 7)) &&
-        amount(charge.expectedAmount) &&
-        Number(charge.expectedAmount) > 0 &&
+        (charge.expectedAmount === null ||
+          (amount(charge.expectedAmount) &&
+            Number(charge.expectedAmount) > 0)) &&
         ["예정", "지연", "완료"].includes(String(charge.status)) &&
         nullableText(charge.categoryId) &&
         nullableText(charge.categoryName) &&
@@ -97,31 +100,22 @@ export function validFixedCostDashboard(
     value.charges.length
   )
     return false;
-  return (
-    Number.isSafeInteger(
-      value.charges.reduce(
-        (sum, charge) =>
-          sum +
-          Number(charge.expectedAmount) +
-          Number(charge.actualAmount ?? 0),
-        0,
-      ),
-    ) &&
-    Number.isSafeInteger(
-      value.unscheduled.reduce(
-        (sum, item) => sum + Number(item.expectedAmount),
-        0,
-      ),
-    )
+  return Number.isSafeInteger(
+    value.charges.reduce(
+      (sum, charge) =>
+        sum + (charge.status === "완료" ? Number(charge.actualAmount ?? 0) : 0),
+      0,
+    ),
   );
 }
 export async function getFixedCostDashboard(
   selectedMonth?: string,
 ): Promise<FixedCostDashboard> {
-  const response = await fetch(
+  const response = await apiFetch(
     `/backend/dashboard/fixed-costs${selectedMonth ? `?month=${encodeURIComponent(selectedMonth)}` : ""}`,
     { cache: "no-store", credentials: "same-origin" },
   );
+  if (response.status === 503) throw new Error(SERVICE_UNAVAILABLE_MESSAGE);
   if (!response.ok) throw new Error("고정비 통계를 불러오지 못했습니다.");
   const value: unknown = await response.json();
   if (!validFixedCostDashboard(value))

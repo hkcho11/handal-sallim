@@ -49,7 +49,7 @@ export default function SpendingBreakdown({
   const total =
     view === "actual"
       ? entries.reduce((sum, entry) => sum + entry.amount, 0)
-      : pending.reduce((sum, charge) => sum + charge.expectedAmount, 0);
+      : pending.reduce((sum, charge) => sum + (charge.expectedAmount ?? 0), 0);
   return (
     <section className={styles.breakdown} aria-labelledby="breakdown-title">
       <div className={styles.breakdownHeader}>
@@ -135,7 +135,10 @@ export default function SpendingBreakdown({
                   </h4>
                   <span>
                     {won(
-                      items.reduce((sum, item) => sum + item.expectedAmount, 0),
+                      items.reduce(
+                        (sum, item) => sum + (item.expectedAmount ?? 0),
+                        0,
+                      ),
                     )}
                   </span>
                 </div>
@@ -153,7 +156,7 @@ export default function SpendingBreakdown({
                         </span>
                       </div>
                       <strong className={styles.rowAmount}>
-                        {won(charge.expectedAmount)}
+                        {won(charge.expectedAmount ?? 0)}
                       </strong>
                     </li>
                   ))}

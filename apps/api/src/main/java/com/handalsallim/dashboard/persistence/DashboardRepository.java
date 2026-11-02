@@ -84,7 +84,7 @@ public class DashboardRepository {
               rs.getString("expense_name"),
               due,
               due.getDayOfMonth(),
-              rs.getLong("expected_amount"),
+              (Long) rs.getObject("expected_amount"),
               rs.getObject("actual_amount", Long.class),
               payer,
               rs.getString("payment_method"),
@@ -111,7 +111,7 @@ public class DashboardRepository {
         """
       SELECT c.id AS category_id, c.name AS category_name, sub.id AS subcategory_id, sub.name AS subcategory_name
       FROM expense_subcategories sub JOIN categories c ON c.id=sub.category_id AND c.space_id=sub.space_id
-      WHERE sub.space_id=? ORDER BY c.created_at, c.id, sub.created_at, sub.id
+      WHERE sub.space_id=? ORDER BY c.sort_order, c.created_at, c.id, sub.sort_order, sub.created_at, sub.id
       """,
         (rs, row) ->
             new FixedCostDashboardView.Classification(

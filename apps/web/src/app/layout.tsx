@@ -2,6 +2,12 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import BottomNavigation from "@/shared/ui/BottomNavigation";
+import { Suspense } from "react";
+import ScrollRestoration from "@/shared/ui/ScrollRestoration";
+import { FixedExpenseListFiltersProvider } from "@/features/fixed-expenses/FixedExpenseListFilters";
+import { HomeViewStateProvider } from "@/features/home/HomeViewState";
+
+import AuthBoundary from "@/features/auth/AuthBoundary";
 
 const pretendard = localFont({
   src: "./fonts/PretendardVariable.woff2",
@@ -21,8 +27,17 @@ export default function RootLayout({
   return (
     <html lang="ko" className={pretendard.variable}>
       <body>
-        <div className="app-content">{children}</div>
-        <BottomNavigation />
+        <AuthBoundary>
+          <HomeViewStateProvider>
+            <FixedExpenseListFiltersProvider>
+              <Suspense fallback={null}>
+                <ScrollRestoration />
+              </Suspense>
+              <div className="app-content">{children}</div>
+              <BottomNavigation />
+            </FixedExpenseListFiltersProvider>
+          </HomeViewStateProvider>
+        </AuthBoundary>
       </body>
     </html>
   );
