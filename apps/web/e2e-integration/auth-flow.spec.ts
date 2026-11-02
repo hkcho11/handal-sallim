@@ -789,11 +789,11 @@ test("회원코드 요청·수락 후 새 기록을 공유하고 과거 기록�
       .getByRole("button", { name: "동의하고 연결 해제", exact: true })
       .click();
     await expect(
-      otherPage.getByRole("heading", { name: "상대에게 요청하기" }),
+      otherPage.getByRole("heading", { name: "계정 연결하기" }),
     ).toBeVisible();
     await page.getByRole("button", { name: "요청 상태 새로고침" }).click();
     await expect(
-      page.getByRole("heading", { name: "상대에게 요청하기" }),
+      page.getByRole("heading", { name: "계정 연결하기" }),
     ).toBeVisible();
     for (const personalPage of [page, otherPage]) {
       await personalPage.goto("/income?month=2025-01");
