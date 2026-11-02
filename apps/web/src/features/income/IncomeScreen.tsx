@@ -53,7 +53,7 @@ export default function IncomeScreen({
 
   useEffect(() => {
     let active = true;
-    listIncomes(month)
+    listIncomes(month, attempt > 0)
       .then((result) => {
         if (active) {
           setData(result);

@@ -79,7 +79,7 @@ export default function FixedExpensesListScreen() {
   const headingRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
     let active = true;
-    listFixedExpenses()
+    listFixedExpenses(retry > 0)
       .then((result) => {
         if (active) setExpenses(result);
       })

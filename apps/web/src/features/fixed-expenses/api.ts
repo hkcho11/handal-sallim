@@ -1,3 +1,4 @@
+import { cachedRead } from "../../shared/api/readCache";
 import { apiFetch } from "../../shared/api/apiFetch";
 import { SERVICE_UNAVAILABLE_MESSAGE } from "../../shared/api/serviceAvailability";
 
@@ -146,7 +147,10 @@ async function readResult(response: Response): Promise<unknown> {
   }
 }
 
-export async function listFixedExpenses(): Promise<FixedExpense[]> {
+export function listFixedExpenses(fresh = false): Promise<FixedExpense[]> {
+  return cachedRead("fixed-expenses:list", fetchFixedExpenses, fresh);
+}
+async function fetchFixedExpenses(): Promise<FixedExpense[]> {
   let response: Response;
   try {
     response = await apiFetch("/backend/recurring-expenses", {

@@ -117,6 +117,11 @@ public class AuthController {
   @GetMapping("/session")
   public SessionView session(Principal principal, HttpServletRequest request) {
     UUID id = UUID.fromString(principal.getName());
+    if (request.getAttribute(AuthConfiguration.AUTHENTICATED_ACCOUNT)
+            instanceof AuthConfiguration.RequestAccount account
+        && account.id().equals(id)) {
+      return new SessionView(id.toString(), account.name(), service.hasSpace(id));
+    }
     var account =
         service.current(id, (Long) request.getSession(false).getAttribute("accountVersion"));
     return new SessionView(id.toString(), account.name(), service.hasSpace(id));

@@ -1,3 +1,4 @@
+import { cachedRead } from "../../shared/api/readCache";
 import { apiFetch } from "../../shared/api/apiFetch";
 import { hasOwner } from "../../shared/api/owners";
 import { SERVICE_UNAVAILABLE_MESSAGE } from "../../shared/api/serviceAvailability";
@@ -81,7 +82,13 @@ async function request(path: string, init?: RequestInit): Promise<unknown> {
     throw new Error("수입 응답을 확인할 수 없습니다.");
   }
 }
-export async function listIncomes(month: string): Promise<IncomeMonth> {
+export function listIncomes(
+  month: string,
+  fresh = false,
+): Promise<IncomeMonth> {
+  return cachedRead(`incomes:${month}`, () => fetchIncomes(month), fresh);
+}
+async function fetchIncomes(month: string): Promise<IncomeMonth> {
   const result = await request(`?month=${encodeURIComponent(month)}`);
   if (
     !object(result) ||

@@ -1,3 +1,4 @@
+import { cachedRead } from "../../shared/api/readCache";
 import { apiFetch } from "../../shared/api/apiFetch";
 import type { FixedCostDashboard } from "./fixedCostStatistics";
 import { SERVICE_UNAVAILABLE_MESSAGE } from "../../shared/api/serviceAvailability";
@@ -108,7 +109,17 @@ export function validFixedCostDashboard(
     ),
   );
 }
-export async function getFixedCostDashboard(
+export function getFixedCostDashboard(
+  selectedMonth?: string,
+  fresh = false,
+): Promise<FixedCostDashboard> {
+  return cachedRead(
+    `dashboard:${selectedMonth ?? "current"}`,
+    () => fetchFixedCostDashboard(selectedMonth),
+    fresh,
+  );
+}
+async function fetchFixedCostDashboard(
   selectedMonth?: string,
 ): Promise<FixedCostDashboard> {
   const response = await apiFetch(

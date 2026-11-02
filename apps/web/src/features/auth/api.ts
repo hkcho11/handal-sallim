@@ -1,4 +1,5 @@
 import { apiFetch } from "../../shared/api/apiFetch";
+import { setReadScope } from "../../shared/api/readCache";
 
 async function fetchAuth(path: string, init?: RequestInit) {
   try {
@@ -38,7 +39,9 @@ export async function currentSession(): Promise<AccountSession | null> {
     throw new Error(
       "계정 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.",
     );
-  return parseSession(await response.json());
+  const session = parseSession(await response.json());
+  setReadScope(session.userId);
+  return session;
 }
 export async function authAction(
   action: string,

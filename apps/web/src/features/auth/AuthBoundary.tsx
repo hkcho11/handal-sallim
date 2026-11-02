@@ -1,5 +1,6 @@
 "use client";
 import { replaceDocument } from "@/shared/loadingState";
+import { invalidateReads } from "@/shared/api/readCache";
 
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import Link from "@/shared/ui/AppLink";
@@ -56,6 +57,17 @@ export default function AuthBoundary({ children }: { children: ReactNode }) {
     window.addEventListener("auth-expired", expired);
     return () => window.removeEventListener("auth-expired", expired);
   }, [load]);
+  useEffect(() => {
+    const clear = () => invalidateReads();
+    window.addEventListener("focus", clear);
+    window.addEventListener("pageshow", clear);
+    document.addEventListener("visibilitychange", clear);
+    return () => {
+      window.removeEventListener("focus", clear);
+      window.removeEventListener("pageshow", clear);
+      document.removeEventListener("visibilitychange", clear);
+    };
+  }, []);
   if (isPublic) return children;
   if (checking || !account)
     return (
