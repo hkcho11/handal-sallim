@@ -180,7 +180,10 @@ export default function SharingScreen() {
           ) : (
             <>
               <section className={styles.card}>
-                <h2>상대에게 요청하기</h2>
+                <h2>계정 연결하기</h2>
+                <p id="partner-code-hint">
+                  전달받은 파트너의 코드를 입력하세요.
+                </p>
                 <form
                   onSubmit={(event) => {
                     event.preventDefault();
@@ -194,7 +197,7 @@ export default function SharingScreen() {
                     <input
                       autoComplete="off"
                       maxLength={20}
-                      placeholder="7KMP-4XQ9"
+                      aria-describedby="partner-code-hint"
                       value={code}
                       onChange={(event) => {
                         setCode(event.target.value);
