@@ -26,8 +26,8 @@ BACKUPS = Path("/var/backups/handalsallim")
 PG = Path("/usr/lib/postgresql/18/bin")
 
 
-def read_json(url):
-    with urlopen(Request(url, headers={"User-Agent": "handalsallim-nightly", "Cache-Control": "no-cache"}), timeout=30) as response:
+def read_json(url, timeout=30):
+    with urlopen(Request(url, headers={"User-Agent": "handalsallim-nightly", "Cache-Control": "no-cache"}), timeout=timeout) as response:
         return json.load(response)
 
 
@@ -78,13 +78,14 @@ def backup():
 
 def healthy():
     try:
-        return read_json("http://127.0.0.1:8081/api/auth/health").get("status") == "UP"
+        return read_json("http://127.0.0.1:8081/api/auth/health", timeout=2).get("status") == "UP"
     except Exception:
         return False
 
 
 def wait_healthy():
-    for _ in range(60):
+    deadline = time.monotonic() + 180
+    while time.monotonic() < deadline:
         if healthy():
             return True
         time.sleep(3)

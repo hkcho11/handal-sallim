@@ -13,6 +13,16 @@ import package_candidate
 
 
 class DeploymentTest(unittest.TestCase):
+    def test_health_probe_cannot_wait_for_a_hung_server_indefinitely(self):
+        with patch.object(deploy, "read_json", return_value={"status": "UP"}) as request:
+            self.assertTrue(deploy.healthy())
+            request.assert_called_once_with("http://127.0.0.1:8081/api/auth/health", timeout=2)
+
+    def test_readiness_uses_a_wall_clock_deadline(self):
+        with patch.object(deploy.time, "monotonic", side_effect=[0, 0, 181]), patch.object(deploy.time, "sleep"), patch.object(deploy, "healthy", return_value=False) as health:
+            self.assertFalse(deploy.wait_healthy())
+            health.assert_called_once()
+
     @contextmanager
     def candidate(self, migration=False, bad_checksum=False, readiness=(True,)):
         with tempfile.TemporaryDirectory() as folder, ExitStack() as stack:
