@@ -43,6 +43,8 @@ for (const width of [360, 1280]) {
     await page
       .getByRole("link", { name: "진행 중인 가입 인증 계속하기" })
       .click();
+    await expect(page).toHaveURL(/\/auth\/register$/);
+    await expect(page.getByLabel("인증번호", { exact: true })).toBeFocused();
     await page.reload();
     const input = page.getByLabel("인증번호", { exact: true });
     await expect(input).toBeFocused();

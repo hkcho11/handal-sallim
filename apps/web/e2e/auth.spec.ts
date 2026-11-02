@@ -1,5 +1,40 @@
 import { expect, test } from "./fixtures";
 
+test("화면 준비 전에는 로그인 정보를 입력하거나 제출하지 않는다", async ({
+  page,
+}) => {
+  let release!: () => void;
+  const scriptsReady = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route("**/_next/static/**/*.js", async (route) => {
+    await scriptsReady;
+    await route.continue();
+  });
+  await page.route("**/backend/auth/login", (route) =>
+    route.fulfill({
+      status: 401,
+      json: { message: "이메일 또는 비밀번호를 확인해 주세요." },
+    }),
+  );
+  try {
+    await page.goto("/auth/login", { waitUntil: "commit" });
+    await expect(page.getByLabel("이메일", { exact: true })).toBeDisabled();
+    await expect(page.getByLabel("비밀번호", { exact: true })).toBeDisabled();
+    await expect(
+      page.getByRole("button", { name: "로그인", exact: true }),
+    ).toBeDisabled();
+  } finally {
+    release();
+  }
+  await page.getByLabel("이메일", { exact: true }).fill("test@example.test");
+  await page.getByLabel("비밀번호", { exact: true }).fill("BadFixture82!");
+  await page.getByRole("button", { name: "로그인", exact: true }).click();
+  await expect(page.getByRole("main").getByRole("alert")).toContainText(
+    "이메일 또는 비밀번호",
+  );
+});
+
 test("로그인 필요 시 복귀 경로를 유지하고 오류를 안내한다", async ({
   page,
 }) => {

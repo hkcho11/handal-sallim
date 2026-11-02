@@ -40,6 +40,7 @@ export default function AuthScreen({ mode }: { mode: Mode }) {
   const [complete, setComplete] = useState(false);
   const [resumeSignup, setResumeSignup] = useState(false);
   const [resumeReset, setResumeReset] = useState(false);
+  const [ready, setReady] = useState(false);
   const codeInput = useRef<HTMLInputElement>(null);
   const passwordInput = useRef<HTMLInputElement>(null);
 
@@ -48,6 +49,7 @@ export default function AuthScreen({ mode }: { mode: Mode }) {
     // Restore browser-only drafts after hydration and ignore an abandoned page.
     queueMicrotask(() => {
       if (!active) return;
+      setReady(true);
       if (mode === "verify" || mode === "reset") {
         const value =
           new URLSearchParams(window.location.hash.slice(1)).get("token") ?? "";
@@ -242,6 +244,7 @@ export default function AuthScreen({ mode }: { mode: Mode }) {
             표시 이름
             <input
               autoComplete="nickname"
+              disabled={!ready}
               required
               maxLength={100}
               value={name}
@@ -254,6 +257,7 @@ export default function AuthScreen({ mode }: { mode: Mode }) {
             이메일
             <input
               type="email"
+              disabled={!ready}
               autoComplete="username"
               required
               maxLength={254}
@@ -268,6 +272,7 @@ export default function AuthScreen({ mode }: { mode: Mode }) {
             <input
               type="text"
               inputMode="numeric"
+              disabled={!ready}
               autoComplete="one-time-code"
               aria-label="인증번호"
               aria-describedby="email-code-hint"
@@ -291,6 +296,7 @@ export default function AuthScreen({ mode }: { mode: Mode }) {
             {reset ? "새 비밀번호" : "비밀번호"}
             <input
               type="password"
+              disabled={!ready}
               ref={passwordInput}
               aria-label={reset ? "새 비밀번호" : "비밀번호"}
               autoComplete={
@@ -315,6 +321,7 @@ export default function AuthScreen({ mode }: { mode: Mode }) {
             <input
               type="password"
               autoComplete="new-password"
+              disabled={!ready}
               required
               maxLength={128}
               value={confirmation}
@@ -329,7 +336,7 @@ export default function AuthScreen({ mode }: { mode: Mode }) {
         )}
         {message && <p role="status">{message}</p>}
         {!complete && (
-          <button disabled={busy}>{busy ? "처리 중…" : label}</button>
+          <button disabled={busy || !ready}>{busy ? "처리 중…" : label}</button>
         )}
       </form>
       {(enteringCode || settingPassword) && !legacyLink && (
