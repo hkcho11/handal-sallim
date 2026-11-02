@@ -444,15 +444,26 @@ class AuthApiTest {
   }
 
   @Test
+  void emailCodeRequiresExactlySixDigits() throws Exception {
+    register();
+    UUID id = codeRequest(false);
+    String code = mailCode(false);
+    assertTrue(code.matches("[0-9]{6}"));
+    for (String invalid : java.util.List.of("12345", "1234567", "12345678", "12a456"))
+      mvc.perform(checkCode(id, invalid, false)).andExpect(status().isBadRequest());
+    mvc.perform(checkCode(id, code, false)).andExpect(status().isOk());
+  }
+
+  @Test
   void emailCodeFailuresCommitAndFiveIncorrectAttemptsBlockEvenTheCorrectCode() throws Exception {
     register();
     UUID id = codeRequest(false);
     String code = mailCode(false);
-    assertTrue(code.matches("[0-9]{8}"));
+    assertTrue(code.matches("[0-9]{6}"));
     assertNotEquals(
         code,
         jdbc.queryForObject("SELECT code_hash FROM email_auth_codes WHERE id=?", String.class, id));
-    String wrong = code.equals("00000000") ? "11111111" : "00000000";
+    String wrong = code.equals("000000") ? "111111" : "000000";
     for (int n = 0; n < 5; n++)
       mvc.perform(checkCode(id, wrong, false)).andExpect(status().isBadRequest());
     assertEquals(
@@ -474,7 +485,7 @@ class AuthApiTest {
     String code = mailCode(false);
     mvc.perform(checkCode(UUID.randomUUID(), code, false)).andExpect(status().isBadRequest());
     mvc.perform(checkCode(id, code, true)).andExpect(status().isBadRequest());
-    String wrong = code.equals("00000000") ? "11111111" : "00000000";
+    String wrong = code.equals("000000") ? "111111" : "000000";
     for (int n = 0; n < 4; n++)
       mvc.perform(checkCode(id, wrong, false)).andExpect(status().isBadRequest());
     mvc.perform(checkCode(id, code, false))
@@ -548,7 +559,7 @@ class AuthApiTest {
     verify(mail, never()).send(anyString(), anyString(), anyBoolean());
     mvc.perform(post("/api/auth/verify-code").contentType(MediaType.APPLICATION_JSON).content("{}"))
         .andExpect(status().isForbidden());
-    mvc.perform(checkCode(UUID.randomUUID(), "00000000", true)).andExpect(status().isBadRequest());
+    mvc.perform(checkCode(UUID.randomUUID(), "000000", true)).andExpect(status().isBadRequest());
   }
 
   @Test

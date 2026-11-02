@@ -229,7 +229,7 @@ export default function AuthScreen({ mode }: { mode: Mode }) {
       )}
       {enteringCode && (
         <p>
-          {email} 메일함에서 숫자 8자리 인증번호를 확인해 이 화면에 입력해
+          {email} 메일함에서 숫자 6자리 인증번호를 확인해 이 화면에 입력해
           주세요. 유효시간은 10분이며 5회 틀리면 새 번호를 받아야 해요.
         </p>
       )}
@@ -278,12 +278,12 @@ export default function AuthScreen({ mode }: { mode: Mode }) {
               aria-describedby="email-code-hint"
               ref={codeInput}
               required
-              pattern="[0-9]{8}"
-              minLength={8}
+              pattern="[0-9]{6}"
+              minLength={6}
               maxLength={32}
               value={code}
               onChange={(event) =>
-                setCode(event.target.value.replace(/[^0-9]/g, "").slice(0, 8))
+                setCode(event.target.value.replace(/[^0-9]/g, "").slice(0, 6))
               }
             />
             <small id="email-code-hint">

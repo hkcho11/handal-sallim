@@ -40,7 +40,7 @@ async function latestCode(
       );
       const body = (await content.json()) as { Text: string };
       expect(body.Text).not.toMatch(/https?:\/\//);
-      const candidate = body.Text.match(/인증번호: ([0-9]{8})/)?.[1];
+      const candidate = body.Text.match(/인증번호: ([0-9]{6})/)?.[1];
       if (!candidate || candidate === previous) return false;
       token = candidate;
       return true;

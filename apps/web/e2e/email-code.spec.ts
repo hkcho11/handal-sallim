@@ -17,7 +17,7 @@ for (const width of [360, 1280]) {
       checks++;
       expect(route.request().postDataJSON()).toEqual({
         requestId,
-        code: "00001234",
+        code: "001234",
         reset: false,
       });
       await route.fulfill({ json: { token: grant } });
@@ -49,10 +49,18 @@ for (const width of [360, 1280]) {
     const input = page.getByLabel("인증번호", { exact: true });
     await expect(input).toBeFocused();
     await expect(input).toHaveAttribute("autocomplete", "one-time-code");
+    await expect(input).toHaveAttribute("pattern", "[0-9]{6}");
+    await input.fill("12345");
+    await page
+      .getByRole("button", { name: "인증번호 확인", exact: true })
+      .click();
+    expect(checks).toBe(0);
+    await input.fill("12345678");
+    await expect(input).toHaveValue("123456");
     await input.fill("letters");
     await expect(input).toHaveValue("");
-    await input.fill("0000 1234");
-    await expect(input).toHaveValue("00001234");
+    await input.fill("00 1234");
+    await expect(input).toHaveValue("001234");
     await page.evaluate(() => {
       document.documentElement.style.fontSize = "200%";
     });
@@ -74,7 +82,7 @@ for (const width of [360, 1280]) {
       JSON.stringify({ ...sessionStorage, ...localStorage }),
     );
     expect(stored).not.toContain(grant);
-    expect(stored).not.toContain("00001234");
+    expect(stored).not.toContain("001234");
     expect(page.url()).not.toContain("token");
     await page.getByLabel("비밀번호", { exact: true }).fill("OwnerFixture82!");
     await page.getByLabel("비밀번호 확인").fill("OwnerFixture82!");
@@ -123,7 +131,7 @@ test("재설정 번호 오류와 재발급·비밀번호 단계 새로고침을 
   await page.goto("/auth/forgot");
   await page.getByLabel("이메일", { exact: true }).fill("fixture@example.test");
   await page.getByRole("button", { name: "재설정 인증번호 받기" }).click();
-  await page.getByLabel("인증번호", { exact: true }).fill("12345678");
+  await page.getByLabel("인증번호", { exact: true }).fill("123456");
   await page
     .getByRole("button", { name: "인증번호 확인", exact: true })
     .click();
@@ -133,7 +141,7 @@ test("재설정 번호 오류와 재발급·비밀번호 단계 새로고침을 
     .getByRole("button", { name: "인증번호 다시 받기", exact: true })
     .click();
   await expect(page.getByLabel("인증번호", { exact: true })).toHaveValue("");
-  await page.getByLabel("인증번호", { exact: true }).fill("87654321");
+  await page.getByLabel("인증번호", { exact: true }).fill("654321");
   await page
     .getByRole("button", { name: "인증번호 확인", exact: true })
     .click();

@@ -38,7 +38,7 @@ public class EmailCodeService {
   public UUID issue(AccountRepository.Account account, boolean reset) {
     UUID id = UUID.randomUUID();
     String purpose = reset ? "PASSWORD_RESET" : "EMAIL_VERIFY";
-    String code = String.format(Locale.ROOT, "%08d", random.nextInt(100_000_000));
+    String code = String.format(Locale.ROOT, "%06d", random.nextInt(1_000_000));
     accounts.revoke(account.id(), purpose, clock.instant());
     codes.issue(
         id,
@@ -69,7 +69,7 @@ public class EmailCodeService {
         || !purpose.equals(code.purpose())
         || account.verified() != reset) throw invalid();
     if (input == null
-        || !input.matches("[0-9]{8}")
+        || !input.matches("[0-9]{6}")
         || !encoder.matches(id + ":" + purpose + ":" + input, code.hash())) {
       codes.fail(id);
       throw invalid();
