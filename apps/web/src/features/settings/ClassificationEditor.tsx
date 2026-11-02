@@ -68,6 +68,17 @@ export default function ClassificationEditor({
     label: string;
   } | null>(null);
   const suppressClick = useRef(false);
+  const pendingFocus = useRef<string | null>(null);
+  useEffect(() => {
+    if (disabled || !pendingFocus.current) return;
+    const handle = document.querySelector<HTMLButtonElement>(
+      `[data-handle-id="${CSS.escape(pendingFocus.current)}"]`,
+    );
+    if (handle) {
+      handle.focus();
+      pendingFocus.current = null;
+    }
+  }, [disabled, items, subcategories]);
   const [moving, setMoving] = useState<{
     id: string;
     from: string;
@@ -298,6 +309,15 @@ export default function ClassificationEditor({
   }
   function restoreEditFocus() {
     requestAnimationFrame(() => {
+      const active = document.activeElement;
+      // A user may have already focused the next control after closing the dialog.
+      if (
+        active &&
+        active !== document.body &&
+        active !== trigger.current &&
+        !dialog.current?.contains(active)
+      )
+        return;
       if (
         trigger.current?.isConnected &&
         !trigger.current.hasAttribute("disabled")
@@ -400,14 +420,8 @@ export default function ClassificationEditor({
       );
     } finally {
       busy.current = false;
+      pendingFocus.current = id;
       onBusy(false);
-      requestAnimationFrame(() =>
-        document
-          .querySelector<HTMLButtonElement>(
-            `[data-handle-id="${CSS.escape(id)}"]`,
-          )
-          ?.focus(),
-      );
     }
   }
   async function saveDrag(current: Drag, next: Layout) {
@@ -441,14 +455,8 @@ export default function ClassificationEditor({
     } finally {
       showPreview(null);
       busy.current = false;
+      pendingFocus.current = current.id;
       onBusy(false);
-      requestAnimationFrame(() =>
-        document
-          .querySelector<HTMLButtonElement>(
-            `[data-handle-id="${CSS.escape(current.id)}"]`,
-          )
-          ?.focus(),
-      );
     }
   }
   function start(

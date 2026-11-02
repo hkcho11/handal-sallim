@@ -341,11 +341,15 @@ for (const width of [360, 1280]) {
           ),
       )
       .toEqual([b, a]);
+    // The reordered preview is visible before the save request has finished.
+    await expect(utility).toBeEnabled();
+    await expect(utility).toBeFocused();
     await utility.press("Enter");
     await expect(
       page.getByRole("dialog", { name: "상위 분류 수정" }),
     ).toBeVisible();
     await page.keyboard.press("Escape");
+    await expect(utility).toBeFocused();
     const loan = page.getByRole("button", {
       name: "대출",
       exact: true,
