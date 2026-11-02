@@ -51,7 +51,7 @@ function MonthDashboard({
   const [attempt, setAttempt] = useState(0);
   useEffect(() => {
     let active = true;
-    getFixedCostDashboard(selectedMonth)
+    getFixedCostDashboard(selectedMonth, attempt > 0)
       .then((result) => {
         if (active) setData(result);
       })

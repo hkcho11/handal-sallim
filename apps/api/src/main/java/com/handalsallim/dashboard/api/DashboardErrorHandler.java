@@ -1,6 +1,5 @@
 package com.handalsallim.dashboard.api;
 
-import com.handalsallim.dashboard.application.DashboardService.NoDashboardSpaceException;
 import com.handalsallim.recurringexpense.api.AuthenticationRequiredException;
 import java.util.Map;
 import org.springframework.http.ResponseEntity;
@@ -21,11 +20,6 @@ public class DashboardErrorHandler {
   @ExceptionHandler(AuthenticationRequiredException.class)
   ResponseEntity<?> unauthorized() {
     return error(401, "로그인이 필요합니다.");
-  }
-
-  @ExceptionHandler(NoDashboardSpaceException.class)
-  ResponseEntity<?> forbidden() {
-    return error(403, "사용할 수 있는 공간이 없습니다.");
   }
 
   @ExceptionHandler(java.time.DateTimeException.class)

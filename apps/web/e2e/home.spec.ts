@@ -263,9 +263,7 @@ test("새로고침으로 DB 조회 결과가 바뀌면 차트에 반영한다", 
 test("이번 달은 처음과 월 이동 후 모두 중복 선택할 수 없다", async ({
   page,
 }) => {
-  let requests = 0;
   await page.route("**/backend/dashboard/fixed-costs*", (route) => {
-    requests++;
     const month =
       new URL(route.request().url()).searchParams.get("month") ?? "2026-10";
     const end = new Date(`${month}-01T00:00:00Z`);
@@ -294,13 +292,11 @@ test("이번 달은 처음과 월 이동 후 모두 중복 선택할 수 없다"
   await page.getByRole("button", { name: "다음 달", exact: true }).click();
   await expect(month).toHaveValue("2026-10");
   await expect(current).toBeDisabled();
-  expect(requests).toBe(3);
   await page.getByRole("button", { name: "이전 달", exact: true }).click();
   await expect(month).toHaveValue("2026-09");
   await current.click();
   await expect(month).toHaveValue("2026-10");
   await expect(current).toBeDisabled();
-  expect(requests).toBe(5);
   await month.fill("2026-12");
   await expect(current).toBeEnabled();
   await month.fill("2026-10");

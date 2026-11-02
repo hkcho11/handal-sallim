@@ -28,8 +28,10 @@ public class ScheduledChargeService {
   @Transactional
   public UUID ensure(UUID user, YearMonth month) {
     UUID space = store.lockCurrentSpace(user);
-    generateSpace(
-        space, month == null ? YearMonth.from(today()).atEndOfMonth() : month.atEndOfMonth());
+    store.generateForLockedSpace(
+        space,
+        month == null ? YearMonth.from(today()).atEndOfMonth() : month.atEndOfMonth(),
+        clock.instant());
     return space;
   }
 

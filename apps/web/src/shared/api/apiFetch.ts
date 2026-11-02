@@ -1,6 +1,13 @@
 import { beginLoading } from "../loadingState";
+import { invalidateReads, setReadScope } from "./readCache";
 
 export async function apiFetch(input: RequestInfo | URL, init?: RequestInit) {
+  const changesData = !["GET", "HEAD", "OPTIONS"].includes(
+    (
+      init?.method ?? (input instanceof Request ? input.method : "GET")
+    ).toUpperCase(),
+  );
+  if (changesData) invalidateReads();
   const finish = beginLoading();
   const controller = new AbortController();
   const abort = () => controller.abort();
@@ -11,6 +18,8 @@ export async function apiFetch(input: RequestInfo | URL, init?: RequestInit) {
   try {
     return await performFetch(input, { ...init, signal: controller.signal });
   } finally {
+    // A read started during the write must not remain cached after it completes.
+    if (changesData) invalidateReads();
     clearTimeout(timeout);
     signal?.removeEventListener("abort", abort);
     finish();
@@ -36,6 +45,10 @@ async function performFetch(input: RequestInfo | URL, init?: RequestInit) {
   const response = await fetch(input, { ...init, headers });
   // Include the response body in the blocking period.
   if (response.body) await response.clone().arrayBuffer();
+  if (response.status === 401 || response.status === 403) {
+    invalidateReads();
+    setReadScope(null);
+  }
   if (response.status === 401 && !String(input).includes("/auth/")) {
     window.dispatchEvent(new Event("auth-expired"));
   }

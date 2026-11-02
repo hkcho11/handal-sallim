@@ -1,3 +1,4 @@
+import { cachedRead } from "../../shared/api/readCache";
 import { apiFetch } from "../../shared/api/apiFetch";
 import { hasOwner } from "../../shared/api/owners";
 import { SERVICE_UNAVAILABLE_MESSAGE } from "../../shared/api/serviceAvailability";
@@ -83,7 +84,10 @@ async function request(path: string, init?: RequestInit): Promise<unknown> {
   }
 }
 
-export async function listSavings(): Promise<SavingsOverview> {
+export function listSavings(fresh = false): Promise<SavingsOverview> {
+  return cachedRead("savings:list", fetchSavings, fresh);
+}
+async function fetchSavings(): Promise<SavingsOverview> {
   const result = await request("");
   if (
     !object(result) ||

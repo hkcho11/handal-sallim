@@ -19,7 +19,7 @@ export default function SavingsListScreen() {
   const [attempt, setAttempt] = useState(0);
   useEffect(() => {
     let active = true;
-    listSavings()
+    listSavings(attempt > 0)
       .then((result) => {
         if (active) {
           setData(result);

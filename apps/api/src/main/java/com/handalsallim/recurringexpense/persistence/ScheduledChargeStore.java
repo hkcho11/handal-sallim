@@ -38,6 +38,12 @@ public class ScheduledChargeStore {
         jdbc.queryForList(
             "SELECT id FROM spaces WHERE id=? AND status='ACTIVE' FOR UPDATE", UUID.class, space);
     if (active.isEmpty()) throw new ChargeFailure(409, "가계부가 변경되었습니다. 새로고침해 주세요.");
+    generateForLockedSpace(space, through, now);
+  }
+
+  // Caller must hold this active-space lock in the same transaction; user paths validate
+  // membership.
+  public void generateForLockedSpace(UUID space, LocalDate through, Instant now) {
     jdbc.update(
         """
       WITH settings AS (

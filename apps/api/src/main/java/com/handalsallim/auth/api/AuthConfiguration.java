@@ -33,6 +33,10 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @Configuration
 @EnableScheduling
 public class AuthConfiguration {
+  static final String AUTHENTICATED_ACCOUNT = AuthConfiguration.class.getName() + ".account";
+
+  record RequestAccount(UUID id, String name) {}
+
   @Bean
   PasswordEncoder passwordEncoder() {
     return new org.springframework.security.crypto.password.DelegatingPasswordEncoder(
@@ -124,6 +128,8 @@ public class AuthConfiguration {
                     var account =
                         service.current(
                             UUID.fromString(id), (Long) session.getAttribute("accountVersion"));
+                    request.setAttribute(
+                        AUTHENTICATED_ACCOUNT, new RequestAccount(account.id(), account.name()));
                     SecurityContextHolder.getContext()
                         .setAuthentication(
                             new UsernamePasswordAuthenticationToken(

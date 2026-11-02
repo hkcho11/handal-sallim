@@ -17,13 +17,6 @@ public class DashboardRepository {
     this.jdbc = jdbc;
   }
 
-  public List<UUID> spaces(UUID user) {
-    return jdbc.query(
-        "SELECT m.space_id FROM space_members m JOIN spaces s ON s.id=m.space_id JOIN users u ON u.id=m.user_id WHERE m.user_id=? AND m.status='ACTIVE' AND s.status='ACTIVE' AND u.status='ACTIVE'",
-        (rs, row) -> rs.getObject(1, UUID.class),
-        user);
-  }
-
   public List<DashboardView.Entry> entries(UUID space, YearMonth month) {
     return jdbc.query(
         """

@@ -65,7 +65,7 @@ test("DB 변경 후 새로고침하면 선택 월의 통계를 다시 조회한�
   expect(
     await screen.findByText("이 달에 결제 완료한 내역이 없어요."),
   ).toBeTruthy();
-  expect(getFixedCostDashboard).toHaveBeenLastCalledWith("2026-09");
+  expect(getFixedCostDashboard).toHaveBeenLastCalledWith("2026-09", true);
 });
 test("새로고침 실패를 알리고 재시도하면 통계를 다시 표시한다", async () => {
   vi.mocked(getFixedCostDashboard).mockResolvedValue(FIXED_COST_FIXTURE);
