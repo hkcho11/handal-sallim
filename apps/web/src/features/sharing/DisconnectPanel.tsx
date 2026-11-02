@@ -1,4 +1,5 @@
 "use client";
+import { replaceDocument } from "@/shared/loadingState";
 
 import { useState } from "react";
 import { decideDisconnect, requestDisconnect, type SharingState } from "./api";
@@ -98,7 +99,7 @@ export default function DisconnectPanel({
               void run(async () => {
                 if (receiving) {
                   await decideDisconnect(pending.id, "ACCEPT");
-                  window.location.replace("/settings/sharing");
+                  replaceDocument("/settings/sharing");
                 } else {
                   onChange(await requestDisconnect(connection.spaceId));
                   setConfirming(false);

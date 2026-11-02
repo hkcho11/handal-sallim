@@ -1,7 +1,8 @@
 "use client";
+import { replaceDocument } from "@/shared/loadingState";
 
 import { useCallback, useEffect, useState, type ReactNode } from "react";
-import Link from "next/link";
+import Link from "@/shared/ui/AppLink";
 import { usePathname } from "next/navigation";
 import {
   authAction,
@@ -26,7 +27,7 @@ export default function AuthBoundary({ children }: { children: ReactNode }) {
       const session = await currentSession();
       setError("");
       if (!session) {
-        window.location.replace(
+        replaceDocument(
           `/auth/login?returnTo=${encodeURIComponent(window.location.pathname + window.location.search)}`,
         );
         return;
@@ -118,7 +119,7 @@ export default function AuthBoundary({ children }: { children: ReactNode }) {
           onClick={async () => {
             try {
               await authAction("logout");
-              window.location.replace("/auth/login");
+              replaceDocument("/auth/login");
             } catch (error) {
               setError(
                 error instanceof Error

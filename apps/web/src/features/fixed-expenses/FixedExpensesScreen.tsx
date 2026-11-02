@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import Link from "@/shared/ui/AppLink";
+import { useAppRouter as useRouter } from "@/shared/ui/useAppRouter";
 import WonInput from "../../shared/ui/WonInput";
 import {
   updateFixedExpense,

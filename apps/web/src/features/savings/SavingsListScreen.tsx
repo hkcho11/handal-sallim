@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/shared/ui/AppLink";
 import { useEffect, useState } from "react";
 import {
   listSavings,

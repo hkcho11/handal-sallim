@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import Link from "@/shared/ui/AppLink";
 import { listFixedExpenses, type FixedExpense } from "../fixed-expenses/api";
 import styles from "./home-dashboard.module.css";
 

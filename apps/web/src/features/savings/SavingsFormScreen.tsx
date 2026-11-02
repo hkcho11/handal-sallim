@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/shared/ui/AppLink";
 import OwnerSelect from "@/shared/ui/OwnerSelect";
 import { useOwnerOptions } from "@/shared/ui/useOwnerOptions";
-import { useRouter } from "next/navigation";
+import { useAppRouter as useRouter } from "@/shared/ui/useAppRouter";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import WonInput from "@/shared/ui/WonInput";
 import {

@@ -1,6 +1,7 @@
 "use client";
+import { replaceDocument } from "@/shared/loadingState";
 
-import Link from "next/link";
+import Link from "@/shared/ui/AppLink";
 import { useEffect, useRef, useState } from "react";
 import { authAction, currentSession, safeReturn } from "./api";
 import {
@@ -78,7 +79,7 @@ export default function AuthScreen({ mode }: { mode: Mode }) {
           .then((session) => {
             if (!active) return;
             if (session) setName(session.name);
-            else window.location.replace("/auth/login");
+            else replaceDocument("/auth/login");
           })
           .catch(() => {
             if (active) setError("계정을 불러오지 못했습니다.");
@@ -150,14 +151,14 @@ export default function AuthScreen({ mode }: { mode: Mode }) {
       } else if (mode === "login") {
         await authAction("login", { email, password });
         setPassword("");
-        window.location.replace(
+        replaceDocument(
           safeReturn(
             new URLSearchParams(window.location.search).get("returnTo"),
           ),
         );
       } else if (mode === "account") {
         await authAction("logout");
-        window.location.replace("/auth/login");
+        replaceDocument("/auth/login");
       } else await requestCode();
     } catch (failure) {
       setError(

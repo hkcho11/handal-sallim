@@ -315,6 +315,7 @@ export default function ClassificationEditor({
         active &&
         active !== document.body &&
         active !== trigger.current &&
+        !active.closest("[data-blocking-loading]") &&
         !dialog.current?.contains(active)
       )
         return;

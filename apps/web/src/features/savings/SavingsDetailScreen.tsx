@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import Link from "@/shared/ui/AppLink";
+import { useAppRouter as useRouter } from "@/shared/ui/useAppRouter";
 import { useEffect, useRef, useState } from "react";
 import {
   deleteSavings,

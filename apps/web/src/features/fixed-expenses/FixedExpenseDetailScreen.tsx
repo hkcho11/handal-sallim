@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import Link from "@/shared/ui/AppLink";
+import { useAppRouter as useRouter } from "@/shared/ui/useAppRouter";
 import { listFixedExpenses, type FixedExpense } from "./api";
 import FixedExpensesScreen from "./FixedExpensesScreen";
 import {

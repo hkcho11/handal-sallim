@@ -1,3 +1,4 @@
+import { apiFetch } from "./apiFetch";
 import { SERVICE_UNAVAILABLE_MESSAGE } from "./serviceAvailability";
 
 export interface OwnerMember {
@@ -28,7 +29,7 @@ export async function listOwners(
 ): Promise<OwnerOptions> {
   let response: Response;
   try {
-    response = await fetch(`/backend/${resource}/members`, {
+    response = await apiFetch(`/backend/${resource}/members`, {
       credentials: "same-origin",
       cache: "no-store",
     });
