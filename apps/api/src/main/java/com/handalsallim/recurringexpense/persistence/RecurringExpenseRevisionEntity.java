@@ -16,9 +16,15 @@ public class RecurringExpenseRevisionEntity {
   private UUID recurringExpenseId;
   private LocalDate effectiveFrom;
   private String name;
-  private short intervalMonths;
+  private Short intervalMonths;
+  private Short recurringDayOfMonth;
   private LocalDate anchorDueDate;
   private long defaultExpectedAmount;
+  private UUID assigneeUserId;
+  private UUID defaultPaymentMethodId;
+  private UUID categoryId;
+  private UUID subcategoryId;
+  private String memo;
   private UUID createdBy;
   private Instant createdAt;
 
@@ -30,15 +36,24 @@ public class RecurringExpenseRevisionEntity {
       UUID expenseId,
       UUID createdBy,
       FixedExpenseDetails details,
+      UUID assigneeUserId,
       Instant now) {
     this.id = id;
     this.spaceId = spaceId;
     this.recurringExpenseId = expenseId;
     this.effectiveFrom = details.firstDueDate();
     this.name = details.name();
-    this.intervalMonths = (short) details.intervalMonths();
+    this.intervalMonths =
+        details.intervalMonths() == null ? null : details.intervalMonths().shortValue();
+    this.recurringDayOfMonth =
+        details.recurringDayOfMonth() == null ? null : details.recurringDayOfMonth().shortValue();
     this.anchorDueDate = details.firstDueDate();
     this.defaultExpectedAmount = details.expectedAmount();
+    this.assigneeUserId = assigneeUserId;
+    this.defaultPaymentMethodId = details.paymentMethodId();
+    this.categoryId = details.categoryId();
+    this.subcategoryId = details.subcategoryId();
+    this.memo = details.memo();
     this.createdBy = createdBy;
     this.createdAt = now;
   }
@@ -55,15 +70,67 @@ public class RecurringExpenseRevisionEntity {
     return name;
   }
 
-  public int getIntervalMonths() {
-    return intervalMonths;
+  public Integer getIntervalMonths() {
+    return intervalMonths == null ? null : intervalMonths.intValue();
   }
 
   public LocalDate getAnchorDueDate() {
     return anchorDueDate;
   }
 
+  public Integer getRecurringDayOfMonth() {
+    return recurringDayOfMonth == null ? null : recurringDayOfMonth.intValue();
+  }
+
   public long getDefaultExpectedAmount() {
     return defaultExpectedAmount;
+  }
+
+  public UUID getAssigneeUserId() {
+    return assigneeUserId;
+  }
+
+  public UUID getSubcategoryId() {
+    return subcategoryId;
+  }
+
+  public String getMemo() {
+    return memo;
+  }
+
+  public UUID getCategoryId() {
+    return categoryId;
+  }
+
+  public UUID getDefaultPaymentMethodId() {
+    return defaultPaymentMethodId;
+  }
+
+  public void completeSchedule(
+      int intervalMonths, int recurringDayOfMonth, LocalDate firstDueDate) {
+    this.effectiveFrom = firstDueDate;
+    this.intervalMonths = (short) intervalMonths;
+    this.recurringDayOfMonth = (short) recurringDayOfMonth;
+    this.anchorDueDate = firstDueDate;
+  }
+
+  public void updateDetails(FixedExpenseDetails details, UUID assigneeId) {
+    name = details.name();
+    defaultExpectedAmount = details.expectedAmount();
+    intervalMonths =
+        details.intervalMonths() == null ? null : details.intervalMonths().shortValue();
+    recurringDayOfMonth =
+        details.recurringDayOfMonth() == null ? null : details.recurringDayOfMonth().shortValue();
+    anchorDueDate = details.firstDueDate();
+    if (effectiveFrom == null) effectiveFrom = details.firstDueDate();
+    assigneeUserId = assigneeId;
+    defaultPaymentMethodId = details.paymentMethodId();
+    categoryId = details.categoryId();
+    subcategoryId = details.subcategoryId();
+    memo = details.memo();
+  }
+
+  public void setEffectiveFrom(LocalDate effectiveFrom) {
+    this.effectiveFrom = effectiveFrom;
   }
 }

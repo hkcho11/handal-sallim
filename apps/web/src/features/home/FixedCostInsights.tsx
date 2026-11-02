@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useHomeViewState } from "./HomeViewState";
 import Link from "next/link";
+import DisclosureChevron from "../../shared/ui/DisclosureChevron";
 import {
   categoryStatistics,
   monthlyChanges,
@@ -34,18 +35,65 @@ function changeLabel(
         : `${Math.abs(percentage).toFixed(1)}%`;
   return `${amount} (${rate})`;
 }
+function PaymentChange({
+  change,
+  percentage,
+}: {
+  change: number | null;
+  percentage: number | null;
+}) {
+  return (
+    <span
+      className={styles.change}
+      data-direction={
+        change === null || change === 0
+          ? "neutral"
+          : change > 0
+            ? "increase"
+            : "decrease"
+      }
+    >
+      {change !== null && change !== 0 && (
+        <>
+          <svg
+            className={styles.changeArrow}
+            viewBox="0 0 12 12"
+            aria-hidden="true"
+          >
+            <path d={change > 0 ? "M6 2 11 10H1Z" : "M1 2H11L6 10Z"} />
+          </svg>
+          <span className={styles.srOnly}>
+            {change > 0 ? "증가 " : "감소 "}
+          </span>
+        </>
+      )}
+      <b>{changeLabel(change, percentage, false)}</b>
+    </span>
+  );
+}
+function categoryColor(data: FixedCostDashboard, id: string | null) {
+  const ids = [
+    ...new Set([
+      ...data.classifications.map((item) => item.categoryId),
+      ...data.charges.flatMap((item) =>
+        item.categoryId === null ? [] : [item.categoryId],
+      ),
+    ]),
+  ].sort();
+  const index = id === null ? ids.length : ids.indexOf(id);
+  return `hsl(${(Math.max(0, index) * 137.508 + 225) % 360} 58% 55%)`;
+}
 function chargeLabel(charge: FixedCostCharge) {
   return charge.status === "완료"
     ? `${won(charge.actualAmount ?? 0)} · 완료`
-    : `${won(charge.expectedAmount)} · ${charge.status}`;
+    : charge.status;
 }
 export default function FixedCostInsights({
   data,
 }: {
   data: FixedCostDashboard;
 }) {
-  const [amountView, setAmountView] = useState<"actual" | "expected">("actual");
-  const statistics = categoryStatistics(data, amountView);
+  const statistics = categoryStatistics(data);
   const first =
     data.classifications.find((c) => c.subcategoryName === "전기") ??
     data.classifications.find((c) =>
@@ -54,10 +102,21 @@ export default function FixedCostInsights({
       ),
     ) ??
     data.classifications[0];
-  const [parent, setParent] = useState(first?.categoryId ?? unknown);
-  const [sub, setSub] = useState(first?.subcategoryId ?? unknown);
-  const [trendMonth, setTrendMonth] = useState(data.month);
-  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+  const [parent, setParent] = useHomeViewState(
+    `${data.month}.parent`,
+    first?.categoryId ?? unknown,
+  );
+  const [sub, setSub] = useHomeViewState(
+    `${data.month}.sub`,
+    first?.subcategoryId ?? unknown,
+  );
+  const [trendMonth, setTrendMonth] = useHomeViewState(
+    `${data.month}.trendMonth`,
+    data.month,
+  );
+  const [expandedCategory, setExpandedCategory] = useHomeViewState<
+    string | null
+  >(`${data.month}.expandedCategory`, null);
   const parents = [
     ...new Map(
       data.classifications.map((c) => [
@@ -70,7 +129,7 @@ export default function FixedCostInsights({
     data.charges.some((charge) => charge.categoryId === null) ||
     !parents.length
   )
-    parents.push({ id: unknown, name: "대분류 미지정" });
+    parents.push({ id: unknown, name: "상위 분류 미지정" });
   const subcategories = data.classifications
     .filter((c) => c.categoryId === parent)
     .map((c) => ({ id: c.subcategoryId, name: c.subcategoryName }));
@@ -82,7 +141,7 @@ export default function FixedCostInsights({
     ) ||
     !subcategories.length
   )
-    subcategories.push({ id: unknown, name: "중분류 미지정" });
+    subcategories.push({ id: unknown, name: "세부 분류 미지정" });
   const selectedSub = subcategories.some((c) => c.id === sub)
     ? sub
     : subcategories[0].id;
@@ -92,19 +151,15 @@ export default function FixedCostInsights({
     parent === unknown ? null : parent,
   );
   const selectedName =
-    subcategories.find((c) => c.id === selectedSub)?.name ?? "중분류 미지정";
+    subcategories.find((c) => c.id === selectedSub)?.name ?? "세부 분류 미지정";
   const selectedPoint =
     changes.find((point) => point.month === trendMonth) ??
     changes[changes.length - 1];
   const methods = paymentStatistics(data);
-  const total =
-    amountView === "actual" ? statistics.actual : statistics.expected;
+  const total = statistics.actual;
   const trendMaximum = Math.max(
     1,
     ...changes.map((point) => point.amount ?? 0),
-  );
-  const pending = statistics.charges.filter(
-    (charge) => charge.status !== "완료",
   );
   function selectParent(id: string) {
     setParent(id);
@@ -115,56 +170,57 @@ export default function FixedCostInsights({
   }
   return (
     <>
-      <section className={styles.panel} aria-labelledby="major-title">
-        <div className={styles.sectionHeader}>
-          <h2 id="major-title">대분류별 지출 통계</h2>
-          <div
-            className={styles.segmented}
-            role="group"
-            aria-label="대분류 집계 금액"
-          >
-            <button
-              type="button"
-              aria-pressed={amountView === "actual"}
-              onClick={() => setAmountView("actual")}
-            >
-              실제
-            </button>
-            <button
-              type="button"
-              aria-pressed={amountView === "expected"}
-              onClick={() => setAmountView("expected")}
-            >
-              예상
-            </button>
-          </div>
-        </div>
+      <section className={styles.panel} aria-label="상위 분류별 지출 통계">
         <div className={styles.total}>
-          <span>{amountView === "actual" ? "실제 결제액" : "예정 청구액"}</span>
+          <span>총 결제액</span>
           <strong>{won(total)}</strong>
-          <small>
-            {amountView === "actual"
-              ? `완료 ${statistics.charges.filter((charge) => charge.status === "완료").length}건`
-              : `청구 ${statistics.charges.length}건`}
-          </small>
         </div>
         {statistics.categories.length ? (
           <div className={styles.categoryList}>
-            <p className={styles.distributionLabel}>
-              {amountView === "actual" ? "전체 실제 지출" : "전체 예정액"} 대비
-              분류별 비중
-            </p>
+            <div className={styles.distributionBar} aria-hidden="true">
+              {statistics.categories.map((category) => (
+                <span
+                  key={category.id ?? unknown}
+                  style={{
+                    width: `${total > 0 ? (category.actual / total) * 100 : 0}%`,
+                    backgroundColor: categoryColor(data, category.id),
+                  }}
+                />
+              ))}
+            </div>
+            <ul
+              className={styles.distributionLegend}
+              aria-label="분류별 지출 비중"
+            >
+              {statistics.categories.map((category) => (
+                <li key={category.id ?? unknown}>
+                  <span
+                    className={styles.legendDot}
+                    style={{
+                      backgroundColor: categoryColor(data, category.id),
+                    }}
+                    aria-hidden="true"
+                  />
+                  {category.name}{" "}
+                  {total > 0
+                    ? `${((category.actual / total) * 100).toFixed(1)}%`
+                    : "—"}
+                </li>
+              ))}
+            </ul>
             {statistics.categories.map((category) => {
               const key = category.id ?? unknown;
               return (
                 <div
                   key={key}
                   className={styles.category}
+                  data-disclosure
                   data-expanded={expandedCategory === key}
                 >
                   <button
                     type="button"
                     className={styles.categoryButton}
+                    data-disclosure-trigger
                     aria-expanded={expandedCategory === key}
                     aria-controls={`category-${key}`}
                     onClick={() => {
@@ -177,24 +233,18 @@ export default function FixedCostInsights({
                     <span className={styles.categoryHeading}>
                       <strong>{category.name}</strong>
                       <span>
-                        <b>{won(category[amountView])}</b>
+                        <b>{won(category.actual)}</b>
                         <small>
-                          {total
-                            ? `${((category[amountView] / total) * 100).toFixed(1)}%`
-                            : "—"}
-                          <span aria-hidden="true">
-                            {" "}
-                            {expandedCategory === key ? "⌃" : "⌄"}
-                          </span>
+                          전월 대비{" "}
+                          <PaymentChange
+                            change={category.change}
+                            percentage={category.percentage}
+                          />
                         </small>
                       </span>
                     </span>
-                    <span className={styles.bar} aria-hidden="true">
-                      <span
-                        style={{
-                          width: `${total > 0 ? (category[amountView] / total) * 100 : 0}%`,
-                        }}
-                      />
+                    <span className={styles.categoryChevron} aria-hidden="true">
+                      <DisclosureChevron />
                     </span>
                   </button>
                   <div
@@ -209,12 +259,12 @@ export default function FixedCostInsights({
                         {category.items.map((charge) => (
                           <li key={charge.id}>
                             <Link
-                              href={`/fixed-costs/${charge.recurringExpenseId}`}
+                              href={`/fixed-costs/${charge.recurringExpenseId}?charge=${encodeURIComponent(charge.id)}`}
                             >
                               <span>
                                 {charge.name}
                                 <small>
-                                  {charge.subcategoryName ?? "중분류 미지정"}
+                                  {charge.subcategoryName ?? "세부 분류 미지정"}
                                 </small>
                                 <small
                                   className={
@@ -238,33 +288,19 @@ export default function FixedCostInsights({
             })}
           </div>
         ) : (
-          <p className={styles.empty}>이 달에 등록된 고정비 청구가 없어요.</p>
-        )}
-        {pending.length > 0 && (
-          <div className={styles.pendingNote}>
-            <span>미결제 {pending.length}건</span>
-            <b>
-              예정{" "}
-              {won(
-                pending.reduce((sum, charge) => sum + charge.expectedAmount, 0),
-              )}
-            </b>
-          </div>
-        )}
-        {pending.length > 0 && amountView === "actual" && (
-          <p className={styles.note}>미결제 건은 실제액 0원으로 표시합니다.</p>
+          <p className={styles.empty}>이 달에 결제 완료한 내역이 없어요.</p>
         )}
       </section>
       <section className={styles.panel} aria-labelledby="trend-title">
         <div className={styles.sectionHeader}>
-          <h2 id="trend-title">중분류별 월별 변화</h2>
+          <h2 id="trend-title">세부 분류별 월별 변화</h2>
           <span className={styles.note}>최근 6개월</span>
         </div>
         <div className={styles.selectors}>
           <label>
-            대분류
+            상위 분류
             <select
-              aria-label="대분류"
+              aria-label="상위 분류"
               data-align="center"
               value={parent}
               onChange={(event) => selectParent(event.target.value)}
@@ -277,9 +313,9 @@ export default function FixedCostInsights({
             </select>
           </label>
           <label>
-            중분류
+            세부 분류
             <select
-              aria-label="중분류"
+              aria-label="세부 분류"
               data-align="center"
               value={selectedSub}
               onChange={(event) => setSub(event.target.value)}
@@ -308,41 +344,11 @@ export default function FixedCostInsights({
           </strong>
           <p>
             전월 대비{" "}
-            <span
-              className={styles.change}
-              data-direction={
-                selectedPoint.change === null || selectedPoint.change === 0
-                  ? "neutral"
-                  : selectedPoint.change > 0
-                    ? "increase"
-                    : "decrease"
-              }
-            >
-              {selectedPoint.change !== null && selectedPoint.change !== 0 && (
-                <>
-                  <span className={styles.changeArrow} aria-hidden="true">
-                    {selectedPoint.change > 0 ? "▲" : "▼"}
-                  </span>
-                  <span className={styles.srOnly}>
-                    {selectedPoint.change > 0 ? "증가 " : "감소 "}
-                  </span>
-                </>
-              )}
-              <b>
-                {changeLabel(
-                  selectedPoint.change,
-                  selectedPoint.percentage,
-                  false,
-                )}
-              </b>
-            </span>
+            <PaymentChange
+              change={selectedPoint.change}
+              percentage={selectedPoint.percentage}
+            />
           </p>
-          {selectedPoint.pendingCount > 0 && (
-            <p>
-              미결제 {selectedPoint.pendingCount}건 · 예정{" "}
-              {won(selectedPoint.expected)}
-            </p>
-          )}
         </div>
         <p className={styles.chartUnit}>단위: 원</p>
         <div
@@ -356,7 +362,7 @@ export default function FixedCostInsights({
               className={styles.trendColumn}
               key={point.month}
               aria-pressed={point.month === selectedPoint.month}
-              aria-label={`${Number(point.month.slice(0, 4))}년 ${Number(point.month.slice(5))}월, ${point.amount === null ? "기록 없음" : won(point.amount)}, 전월 대비 ${changeLabel(point.change, point.percentage)}${point.pendingCount ? `, 미결제 ${point.pendingCount}건` : ""}`}
+              aria-label={`${Number(point.month.slice(0, 4))}년 ${Number(point.month.slice(5))}월, ${point.amount === null ? "기록 없음" : won(point.amount)}, 전월 대비 ${changeLabel(point.change, point.percentage)}`}
               onClick={() => setTrendMonth(point.month)}
             >
               <span className={styles.trendValue} aria-hidden="true">
@@ -398,7 +404,7 @@ export default function FixedCostInsights({
             <div className={styles.paymentHead}>
               <span>결제수단</span>
               <span>실제</span>
-              <span>미결제 예정</span>
+              <span>완료 건수</span>
             </div>
             {methods.map((method) => (
               <div
@@ -407,7 +413,7 @@ export default function FixedCostInsights({
               >
                 <strong>{method.name}</strong>
                 <span>{won(method.actual)}</span>
-                <span>{won(method.planned)}</span>
+                <span>{method.completedCount}건</span>
               </div>
             ))}
           </>
@@ -415,7 +421,7 @@ export default function FixedCostInsights({
           <p className={styles.empty}>이 달의 결제수단 내역이 없어요.</p>
         )}
         <p className={styles.note}>
-          완료 건은 실제 결제수단, 미결제 건은 예정 결제수단에 집계합니다.
+          결제 완료 내역을 실제 결제수단 기준으로 집계합니다.
         </p>
       </section>
       {data.unscheduled.length > 0 && (

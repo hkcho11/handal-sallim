@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import DisclosureChevron from "../../shared/ui/DisclosureChevron";
 import {
   calculateSpendingStatistics,
   type SpendingEntry,
@@ -78,8 +79,12 @@ export default function CategorySpending({
           </div>
           <div className={styles.categoryList}>
             {categories.map((category, index) => (
-              <details key={category.name} className={styles.category}>
-                <summary>
+              <details
+                key={category.name}
+                className={styles.category}
+                data-disclosure
+              >
+                <summary data-disclosure-trigger>
                   <span className={styles.categoryName}>
                     <i
                       style={
@@ -95,9 +100,7 @@ export default function CategorySpending({
                     <b>{won(category.amount)}</b>
                     <small>{category.share.toFixed(1)}%</small>
                   </span>
-                  <span className={styles.categoryArrow} aria-hidden="true">
-                    ⌄
-                  </span>
+                  <DisclosureChevron />
                 </summary>
                 <ul className={styles.categoryEntries}>
                   {[...category.items]

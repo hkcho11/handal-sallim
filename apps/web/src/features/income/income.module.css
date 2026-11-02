@@ -1,0 +1,315 @@
+.screen {
+  max-width: 680px;
+  margin: auto;
+  padding: 1.75rem 1.25rem 2rem;
+}
+.overview {
+  padding-top: 0.75rem;
+}
+.overview .header h1 {
+  font-size: 1.25rem;
+}
+.overview .monthField {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+.overview .monthCaption {
+  order: 2;
+  min-height: 0;
+}
+.overview .monthCaption > span {
+  display: none;
+}
+.overview .monthNavigation {
+  flex: 1 1 190px;
+  min-width: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+}
+.overview .summary {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.35rem 0.75rem;
+  padding: 1rem 1.25rem;
+  margin: 0.75rem 0;
+}
+.overview .summary strong {
+  grid-row: 2;
+  grid-column: 1 / -1;
+}
+.overview .summary > span:last-child {
+  grid-column: 2;
+  grid-row: 1;
+  color: var(--text-secondary);
+}
+.overview .list {
+  margin-top: 0;
+}
+.overview .list .card {
+  padding: 1rem;
+  margin: 0.5rem 0;
+}
+.overview .list .actions {
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+.header,
+.listHeader,
+.item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.header h1 {
+  margin: 0.4rem 0;
+  font-size: 1.75rem;
+}
+.eyebrow,
+.description {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.7;
+}
+.card {
+  padding: 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  margin: 1rem 0;
+  overflow-wrap: anywhere;
+}
+.card h2,
+.card h3 {
+  margin-top: 0;
+}
+.card h3 {
+  margin-bottom: 0;
+  font-size: 1rem;
+}
+.summary {
+  display: grid;
+  gap: 0.75rem;
+  background: var(--primary-soft);
+  padding: 1.5rem;
+  border-radius: 20px;
+  margin: 1.5rem 0;
+  overflow-wrap: anywhere;
+}
+.summary strong {
+  font-size: clamp(1.5rem, 6vw, 2.25rem);
+  color: var(--primary);
+}
+.summary span {
+  font-size: 0.875rem;
+}
+.primary,
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  min-height: 44px;
+  border-radius: 12px;
+  padding: 0.65rem 1rem;
+  cursor: pointer;
+  font-weight: 600;
+}
+.formHeader h1 {
+  margin: 0.5rem 0;
+  font-size: 1.5rem;
+}
+.back {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+.primary {
+  background: var(--primary);
+  color: white;
+  border: 1px solid var(--primary);
+}
+.secondary {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.screen button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.field {
+  display: grid;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+.monthField {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+}
+.monthCaption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+.monthCaption button {
+  border: 0;
+  background: transparent;
+  color: var(--primary);
+  min-height: 44px;
+  padding: 0 0.5rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+.monthNavigation {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.monthNavigation > span {
+  text-align: center;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.monthNavigation button {
+  min-height: 44px;
+  border: 0;
+  border-radius: 8px;
+  color: var(--text);
+  background: transparent;
+  font-size: 1.75rem;
+  cursor: pointer;
+}
+.monthNavigation button:hover:not(:disabled) {
+  background: var(--primary-soft);
+}
+.field input,
+.field select {
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.75rem;
+  background: var(--surface);
+  color: var(--text);
+}
+.form,
+.form fieldset {
+  display: grid;
+  gap: 1rem;
+}
+.form fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+.listHeader h2 {
+  font-size: 1.1rem;
+}
+.list {
+  padding: 0;
+  list-style: none;
+}
+.item > * {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.error {
+  color: var(--danger);
+  line-height: 1.6;
+}
+.dialog {
+  width: min(90vw, 400px);
+  border: 0;
+  border-radius: 20px;
+  padding: 1.5rem;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+.dialog::backdrop {
+  background: rgb(0 0 0 / 40%);
+}
+
+.owner {
+  margin: 0.4rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+.ownerGroups {
+  display: grid;
+  gap: 0;
+}
+.ownerGroup {
+  border-bottom: 1px solid var(--border);
+  border-radius: 14px;
+  padding-inline: 12px;
+}
+.ownerSummary {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  min-height: 60px;
+  padding: 0.85rem 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+.ownerSummary > span {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.ownerSummary strong {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.ownerTotal {
+  text-align: right;
+  margin-left: auto;
+}
+.ownerSummary small {
+  font-size: 0.7rem;
+}
+.ownerSummary strong {
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.ownerSummary small {
+  color: var(--text-secondary);
+}
+.ownerGroup > div {
+  padding: 0 0 12px;
+}

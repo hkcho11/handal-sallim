@@ -1,0 +1,43 @@
+/* Home and owner summaries share the same disclosure treatment. */
+[data-disclosure] {
+  border-radius: 14px;
+  transition: background-color 180ms ease;
+}
+[data-disclosure]:has(> [aria-expanded="true"]),
+details[data-disclosure][open] {
+  background: var(--primary-soft);
+}
+[data-disclosure-trigger] {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 60px;
+  padding: 0.85rem 0;
+  border: 0;
+  color: var(--text);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+[data-disclosure-trigger][aria-expanded="true"] strong,
+details[open] > [data-disclosure-trigger] strong {
+  color: var(--primary);
+}
+[data-disclosure-chevron] {
+  display: block;
+  flex: none;
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: var(--text-secondary);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 180ms ease;
+}
+[aria-expanded="true"] [data-disclosure-chevron],
+details[open] > summary [data-disclosure-chevron] {
+  transform: rotate(180deg);
+  stroke: var(--primary);
+}

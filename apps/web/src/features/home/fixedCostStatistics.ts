@@ -3,7 +3,7 @@ export interface FixedCostCharge {
   recurringExpenseId: string;
   name: string;
   dueDate: string;
-  expectedAmount: number;
+  expectedAmount: number | null;
   actualAmount: number | null;
   status: "예정" | "지연" | "완료";
   categoryId: string | null;
@@ -34,28 +34,47 @@ export const confirmedAmount = (charge: FixedCostCharge) =>
   charge.status === "완료" ? (charge.actualAmount ?? 0) : 0;
 export const inMonth = (charge: FixedCostCharge, month: string) =>
   charge.dueDate.startsWith(`${month}-`);
-export function categoryStatistics(
-  data: FixedCostDashboard,
-  amountView: "actual" | "expected" = "actual",
-) {
+export function categoryStatistics(data: FixedCostDashboard) {
   const charges = data.charges.filter((charge) => inMonth(charge, data.month));
-  const categories = [...new Set(charges.map((charge) => charge.categoryId))]
+  const completed = charges.filter((charge) => charge.status === "완료");
+  const previousDate = new Date(`${data.month}-01T00:00:00Z`);
+  previousDate.setUTCMonth(previousDate.getUTCMonth() - 1);
+  const previousMonth = previousDate.toISOString().slice(0, 7);
+  const categories = [...new Set(completed.map((charge) => charge.categoryId))]
     .map((id) => {
-      const items = charges.filter((charge) => charge.categoryId === id);
+      const items = completed.filter((charge) => charge.categoryId === id);
+      const actual = items.reduce(
+        (sum, charge) => sum + confirmedAmount(charge),
+        0,
+      );
+      const previous = data.charges.filter(
+        (charge) =>
+          inMonth(charge, previousMonth) &&
+          charge.categoryId === id &&
+          charge.status === "완료",
+      );
+      const previousAmount = previous.length
+        ? previous.reduce((sum, charge) => sum + confirmedAmount(charge), 0)
+        : null;
+      const change = previousAmount === null ? null : actual - previousAmount;
+      const percentage =
+        change !== null && previousAmount !== null && previousAmount > 0
+          ? (change / previousAmount) * 100
+          : null;
       return {
         id,
-        name: items[0].categoryName ?? "대분류 미지정",
+        change,
+        percentage,
+        name: items[0].categoryName ?? "상위 분류 미지정",
         items,
-        actual: items.reduce((sum, charge) => sum + confirmedAmount(charge), 0),
-        expected: items.reduce((sum, charge) => sum + charge.expectedAmount, 0),
+        actual,
       };
     })
-    .sort((a, b) => b[amountView] - a[amountView]);
+    .sort((a, b) => b.actual - a.actual);
   return {
     categories,
     charges,
     actual: categories.reduce((sum, c) => sum + c.actual, 0),
-    expected: categories.reduce((sum, c) => sum + c.expected, 0),
   };
 }
 export function monthlyChanges(
@@ -76,10 +95,10 @@ export function monthlyChanges(
         charge.subcategoryId === subcategoryId &&
         charge.categoryId === categoryId,
     );
-    const amount = items.length
+    const amount = items.some((charge) => charge.status === "완료")
       ? items.reduce((sum, charge) => sum + confirmedAmount(charge), 0)
       : null;
-    const previousAmount = previous.length
+    const previousAmount = previous.some((charge) => charge.status === "완료")
       ? previous.reduce((sum, charge) => sum + confirmedAmount(charge), 0)
       : null;
     const change =
@@ -96,7 +115,6 @@ export function monthlyChanges(
       change,
       percentage,
       pendingCount: items.filter((charge) => charge.status !== "완료").length,
-      expected: items.reduce((sum, charge) => sum + charge.expectedAmount, 0),
     };
   });
 }
@@ -107,13 +125,11 @@ export function paymentStatistics(data: FixedCostDashboard) {
       id: string | null;
       name: string;
       actual: number;
-      planned: number;
       completedCount: number;
-      pendingCount: number;
     }
   >();
-  for (const charge of data.charges.filter((charge) =>
-    inMonth(charge, data.month),
+  for (const charge of data.charges.filter(
+    (charge) => inMonth(charge, data.month) && charge.status === "완료",
   )) {
     const completed = charge.status === "완료";
     const id = completed
@@ -126,20 +142,13 @@ export function paymentStatistics(data: FixedCostDashboard) {
       id,
       name,
       actual: 0,
-      planned: 0,
       completedCount: 0,
-      pendingCount: 0,
     };
     if (completed) {
       group.actual += confirmedAmount(charge);
       group.completedCount++;
-    } else {
-      group.planned += charge.expectedAmount;
-      group.pendingCount++;
     }
     groups.set(id, group);
   }
-  return [...groups.values()].sort(
-    (a, b) => b.actual + b.planned - (a.actual + a.planned),
-  );
+  return [...groups.values()].sort((a, b) => b.actual - a.actual);
 }

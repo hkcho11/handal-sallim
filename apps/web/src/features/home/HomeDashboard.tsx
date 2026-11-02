@@ -1,28 +1,34 @@
 "use client";
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import Image from "next/image";
 import { getFixedCostDashboard } from "./fixedCostApi";
 import type { FixedCostDashboard } from "./fixedCostStatistics";
 import FixedCostInsights from "./FixedCostInsights";
 import styles from "./fixed-cost-dashboard.module.css";
+import { useHomeViewState } from "./HomeViewState";
+import { SERVICE_UNAVAILABLE_MESSAGE } from "../../shared/api/serviceAvailability";
 
 export default function HomeDashboard() {
-  const [month, setMonth] = useState<string>();
+  const [month, setMonth] = useHomeViewState<string | undefined>(
+    "month",
+    undefined,
+  );
   return (
     <main className={styles.page}>
       <div className={styles.container}>
         <header className={styles.header}>
           <h1>
-            <span className={styles.brandMark} aria-hidden="true">
-              <svg viewBox="0 0 24 24">
-                <path d="M5 10 12 4l7 6v9H5zM9 19v-7h6v7" />
-              </svg>
-            </span>
+            <Image
+              src="/brand/handal-sallim-blue.png"
+              alt=""
+              width={48}
+              height={48}
+              className={styles.brandMark}
+              priority
+            />
             한달살림
           </h1>
-          <Link className={styles.add} href="/entries/new">
-            + 고정비 추가
-          </Link>
+          <span className={styles.dashboardLabel}>고정비 대시보드</span>
         </header>
         <MonthDashboard
           key={month ?? "current"}
@@ -49,8 +55,14 @@ function MonthDashboard({
       .then((result) => {
         if (active) setData(result);
       })
-      .catch(() => {
-        if (active) setError("고정비 통계를 불러오지 못했습니다.");
+      .catch((error: unknown) => {
+        if (active)
+          setError(
+            error instanceof Error &&
+              error.message === SERVICE_UNAVAILABLE_MESSAGE
+              ? SERVICE_UNAVAILABLE_MESSAGE
+              : "고정비 통계를 불러오지 못했습니다.",
+          );
       });
     return () => {
       active = false;
@@ -88,7 +100,6 @@ function MonthDashboard({
     <>
       <section className={styles.monthSection} aria-label="통계 조회 월">
         <div className={styles.monthHeading}>
-          <span>고정비 통계</span>
           <div className={styles.monthActions}>
             <button
               type="button"
@@ -98,7 +109,8 @@ function MonthDashboard({
                 setAttempt((value) => value + 1);
               }}
             >
-              통계 새로고침
+              <span aria-hidden="true">↻</span>
+              <span className={styles.srOnly}>통계 새로고침</span>
             </button>
             <button
               type="button"
@@ -142,10 +154,6 @@ function MonthDashboard({
             ›
           </button>
         </div>
-        <p className={styles.asOf}>
-          {Number(data.asOf.slice(5, 7))}월 {Number(data.asOf.slice(8))}일 기준
-          · 예정 결제월로 집계
-        </p>
       </section>
       <FixedCostInsights data={data} />
     </>
