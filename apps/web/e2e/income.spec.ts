@@ -231,9 +231,19 @@ test("달력 없이 연도를 넘겨 이동하고 선택한 월로 등록을 시
   await page.goto("/income");
   const query = page.getByRole("group", { name: "조회 월", exact: true });
   const next = query.getByRole("button", { name: "다음 달", exact: true });
+  const januaryLoaded = page.waitForResponse((response) =>
+    response.url().includes("/backend/incomes?month=2027-01"),
+  );
   for (let i = 0; i < 3; i++) await next.click();
+  await januaryLoaded;
   await expect(query).toContainText("2027년 1월");
+  await expect(
+    page.getByRole("dialog", { name: "처리 중", exact: true }),
+  ).toBeHidden();
   await next.press("Shift+Tab");
+  await expect(
+    query.getByRole("button", { name: "이전 달", exact: true }),
+  ).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(query).toContainText("2026년 12월");
   await page.getByRole("link", { name: "수입 등록", exact: true }).click();

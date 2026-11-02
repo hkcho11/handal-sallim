@@ -1,5 +1,6 @@
 "use client";
-import Link from "next/link";
+import { focusWhenReady } from "@/shared/loadingState";
+import Link from "@/shared/ui/AppLink";
 import { useEffect, useRef, useState } from "react";
 import { getFixedExpenseFormOptions } from "@/features/fixed-expenses/api";
 import { errorMessage } from "@/features/payment-methods/api";
@@ -121,7 +122,7 @@ export default function CategoriesScreen() {
                 aria-label="분류 검색 지우기"
                 onClick={() => {
                   setQuery("");
-                  searchInput.current?.focus();
+                  focusWhenReady(searchInput.current);
                 }}
               >
                 ×
@@ -133,7 +134,7 @@ export default function CategoriesScreen() {
             items={items}
             subcategories={subcategories}
             query={query}
-            onSearchFocus={() => searchInput.current?.focus()}
+            onSearchFocus={() => focusWhenReady(searchInput.current)}
             disabled={isSaving}
             onBusy={setSaving}
             onChange={(categories, subs) => {

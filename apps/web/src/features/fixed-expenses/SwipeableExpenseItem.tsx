@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, type PointerEvent, type ReactNode } from "react";
-import Link from "next/link";
+import Link from "@/shared/ui/AppLink";
 import type { FixedExpense } from "./api";
 import TrashIcon from "./TrashIcon";
 import styles from "./fixed-expenses.module.css";

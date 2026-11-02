@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/shared/ui/AppLink";
 import styles from "@/features/settings/settings.module.css";
 export default function Page() {
   return (

@@ -1,5 +1,6 @@
 "use client";
-import Link from "next/link";
+import { replaceDocument } from "@/shared/loadingState";
+import Link from "@/shared/ui/AppLink";
 import { useEffect, useState } from "react";
 import {
   loadSharing,
@@ -166,7 +167,7 @@ export default function SharingScreen() {
                 })}
               </p>
               <p>{policy}</p>
-              <button onClick={() => window.location.replace("/")}>
+              <button onClick={() => replaceDocument("/")}>
                 공유 가계부 열기
               </button>
               <DisconnectPanel
@@ -293,7 +294,7 @@ export default function SharingScreen() {
                     onClick={() =>
                       void run(async () => {
                         await decideRequest(accepting.id, "ACCEPT");
-                        window.location.replace("/");
+                        replaceDocument("/");
                       })
                     }
                   >

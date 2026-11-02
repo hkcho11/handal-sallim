@@ -8,6 +8,7 @@ import { FixedExpenseListFiltersProvider } from "@/features/fixed-expenses/Fixed
 import { HomeViewStateProvider } from "@/features/home/HomeViewState";
 
 import AuthBoundary from "@/features/auth/AuthBoundary";
+import BlockingLoading from "@/shared/ui/BlockingLoading";
 
 const pretendard = localFont({
   src: "./fonts/PretendardVariable.woff2",
@@ -41,6 +42,7 @@ export default function RootLayout({
   return (
     <html lang="ko" className={pretendard.variable}>
       <body>
+        <BlockingLoading />
         <AuthBoundary>
           <HomeViewStateProvider>
             <FixedExpenseListFiltersProvider>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useHomeViewState } from "./HomeViewState";
-import Link from "next/link";
+import Link from "@/shared/ui/AppLink";
 import DisclosureChevron from "../../shared/ui/DisclosureChevron";
 import {
   categoryStatistics,
