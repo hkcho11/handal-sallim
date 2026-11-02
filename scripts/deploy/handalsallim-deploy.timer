@@ -1,0 +1,11 @@
+[Unit]
+Description=Handal Sallim backend deployment at 04:00 Korea time
+
+[Timer]
+OnCalendar=*-*-* 04:00:00 Asia/Seoul
+Persistent=false
+AccuracySec=1min
+Unit=handalsallim-deploy.service
+
+[Install]
+WantedBy=timers.target

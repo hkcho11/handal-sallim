@@ -1,0 +1,14 @@
+[Unit]
+Description=Verified Handal Sallim backend deployment
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /opt/handalsallim/nightly_api.py
+User=root
+UMask=0077
+TimeoutStartSec=15min
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
