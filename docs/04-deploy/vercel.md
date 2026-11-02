@@ -4,6 +4,8 @@
 
 ## 프로젝트 설정
 
+Vercel에서는 `scripts/vercel-pnpm.sh`로 임시 폴더에서 pnpm 12.10.1을 시작한 뒤 웹 폴더를 지정한다. 웹 폴더에서 바로 `npx`를 실행하면 Vercel의 최신 Node 24 패치 버전과 `devEngines.runtime`의 고정 버전을 npm이 먼저 비교하여 pnpm의 런타임 다운로드 전에 설치를 거부할 수 있다. 프로젝트의 고정 버전과 lockfile 검증은 유지한다.
+
 | 항목 | 값 |
 |---|---|
 | Git 저장소 | `hkcho11/handal-sallim` |
