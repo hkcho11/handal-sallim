@@ -10,7 +10,9 @@ import {
 export interface FixedExpense {
   id: string;
   name: string;
-  expectedAmount: number;
+  expectedAmount: number | null;
+  billingMode?: "LEGACY" | "FIXED" | "VARIABLE";
+  billingMonth?: string | null;
   intervalMonths: 1 | 2 | 3 | 12 | null;
   recurringDayOfMonth: number | null;
   firstDueDate: string | null;
@@ -28,9 +30,11 @@ export interface FixedExpense {
 }
 
 export interface NewFixedExpense {
+  billingMode?: "LEGACY" | "FIXED" | "VARIABLE";
+  billingMonth?: string | null;
   memo: string | null;
   subcategoryId: string;
-  expectedAmount: number;
+  expectedAmount: number | null;
   intervalMonths: Exclude<FixedExpense["intervalMonths"], null> | null;
   recurringDayOfMonth: number | null;
   firstDueDate: string | null;
@@ -87,8 +91,16 @@ function isFixedExpense(value: unknown): value is FixedExpense {
   return (
     isUuid(value.id) &&
     typeof value.name === "string" &&
-    Number.isSafeInteger(value.expectedAmount) &&
-    Number(value.expectedAmount) > 0 &&
+    (value.billingMode === undefined ||
+      ["LEGACY", "FIXED", "VARIABLE"].includes(String(value.billingMode))) &&
+    (value.billingMonth === undefined ||
+      value.billingMonth === null ||
+      (typeof value.billingMonth === "string" &&
+        /^\d{4}-(0[1-9]|1[0-2])$/.test(value.billingMonth))) &&
+    (value.billingMode === "VARIABLE"
+      ? value.expectedAmount === null && typeof value.billingMonth === "string"
+      : Number.isSafeInteger(value.expectedAmount) &&
+        Number(value.expectedAmount) > 0) &&
     (value.intervalMonths === null ||
       [1, 2, 3, 12].includes(Number(value.intervalMonths))) &&
     (value.recurringDayOfMonth === null ||

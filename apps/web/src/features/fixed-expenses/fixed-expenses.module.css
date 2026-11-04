@@ -802,3 +802,27 @@
   justify-content: flex-end;
   gap: 12px;
 }
+.paymentForm {
+  display: grid;
+  gap: 16px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+.paymentForm label {
+  display: grid;
+  gap: 8px;
+}
+.paymentForm input,
+.paymentForm select {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font: inherit;
+}
+.chargeList strong.paymentAmount {
+  font-size: 20px;
+}

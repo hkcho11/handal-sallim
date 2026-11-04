@@ -15,4 +15,5 @@ public record ChargeView(
     UUID plannedPaymentMethodId,
     UUID actualPaymentMethodId,
     String paymentMethodName,
-    long version) {}
+    long version,
+    java.time.YearMonth billingMonth) {}

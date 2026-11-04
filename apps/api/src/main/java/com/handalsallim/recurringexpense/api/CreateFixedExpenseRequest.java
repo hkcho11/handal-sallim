@@ -8,16 +8,20 @@ import java.util.UUID;
 
 public record CreateFixedExpenseRequest(
     @Size(max = 120) String memo,
-    @NotNull Object expectedAmount,
+    Object expectedAmount,
     Object intervalMonths,
     Object recurringDayOfMonth,
     LocalDate firstDueDate,
     String payer,
     UUID paymentMethodId,
     @NotNull UUID categoryId,
-    @NotNull UUID subcategoryId) {
+    @NotNull UUID subcategoryId,
+    String billingMode,
+    java.time.YearMonth billingMonth) {
 
   public com.handalsallim.recurringexpense.domain.FixedExpenseDetails details() {
+    if ("FIXED".equals(billingMode) && paymentMethodId == null)
+      throw new IllegalArgumentException("자동 결제에 사용할 결제수단을 선택해 주세요.");
     return new com.handalsallim.recurringexpense.domain.FixedExpenseDetails(
         "분류 지출",
         wholeWon(),
@@ -28,10 +32,13 @@ public record CreateFixedExpenseRequest(
         paymentMethodId,
         categoryId,
         subcategoryId,
-        memo);
+        memo,
+        billingMode,
+        billingMonth);
   }
 
-  public long wholeWon() {
+  public Long wholeWon() {
+    if (expectedAmount == null && "VARIABLE".equals(billingMode)) return null;
     if (expectedAmount instanceof Integer amount) return amount.longValue();
     if (expectedAmount instanceof Long amount) return amount;
     if (expectedAmount instanceof BigInteger amount && amount.bitLength() < 64) {

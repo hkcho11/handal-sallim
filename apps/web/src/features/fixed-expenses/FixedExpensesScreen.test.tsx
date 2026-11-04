@@ -45,6 +45,21 @@ async function selectClassification() {
   fireEvent.change(screen.getByLabelText("중분류"), {
     target: { value: subcategoryId },
   });
+  if (
+    (screen.getByLabelText("금액 변동 여부") as HTMLSelectElement).value ===
+    "FIXED"
+  ) {
+    fireEvent.change(screen.getByLabelText("반복주기"), {
+      target: { value: "1" },
+    });
+    fireEvent.change(screen.getByLabelText("첫 결제일"), {
+      target: { value: "2026-10-15" },
+    });
+    const methods = screen.getByLabelText("결제수단") as HTMLSelectElement;
+    fireEvent.change(methods, {
+      target: { value: methods.options[1]?.value ?? "" },
+    });
+  }
 }
 
 beforeEach(() => {
@@ -56,7 +71,13 @@ beforeEach(() => {
   vi.mocked(getFixedExpenseFormOptions).mockResolvedValue({
     ...classification,
     payers: [],
-    paymentMethods: [],
+    paymentMethods: [
+      {
+        id: "33333333-3333-4333-8333-333333333333",
+        name: "현금",
+        type: "CASH",
+      },
+    ],
   });
 });
 
@@ -140,11 +161,12 @@ test("등록 후 상세로 이동하며 입력 화면에 기존 목록을 표시
       categoryId,
       subcategoryId,
       expectedAmount: 35000,
-      intervalMonths: null,
-      recurringDayOfMonth: null,
-      firstDueDate: null,
+      billingMode: "FIXED",
+      intervalMonths: 1,
+      recurringDayOfMonth: 15,
+      firstDueDate: "2026-10-15",
       payer: null,
-      paymentMethodId: null,
+      paymentMethodId: "33333333-3333-4333-8333-333333333333",
     }),
     expect.any(String),
   );
@@ -412,6 +434,8 @@ test("이미 설정한 모든 정보를 상세에서 수정할 수 있다", asyn
   fireEvent.click(screen.getByRole("button", { name: "정보 저장" }));
   await screen.findByText("고정비 정보를 수정했습니다.");
   expect(updateFixedExpense).toHaveBeenCalledWith(expense.id, {
+    billingMode: "LEGACY",
+    billingMonth: null,
     memo: "통신비",
     categoryId,
     subcategoryId,
@@ -422,4 +446,39 @@ test("이미 설정한 모든 정보를 상세에서 수정할 수 있다", asyn
     payer: "PARTNER",
     paymentMethodId: secondMethod,
   });
+});
+
+test("변동 고정비는 금액과 첫 결제일 대신 해당 월만 저장한다", async () => {
+  vi.mocked(createFixedExpense).mockResolvedValue({
+    ...expense,
+    billingMode: "VARIABLE",
+    billingMonth: "2026-10",
+    expectedAmount: null,
+  });
+  render(<FixedExpensesScreen />);
+  await selectClassification();
+  fireEvent.change(screen.getByLabelText("금액 변동 여부"), {
+    target: { value: "VARIABLE" },
+  });
+  expect(screen.queryByLabelText("금액 (원)")).toBeNull();
+  expect(screen.queryByLabelText("첫 결제일")).toBeNull();
+  expect(screen.queryByLabelText("반복 결제일")).toBeNull();
+  fireEvent.change(screen.getByLabelText("해당 월"), {
+    target: { value: "2026-10" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "고정비 저장" }));
+  await waitFor(() =>
+    expect(createFixedExpense).toHaveBeenCalledWith(
+      expect.objectContaining({
+        billingMode: "VARIABLE",
+        billingMonth: "2026-10",
+        expectedAmount: null,
+        firstDueDate: null,
+        intervalMonths: null,
+        recurringDayOfMonth: null,
+        paymentMethodId: null,
+      }),
+      expect.any(String),
+    ),
+  );
 });

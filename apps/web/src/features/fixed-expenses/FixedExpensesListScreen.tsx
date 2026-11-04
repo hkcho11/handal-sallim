@@ -19,6 +19,8 @@ import {
 } from "./expenseOrder";
 
 export function expenseStatus(expense: FixedExpense) {
+  if (expense.billingMode === "VARIABLE") return "직접 입력";
+  if (expense.billingMode === "FIXED") return "자동 기록";
   if (expense.firstChargeStatus === "COMPLETED") return "완료";
   if (expense.firstChargeStatus === "OVERDUE")
     return overdueStatus(expense, todayInSeoul());
@@ -259,15 +261,23 @@ export default function FixedExpensesListScreen() {
                         </strong>
                       </div>
                       <span className={styles.amount}>
-                        {expense.expectedAmount.toLocaleString("ko-KR")}원
+                        {expense.expectedAmount === null
+                          ? "금액 변동"
+                          : `${expense.expectedAmount.toLocaleString("ko-KR")}원`}
                       </span>
                     </div>
                     <div className={styles.itemMeta}>
                       <span>
-                        {expenseInterval(expense.intervalMonths)} · 결제일{" "}
-                        {expense.recurringDayOfMonth === null
-                          ? "-"
-                          : `${expense.recurringDayOfMonth}일`}
+                        {expense.billingMode === "VARIABLE" ? (
+                          `${expense.billingMonth}부터 월별 입력`
+                        ) : (
+                          <>
+                            {expenseInterval(expense.intervalMonths)} · 결제일{" "}
+                            {expense.recurringDayOfMonth === null
+                              ? "-"
+                              : `${expense.recurringDayOfMonth}일`}
+                          </>
+                        )}
                       </span>
                       <span
                         className={styles.badge}
@@ -277,7 +287,11 @@ export default function FixedExpensesListScreen() {
                       </span>
                     </div>
                     <div className={styles.itemMeta}>
-                      <span>결제수단 {expense.paymentMethodName ?? "-"}</span>
+                      <span>
+                        {expense.billingMode === "VARIABLE"
+                          ? "월별 결제 내역에서 확인"
+                          : `결제수단 ${expense.paymentMethodName ?? "-"}`}
+                      </span>
                       <span aria-hidden="true">→</span>
                     </div>
                   </SwipeableExpenseItem>

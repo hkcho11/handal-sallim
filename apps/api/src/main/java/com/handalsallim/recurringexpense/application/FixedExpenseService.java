@@ -72,7 +72,7 @@ public class FixedExpenseService {
     expenses.save(expense);
     revisions.save(revision);
     ScheduledChargeEntity charge = null;
-    if (details.hasSchedule()) {
+    if (details.hasSchedule() && "LEGACY".equals(details.billingMode())) {
       charge =
           new ScheduledChargeEntity(
               UUID.randomUUID(), spaceId, expenseId, revisionId, details, assigneeId, now);
@@ -108,6 +108,8 @@ public class FixedExpenseService {
     var expense = expenses.findById(expenseId).orElseThrow(FixedExpenseNotFoundException::new);
     if (expense.isEnded()) throw new FixedExpenseNotFoundException();
     var revision = revisions.findFirstByRecurringExpenseIdOrderByEffectiveFromAsc(expenseId);
+    if (!"LEGACY".equals(revision.getBillingMode()))
+      throw new IllegalArgumentException("새 결제 방식의 일정은 정보 수정에서 변경해 주세요.");
     var existingCharge = charges.findFirstByRecurringExpenseIdOrderByDueDateAsc(expenseId);
     if (existingCharge != null) {
       if (Objects.equals(revision.getIntervalMonths(), intervalMonths)
@@ -160,6 +162,7 @@ public class FixedExpenseService {
     validatePaymentMethod(spaceId, details.paymentMethodId());
     details = classifyDetails(spaceId, details);
     if (sameRequest(revision, details, assigneeId)) return view(expense, userId);
+    boolean changingBillingMode = !Objects.equals(revision.getBillingMode(), details.billingMode());
     var history = charges.findByRecurringExpenseIdOrderByDueDateAsc(expenseId);
     LocalDate lastCompleted =
         history.stream()
@@ -192,8 +195,10 @@ public class FixedExpenseService {
       revision.setEffectiveFrom(nextDue);
     }
     revisions.save(revision);
+    if (changingBillingMode)
+      revision.setAutoFromDate(LocalDate.now(clock.withZone(java.time.ZoneId.of("Asia/Seoul"))));
     ScheduledChargeEntity target = null;
-    if (nextDue != null) {
+    if (nextDue != null && "LEGACY".equals(details.billingMode())) {
       target =
           history.stream()
               .filter(
@@ -211,7 +216,7 @@ public class FixedExpenseService {
     for (var item : history) {
       if (item != target) item.cancel(now);
     }
-    if (nextDue != null) {
+    if (nextDue != null && "LEGACY".equals(details.billingMode())) {
       if (target == null) {
         target =
             new ScheduledChargeEntity(
@@ -233,6 +238,9 @@ public class FixedExpenseService {
       charges.save(target);
     }
     generateCurrent(spaceId);
+    entityManager.clear();
+    if (!"LEGACY".equals(details.billingMode()))
+      return view(expenses.findById(expenseId).orElseThrow(), userId);
     return toView(
         expense,
         revision,
@@ -367,7 +375,9 @@ public class FixedExpenseService {
                 null,
                 revision.getCategoryId(),
                 revision.getSubcategoryId(),
-                revision.getMemo());
+                revision.getMemo(),
+                revision.getBillingMode(),
+                revision.getBillingMonth());
         boolean hasCompleted =
             history.stream()
                 .anyMatch(
@@ -745,7 +755,9 @@ public class FixedExpenseService {
         details.paymentMethodId(),
         details.categoryId(),
         details.subcategoryId(),
-        details.memo());
+        details.memo(),
+        details.billingMode(),
+        details.billingMonth());
   }
 
   private void validateCategory(UUID spaceId, UUID categoryId) {
@@ -814,7 +826,9 @@ public class FixedExpenseService {
   private boolean sameRequest(
       RecurringExpenseRevisionEntity revision, FixedExpenseDetails details, UUID assigneeId) {
     return revision.getName().equals(details.name())
-        && revision.getDefaultExpectedAmount() == details.expectedAmount()
+        && Objects.equals(revision.getDefaultExpectedAmount(), details.expectedAmount())
+        && Objects.equals(revision.getBillingMode(), details.billingMode())
+        && Objects.equals(revision.getBillingMonth(), details.billingMonth())
         && Objects.equals(revision.getIntervalMonths(), details.intervalMonths())
         && Objects.equals(revision.getRecurringDayOfMonth(), details.recurringDayOfMonth())
         && Objects.equals(revision.getAnchorDueDate(), details.firstDueDate())
@@ -894,6 +908,8 @@ public class FixedExpenseService {
                 revision.getSubcategoryId(),
                 expense.getSpaceId()),
         revision.getMemo(),
-        charge == null ? null : charge.getDueDate());
+        charge == null ? null : charge.getDueDate(),
+        revision.getBillingMode(),
+        revision.getBillingMonth());
   }
 }

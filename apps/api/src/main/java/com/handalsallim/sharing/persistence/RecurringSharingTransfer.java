@@ -23,7 +23,7 @@ public class RecurringSharingTransfer {
 
   record Template(
       String name,
-      long amount,
+      Long amount,
       Integer interval,
       Integer day,
       LocalDate anchor,
@@ -31,20 +31,22 @@ public class RecurringSharingTransfer {
       UUID subcategory,
       UUID payment,
       String memo,
-      LocalDate lastCompleted) {}
+      LocalDate lastCompleted,
+      String billingMode,
+      LocalDate billingMonth) {}
 
   public void carry(UUID old, UUID shared, UUID user, LocalDate today, Instant now) {
     List<Template> templates =
         jdbc.query(
             """
-      SELECT r.name,r.default_expected_amount,r.interval_months,r.recurring_day_of_month,r.anchor_due_date,r.category_id,r.subcategory_id,r.default_payment_method_id,r.memo,(SELECT max(due_date) FROM scheduled_charges c WHERE c.recurring_expense_id=e.id AND c.status='COMPLETED')
+      SELECT r.name,r.default_expected_amount,r.interval_months,r.recurring_day_of_month,r.anchor_due_date,r.category_id,r.subcategory_id,r.default_payment_method_id,r.memo,(SELECT max(due_date) FROM scheduled_charges c WHERE c.recurring_expense_id=e.id AND c.status='COMPLETED'),r.billing_mode,r.billing_month
       FROM recurring_expenses e JOIN LATERAL (SELECT * FROM recurring_expense_revisions x WHERE x.recurring_expense_id=e.id ORDER BY x.created_at DESC,x.id DESC LIMIT 1) r ON true
       WHERE e.space_id=? AND e.status='ACTIVE' ORDER BY e.created_at,e.id
       """,
             (rs, n) ->
                 new Template(
                     rs.getString(1),
-                    rs.getLong(2),
+                    rs.getObject(2, Long.class),
                     rs.getObject(3, Integer.class),
                     rs.getObject(4, Integer.class),
                     rs.getObject(5, LocalDate.class),
@@ -52,7 +54,9 @@ public class RecurringSharingTransfer {
                     rs.getObject(7, UUID.class),
                     rs.getObject(8, UUID.class),
                     rs.getString(9),
-                    rs.getObject(10, LocalDate.class)),
+                    rs.getObject(10, LocalDate.class),
+                    rs.getString(11),
+                    rs.getObject(12, LocalDate.class)),
             old);
     for (Template template : templates) {
       UUID category = category(shared, template.category(), now);
@@ -72,7 +76,9 @@ public class RecurringSharingTransfer {
               payment,
               category,
               subcategory,
-              template.memo()));
+              template.memo(),
+              template.billingMode(),
+              template.billingMonth() == null ? null : YearMonth.from(template.billingMonth())));
     }
   }
 

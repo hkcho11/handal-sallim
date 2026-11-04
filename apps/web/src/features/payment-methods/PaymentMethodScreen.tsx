@@ -363,7 +363,9 @@ export default function PaymentMethodScreen({
                         <small>첫 결제일 {item.firstDueDate ?? "미정"}</small>
                       </span>
                       <strong>
-                        {item.expectedAmount.toLocaleString("ko-KR")}원
+                        {item.expectedAmount === null
+                          ? "금액 변동"
+                          : `${item.expectedAmount.toLocaleString("ko-KR")}원`}
                       </strong>
                     </Link>
                   ))

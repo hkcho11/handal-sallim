@@ -18,7 +18,7 @@ const row = (digit: string, dueDate: string) => ({
 });
 
 for (const width of [360, 1280]) {
-  test(`회차 최신순·닫기 버튼·숫자 전용 금액과 쉼표 편집 (${width}px)`, async ({
+  test(`회차 최신순·인라인 입력 취소·금액 쉼표 편집 (${width}px)`, async ({
     page,
   }) => {
     await page.setViewportSize({ width, height: 844 });
@@ -88,11 +88,9 @@ for (const width of [360, 1280]) {
     );
     await page.goto(`/fixed-costs/${expenseId}`);
     const history = page.getByRole("region", { name: "회차별 결제 내역" });
-    await expect(history.getByRole("listitem").locator("strong")).toHaveText([
-      "2026-09-01",
-      "2026-08-01",
-      "2026-07-01",
-    ]);
+    await expect(
+      history.getByRole("listitem").locator("div > span"),
+    ).toHaveText(["2026-09 · 통신비", "2026-08 · 통신비", "2026-07 · 통신비"]);
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= window.innerWidth,
@@ -102,16 +100,20 @@ for (const width of [360, 1280]) {
       path: `../../.local/charge-list-${width}.png`,
       fullPage: true,
     });
-    await history.getByRole("button", { name: "2026-09-01 결제 완료" }).click();
-    const dialog = page.getByRole("dialog", { name: "결제 완료 확인" });
+    await history
+      .getByRole("button", { name: "2026-09 결제 내역 입력" })
+      .click();
+    const dialog = page.getByRole("form", { name: "결제 내역 수정" });
     await expect(
       dialog.getByRole("button", { name: "돌아가기", exact: true }),
     ).toHaveCount(0);
-    await dialog.getByRole("button", { name: "결제 완료 창 닫기" }).click();
+    await dialog.getByRole("button", { name: "취소", exact: true }).click();
     await expect(dialog).not.toBeVisible();
     expect(submitted).toBeNull();
-    await history.getByRole("button", { name: "2026-09-01 결제 완료" }).click();
-    const amount = dialog.getByLabel("실제 결제 금액");
+    await history
+      .getByRole("button", { name: "2026-09 결제 내역 입력" })
+      .click();
+    const amount = dialog.getByLabel("결제 금액");
     await amount.fill("abc");
     await expect(amount).toHaveValue("");
     await amount.pressSequentially("1234567abc");
@@ -145,10 +147,10 @@ for (const width of [360, 1280]) {
         ),
       ).toBe(true);
       await dialog
-        .getByRole("button", { name: "결제 완료 창 닫기" })
+        .getByRole("button", { name: "취소", exact: true })
         .scrollIntoViewIfNeeded();
       await expect(
-        dialog.getByRole("button", { name: "결제 완료 창 닫기" }),
+        dialog.getByRole("button", { name: "취소", exact: true }),
       ).toBeVisible();
       await page.evaluate(() => {
         document.documentElement.style.fontSize = "";
@@ -159,10 +161,11 @@ for (const width of [360, 1280]) {
       fullPage: true,
     });
     await dialog
-      .getByRole("button", { name: "확인하고 결제 완료", exact: true })
+      .getByRole("button", { name: "결제 내역 저장", exact: true })
       .click();
     await expect(dialog).not.toBeVisible();
     expect(submitted).toEqual({
+      billingMonth: "2026-09",
       amount: 35000,
       paidOn: "2026-09-01",
       paymentMethodId: methodId,

@@ -19,7 +19,10 @@ public class RecurringExpenseRevisionEntity {
   private Short intervalMonths;
   private Short recurringDayOfMonth;
   private LocalDate anchorDueDate;
-  private long defaultExpectedAmount;
+  private Long defaultExpectedAmount;
+  private String billingMode;
+  private LocalDate billingMonth;
+  private LocalDate autoFromDate;
   private UUID assigneeUserId;
   private UUID defaultPaymentMethodId;
   private UUID categoryId;
@@ -49,6 +52,9 @@ public class RecurringExpenseRevisionEntity {
         details.recurringDayOfMonth() == null ? null : details.recurringDayOfMonth().shortValue();
     this.anchorDueDate = details.firstDueDate();
     this.defaultExpectedAmount = details.expectedAmount();
+    this.billingMode = details.billingMode();
+    this.billingMonth = details.billingMonth() == null ? null : details.billingMonth().atDay(1);
+    this.autoFromDate = details.firstDueDate();
     this.assigneeUserId = assigneeUserId;
     this.defaultPaymentMethodId = details.paymentMethodId();
     this.categoryId = details.categoryId();
@@ -86,7 +92,7 @@ public class RecurringExpenseRevisionEntity {
     return recurringDayOfMonth == null ? null : recurringDayOfMonth.intValue();
   }
 
-  public long getDefaultExpectedAmount() {
+  public Long getDefaultExpectedAmount() {
     return defaultExpectedAmount;
   }
 
@@ -119,6 +125,8 @@ public class RecurringExpenseRevisionEntity {
   }
 
   public void updateDetails(FixedExpenseDetails details, UUID assigneeId) {
+    billingMode = details.billingMode();
+    billingMonth = details.billingMonth() == null ? null : details.billingMonth().atDay(1);
     name = details.name();
     defaultExpectedAmount = details.expectedAmount();
     intervalMonths =
@@ -136,5 +144,17 @@ public class RecurringExpenseRevisionEntity {
 
   public void setEffectiveFrom(LocalDate effectiveFrom) {
     this.effectiveFrom = effectiveFrom;
+  }
+
+  public String getBillingMode() {
+    return billingMode;
+  }
+
+  public java.time.YearMonth getBillingMonth() {
+    return billingMonth == null ? null : java.time.YearMonth.from(billingMonth);
+  }
+
+  public void setAutoFromDate(LocalDate date) {
+    autoFromDate = date;
   }
 }
