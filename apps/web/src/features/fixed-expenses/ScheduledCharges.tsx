@@ -32,7 +32,6 @@ export default function ScheduledCharges({
   >([]);
   const [error, setError] = useState("");
   const [formError, setFormError] = useState("");
-  const [notice, setNotice] = useState("");
   const [retry, setRetry] = useState(0);
   const [busy, setBusy] = useState(false);
   const busyRef = useRef(false);
@@ -76,7 +75,6 @@ export default function ScheduledCharges({
     setBusy(true);
     setFormError("");
     setError("");
-    setNotice("");
     try {
       const options = await getFixedExpenseFormOptions();
       setMethods(options.paymentMethods);
@@ -93,7 +91,7 @@ export default function ScheduledCharges({
       setPaidOn(item === "new" ? today : (item.actualPaidOn ?? item.dueDate));
       setMethod(
         item === "new"
-          ? ""
+          ? (expense?.paymentMethodId ?? "")
           : (item.actualPaymentMethodId ?? item.plannedPaymentMethodId ?? ""),
       );
     } catch (e) {
@@ -138,7 +136,6 @@ export default function ScheduledCharges({
         await editPayment(editing.id, input);
       else await completeCharge(editing.id, input);
       setEditing(null);
-      setNotice("결제 내역을 저장하고 해당 월 지출에 반영했습니다.");
       setRetry((v) => v + 1);
       onCompleted();
     } catch (e) {
@@ -168,13 +165,6 @@ export default function ScheduledCharges({
           </button>
         )}
       </div>
-      <p className={styles.fieldHint}>
-        {expense?.billingMode === "VARIABLE"
-          ? "회차는 자동 생성되지 않아요. 사용한 월의 내역을 입력하면 바로 지출에 반영돼요."
-          : expense?.billingMode === "FIXED"
-            ? "반복 결제일에 완료 내역이 자동으로 기록돼요. 각 내역의 금액·결제일·결제수단을 수정할 수 있어요."
-            : "기존 결제 기록을 보존하고 있어요. 정보 수정에서 금액 변동 여부를 선택하면 이후부터 새 방식이 적용돼요."}
-      </p>
       {error && (
         <div role="alert" className={styles.error}>
           <p>{error}</p>
@@ -183,21 +173,10 @@ export default function ScheduledCharges({
           </button>
         </div>
       )}
-      {notice && (
-        <p role="status" className={styles.notice}>
-          {notice}
-        </p>
-      )}
       {charges === null && !error && (
         <p role="status">결제 내역을 불러오는 중…</p>
       )}
-      {charges?.length === 0 && (
-        <p>
-          {expense?.billingMode === "VARIABLE"
-            ? "등록한 결제 내역이 없어요. 해당 월의 결제 내역을 입력해 주세요."
-            : "아직 결제 내역이 없어요. 설정한 결제일이 되면 기록됩니다."}
-        </p>
-      )}
+      {charges?.length === 0 && <p>등록한 결제 내역이 없어요.</p>}
       <ul className={styles.chargeList}>
         {charges
           ?.toSorted(
@@ -311,9 +290,6 @@ export default function ScheduledCharges({
               ))}
             </select>
           </label>
-          <p className={styles.fieldHint}>
-            저장하면 해당 월의 완료된 지출로 기록됩니다.
-          </p>
           {formError && (
             <p role="alert" className={styles.error}>
               {formError}

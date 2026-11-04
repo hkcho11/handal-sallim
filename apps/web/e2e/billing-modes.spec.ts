@@ -16,7 +16,10 @@ for (const width of [360, 1280]) {
     await page.route("**/backend/recurring-expenses/options", (route) =>
       route.fulfill({
         json: {
-          payers: [],
+          payers: [
+            { value: "ME", label: "나" },
+            { value: "PARTNER", label: "상대" },
+          ],
           paymentMethods: [
             { id: method, name: "생활비 카드", type: "CREDIT_CARD" },
           ],
@@ -34,8 +37,10 @@ for (const width of [360, 1280]) {
         billingMonth: "2026-10",
         expectedAmount: null,
         firstDueDate: null,
-        intervalMonths: null,
-        recurringDayOfMonth: null,
+        intervalMonths: 1,
+        recurringDayOfMonth: 10,
+        payer: "PARTNER",
+        paymentMethodId: method,
       });
       saved = {
         id,
@@ -45,7 +50,7 @@ for (const width of [360, 1280]) {
         subcategoryName: "전기",
         firstChargeId: null,
         firstChargeStatus: null,
-        paymentMethodName: null,
+        paymentMethodName: "생활비 카드",
       };
       await route.fulfill({ json: saved });
     });
@@ -102,17 +107,31 @@ for (const width of [360, 1280]) {
     await page.getByLabel("해당 월", { exact: true }).fill("2026-10");
     await page.getByLabel("대분류", { exact: true }).selectOption(category);
     await page.getByLabel("중분류", { exact: true }).selectOption(sub);
+    await page.getByLabel("반복주기", { exact: true }).selectOption("1");
+    await page.getByLabel("반복 결제일", { exact: true }).fill("10");
+    await page.getByLabel("결제자", { exact: true }).selectOption("PARTNER");
+    await page.getByLabel("결제수단", { exact: true }).selectOption(method);
     await page.getByRole("button", { name: "고정비 저장" }).click();
     await expect(page).toHaveURL(`/fixed-costs/${id}`);
+    const info = page.getByRole("region", { name: "고정비 정보" });
+    await expect(info.getByText("매월", { exact: true })).toBeVisible();
+    await expect(info.getByText("10일", { exact: true })).toBeVisible();
+    await expect(info.getByText("상대", { exact: true })).toBeVisible();
+    await expect(info.getByText("생활비 카드", { exact: true })).toBeVisible();
+    await expect(info.getByText("2026-10", { exact: true })).toBeVisible();
+    await expect(info.getByText("첫 결제일", { exact: true })).toHaveCount(0);
+    await expect(
+      page.getByText(/부터 월별 결제 내역을 직접 입력|자동 생성되지 않아요/),
+    ).toHaveCount(0);
     const history = page.getByRole("region", { name: "회차별 결제 내역" });
     await expect(history.getByRole("listitem")).toHaveCount(0);
     await history.getByRole("button", { name: "+ 결제 내역 입력" }).click();
     const form = history.getByRole("form", { name: "결제 내역 입력" });
     await form.getByLabel("결제 금액", { exact: true }).fill("50000");
     await form.getByLabel("실제 결제일").fill("2026-11-10");
-    await form
-      .getByRole("combobox", { name: "결제수단", exact: true })
-      .selectOption(method);
+    await expect(
+      form.getByRole("combobox", { name: "결제수단", exact: true }),
+    ).toHaveValue(method);
     await form.getByRole("button", { name: "결제 내역 저장" }).click();
     await expect(form.getByRole("alert")).toContainText("일시 오류");
     await expect(form.getByLabel("결제 금액", { exact: true })).toHaveValue(
@@ -120,6 +139,9 @@ for (const width of [360, 1280]) {
     );
     await form.getByRole("button", { name: "결제 내역 저장" }).click();
     await expect(form).toHaveCount(0);
+    await expect(
+      page.getByText(/저장하고 해당 월 지출에 반영|고정비 정보를 수정했습니다/),
+    ).toHaveCount(0);
     expect(keys[0]).toBe(keys[1]);
     await expect(history.getByRole("listitem")).toContainText([
       "2026-10 · 전기50,000원생활비 카드 · 2026-11-10",

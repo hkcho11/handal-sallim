@@ -290,7 +290,7 @@ test("상세에서 정보를 수정하고 결과를 다시 조회한다", async 
   });
   await screen.findByRole("option", { name: "인터넷" });
   fireEvent.click(screen.getByRole("button", { name: "정보 저장" }));
-  await screen.findByText("고정비 정보를 수정했습니다.");
+  await screen.findByRole("button", { name: "정보 수정" });
   expect(screen.getByText("2026-11-15")).toBeTruthy();
   expect(updateFixedExpense).toHaveBeenCalledWith(
     expense.id,
@@ -432,7 +432,7 @@ test("이미 설정한 모든 정보를 상세에서 수정할 수 있다", asyn
     fireEvent.change(screen.getByLabelText(label), { target: { value } });
   await screen.findByRole("option", { name: "인터넷" });
   fireEvent.click(screen.getByRole("button", { name: "정보 저장" }));
-  await screen.findByText("고정비 정보를 수정했습니다.");
+  await screen.findByRole("button", { name: "정보 수정" });
   expect(updateFixedExpense).toHaveBeenCalledWith(expense.id, {
     billingMode: "LEGACY",
     billingMonth: null,
@@ -448,7 +448,7 @@ test("이미 설정한 모든 정보를 상세에서 수정할 수 있다", asyn
   });
 });
 
-test("변동 고정비는 금액과 첫 결제일 대신 해당 월만 저장한다", async () => {
+test("변동 고정비도 공통 설정을 유지하고 금액과 첫 결제일 대신 해당 월을 저장한다", async () => {
   vi.mocked(createFixedExpense).mockResolvedValue({
     ...expense,
     billingMode: "VARIABLE",
@@ -462,7 +462,15 @@ test("변동 고정비는 금액과 첫 결제일 대신 해당 월만 저장한
   });
   expect(screen.queryByLabelText("금액 (원)")).toBeNull();
   expect(screen.queryByLabelText("첫 결제일")).toBeNull();
-  expect(screen.queryByLabelText("반복 결제일")).toBeNull();
+  expect((screen.getByLabelText("반복주기") as HTMLSelectElement).value).toBe(
+    "1",
+  );
+  expect((screen.getByLabelText("반복 결제일") as HTMLInputElement).value).toBe(
+    "15",
+  );
+  expect((screen.getByLabelText("결제수단") as HTMLSelectElement).value).toBe(
+    "33333333-3333-4333-8333-333333333333",
+  );
   fireEvent.change(screen.getByLabelText("해당 월"), {
     target: { value: "2026-10" },
   });
@@ -474,9 +482,9 @@ test("변동 고정비는 금액과 첫 결제일 대신 해당 월만 저장한
         billingMonth: "2026-10",
         expectedAmount: null,
         firstDueDate: null,
-        intervalMonths: null,
-        recurringDayOfMonth: null,
-        paymentMethodId: null,
+        intervalMonths: 1,
+        recurringDayOfMonth: 15,
+        paymentMethodId: "33333333-3333-4333-8333-333333333333",
       }),
       expect.any(String),
     ),

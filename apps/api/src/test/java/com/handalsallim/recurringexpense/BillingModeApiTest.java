@@ -74,11 +74,11 @@ class BillingModeApiTest {
     return new FixedExpenseDetails(
         "전기",
         mode.equals("VARIABLE") ? null : 30000L,
-        mode.equals("VARIABLE") ? null : 1,
-        mode.equals("VARIABLE") ? null : 10,
+        1,
+        10,
         mode.equals("VARIABLE") ? null : LocalDate.of(2026, 10, 10),
         null,
-        mode.equals("VARIABLE") ? null : payment,
+        payment,
         category,
         sub,
         null,
@@ -90,6 +90,9 @@ class BillingModeApiTest {
   void variableRecordsOnlyOnInputUsesBillingMonthAndEditsOneTransaction() {
     var expense = fixed.create(user, UUID.randomUUID(), details("VARIABLE"));
     assertNull(expense.expectedAmount());
+    assertEquals(1, expense.intervalMonths());
+    assertEquals(10, expense.recurringDayOfMonth());
+    assertEquals(payment, expense.paymentMethodId());
     assertTrue(payments.list(user, expense.id()).isEmpty());
     var key = UUID.randomUUID();
     var input = new PaymentCompletion(50000, LocalDate.of(2026, 11, 10), payment, 0);

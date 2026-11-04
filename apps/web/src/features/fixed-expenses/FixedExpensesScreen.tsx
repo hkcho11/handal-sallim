@@ -202,15 +202,10 @@ export default function FixedExpensesScreen({
       errors.memo = "메모는 120자 이내로 입력해 주세요.";
     if (!isVariable && parsedAmount === null)
       errors.amount = "1원 이상의 금액을 숫자로 입력해 주세요.";
-    if (
-      !isVariable &&
-      parsedInterval !== null &&
-      ![1, 2, 3, 12].includes(parsedInterval)
-    ) {
+    if (parsedInterval !== null && ![1, 2, 3, 12].includes(parsedInterval)) {
       errors.interval = "목록에서 반복주기를 선택해 주세요.";
     }
     if (
-      !isVariable &&
       recurringDay &&
       (!Number.isInteger(parsedRecurringDay) ||
         parsedRecurringDay! < 1 ||
@@ -248,13 +243,11 @@ export default function FixedExpensesScreen({
       billingMode,
       billingMonth: isVariable ? billingMonth : null,
       expectedAmount: isVariable ? null : parsedAmount,
-      intervalMonths: isVariable
-        ? null
-        : (parsedInterval as NewFixedExpense["intervalMonths"]),
-      recurringDayOfMonth: isVariable ? null : parsedRecurringDay,
+      intervalMonths: parsedInterval as NewFixedExpense["intervalMonths"],
+      recurringDayOfMonth: parsedRecurringDay,
       firstDueDate: isVariable ? null : firstDueDate || null,
       payer: (payer || null) as NewFixedExpense["payer"],
-      paymentMethodId: isVariable ? null : paymentMethodId || null,
+      paymentMethodId: paymentMethodId || null,
       categoryId,
     };
     creationKey.current ??= crypto.randomUUID();
@@ -292,11 +285,6 @@ export default function FixedExpensesScreen({
           ← {expense ? "상세로 돌아가기" : "고정비 목록"}
         </Link>
         <h1>{expense ? "정보 수정" : "내역 추가"}</h1>
-        <p>
-          {expense
-            ? "고정비의 결제 정보와 일정을 수정하세요."
-            : "고정비의 결제 정보와 일정을 등록하세요."}
-        </p>
       </header>
       <section
         className={`${styles.panel} ${styles.formPanel}`}
@@ -305,16 +293,6 @@ export default function FixedExpensesScreen({
         <h2 id="add-heading">
           {expense ? (expense.subcategoryName ?? expense.name) : "고정비"}
         </h2>
-        <p className={styles.muted}>
-          금액 변동 여부에 따라 입력 항목이 달라져요. 분류를 선택하고 필요한
-          정보를 입력해 주세요.
-        </p>
-        {expense && (
-          <p className={styles.fieldHint}>
-            수정 내용은 반복 설정과 미완료 예정 청구에 반영되며, 완료 기록은
-            유지됩니다.
-          </p>
-        )}
         <form onSubmit={handleSubmit} className={styles.form} noValidate>
           <label htmlFor="billing-mode">금액 변동 여부</label>
           <select
@@ -331,44 +309,9 @@ export default function FixedExpensesScreen({
             (expense && !expense.billingMode) ? (
               <option value="LEGACY">기존 방식 유지</option>
             ) : null}
-            <option value="FIXED">금액 일정 · 결제일에 자동 기록</option>
-            <option value="VARIABLE">금액 변동 · 월별 직접 입력</option>
+            <option value="FIXED">금액 일정</option>
+            <option value="VARIABLE">금액 변동</option>
           </select>
-          <p className={styles.fieldHint}>
-            {isVariable
-              ? "금액과 첫 결제일은 입력하지 않아요. 저장 후 상세에서 월별 결제 내역을 직접 입력해 주세요."
-              : billingMode === "LEGACY"
-                ? "기존 기록을 유지해요. 새 유형을 선택해 저장하면 이후부터 적용돼요."
-                : "반복 결제일이 되면 완료 내역이 자동으로 기록되며, 상세에서 수정할 수 있어요."}
-          </p>
-          {isVariable && (
-            <>
-              <label htmlFor="billing-month">해당 월</label>
-              <input
-                id="billing-month"
-                ref={(element) => {
-                  fieldRefs.current.date = element;
-                }}
-                aria-invalid={Boolean(fieldErrors.date)}
-                type="month"
-                min="0001-01"
-                max="9998-12"
-                value={billingMonth}
-                disabled={isSaving}
-                onChange={(event) => {
-                  setBillingMonth(event.target.value);
-                  clearFieldError("date");
-                  resetCreationKey();
-                }}
-              />
-            </>
-          )}
-
-          {isVariable && fieldErrors.date && (
-            <p role="alert" className={styles.fieldError}>
-              {fieldErrors.date}
-            </p>
-          )}
           <label htmlFor="expense-category">대분류</label>
           <select
             id="expense-category"
@@ -473,7 +416,6 @@ export default function FixedExpensesScreen({
               fieldRefs.current.memo = element;
             }}
             aria-invalid={Boolean(fieldErrors.memo)}
-            aria-describedby="expense-memo-hint"
             onChange={(event) => {
               setMemo(event.target.value);
               clearFieldError("memo");
@@ -481,9 +423,6 @@ export default function FixedExpensesScreen({
             }}
             placeholder="예: 넷플릭스, 내 휴대폰"
           />
-          <p id="expense-memo-hint" className={styles.fieldHint}>
-            비워두면 중분류명으로 표시해요.
-          </p>
           {fieldErrors.memo && (
             <p role="alert" className={styles.fieldError}>
               {fieldErrors.memo}
@@ -521,78 +460,78 @@ export default function FixedExpensesScreen({
                   {fieldErrors.amount}
                 </p>
               )}
-
-              <label htmlFor="expense-interval">반복주기</label>
-              <select
-                id="expense-interval"
-                data-align="center"
-                ref={(element) => {
-                  fieldRefs.current.interval = element;
-                }}
-                disabled={isSaving}
-                value={interval}
-                onChange={(event) => {
-                  setInterval(event.target.value);
-                  resetCreationKey();
-                  clearFieldError("interval");
-                }}
-                aria-invalid={Boolean(fieldErrors.interval)}
-                aria-describedby={
-                  fieldErrors.interval ? "expense-interval-error" : undefined
-                }
-              >
-                <option value="">-</option>
-                {INTERVALS.map((item) => (
-                  <option key={item.value} value={item.value}>
-                    {item.label}
-                  </option>
-                ))}
-              </select>
-              {fieldErrors.interval && (
-                <p
-                  id="expense-interval-error"
-                  role="alert"
-                  className={styles.fieldError}
-                >
-                  {fieldErrors.interval}
-                </p>
-              )}
-
-              <label htmlFor="expense-recurring-day">반복 결제일</label>
-              <input
-                id="expense-recurring-day"
-                ref={(element) => {
-                  fieldRefs.current.recurringDay = element;
-                }}
-                type="number"
-                min={1}
-                max={31}
-                step={1}
-                inputMode="numeric"
-                disabled={isSaving}
-                value={recurringDay}
-                placeholder="1~31"
-                aria-invalid={Boolean(fieldErrors.recurringDay)}
-                aria-describedby={`expense-recurring-day-hint${fieldErrors.recurringDay ? " expense-recurring-day-error" : ""}`}
-                onChange={(event) => {
-                  setRecurringDay(event.target.value);
-                  resetCreationKey();
-                  clearFieldError("recurringDay");
-                }}
-              />
-              <p id="expense-recurring-day-hint" className={styles.fieldHint}>
-                첫 결제일과 별도로, 이후 회차에 적용할 날짜입니다.
-              </p>
-              {fieldErrors.recurringDay && (
-                <p
-                  id="expense-recurring-day-error"
-                  role="alert"
-                  className={styles.fieldError}
-                >
-                  {fieldErrors.recurringDay}
-                </p>
-              )}
             </>
+          )}
+          <label htmlFor="expense-interval">반복주기</label>
+          <select
+            id="expense-interval"
+            data-align="center"
+            ref={(element) => {
+              fieldRefs.current.interval = element;
+            }}
+            disabled={isSaving}
+            value={interval}
+            onChange={(event) => {
+              setInterval(event.target.value);
+              resetCreationKey();
+              clearFieldError("interval");
+            }}
+            aria-invalid={Boolean(fieldErrors.interval)}
+            aria-describedby={
+              fieldErrors.interval ? "expense-interval-error" : undefined
+            }
+          >
+            <option value="">-</option>
+            {INTERVALS.map((item) => (
+              <option key={item.value} value={item.value}>
+                {item.label}
+              </option>
+            ))}
+          </select>
+          {fieldErrors.interval && (
+            <p
+              id="expense-interval-error"
+              role="alert"
+              className={styles.fieldError}
+            >
+              {fieldErrors.interval}
+            </p>
+          )}
+
+          <label htmlFor="expense-recurring-day">반복 결제일</label>
+          <input
+            id="expense-recurring-day"
+            ref={(element) => {
+              fieldRefs.current.recurringDay = element;
+            }}
+            type="number"
+            min={1}
+            max={31}
+            step={1}
+            inputMode="numeric"
+            disabled={isSaving}
+            value={recurringDay}
+            placeholder="1~31"
+            aria-invalid={Boolean(fieldErrors.recurringDay)}
+            aria-describedby={
+              fieldErrors.recurringDay
+                ? "expense-recurring-day-error"
+                : undefined
+            }
+            onChange={(event) => {
+              setRecurringDay(event.target.value);
+              resetCreationKey();
+              clearFieldError("recurringDay");
+            }}
+          />
+          {fieldErrors.recurringDay && (
+            <p
+              id="expense-recurring-day-error"
+              role="alert"
+              className={styles.fieldError}
+            >
+              {fieldErrors.recurringDay}
+            </p>
           )}
           {options.payers.length > 0 && (
             <>
@@ -617,36 +556,64 @@ export default function FixedExpensesScreen({
             </>
           )}
 
-          {!isVariable && (
+          <label htmlFor="expense-payment-method">결제수단</label>
+          <select
+            id="expense-payment-method"
+            ref={(element) => {
+              fieldRefs.current.paymentMethod = element;
+            }}
+            aria-invalid={Boolean(fieldErrors.paymentMethod)}
+            disabled={isSaving}
+            value={paymentMethodId}
+            onChange={(event) => {
+              setPaymentMethodId(event.target.value);
+              clearFieldError("paymentMethod");
+              resetCreationKey();
+            }}
+          >
+            <option value="">-</option>
+            {options.paymentMethods.map((method) => (
+              <option key={method.id} value={method.id}>
+                {method.name} ({typeLabels[method.type]})
+              </option>
+            ))}
+          </select>
+
+          {fieldErrors.paymentMethod && (
+            <p role="alert" className={styles.fieldError}>
+              {fieldErrors.paymentMethod}
+            </p>
+          )}
+          {isVariable && (
             <>
-              <label htmlFor="expense-payment-method">결제수단</label>
-              <select
-                id="expense-payment-method"
+              <label htmlFor="billing-month">해당 월</label>
+              <input
+                id="billing-month"
                 ref={(element) => {
-                  fieldRefs.current.paymentMethod = element;
+                  fieldRefs.current.date = element;
                 }}
-                aria-invalid={Boolean(fieldErrors.paymentMethod)}
+                aria-invalid={Boolean(fieldErrors.date)}
+                type="month"
+                min="0001-01"
+                max="9998-12"
+                value={billingMonth}
                 disabled={isSaving}
-                value={paymentMethodId}
                 onChange={(event) => {
-                  setPaymentMethodId(event.target.value);
-                  clearFieldError("paymentMethod");
+                  setBillingMonth(event.target.value);
+                  clearFieldError("date");
                   resetCreationKey();
                 }}
-              >
-                <option value="">-</option>
-                {options.paymentMethods.map((method) => (
-                  <option key={method.id} value={method.id}>
-                    {method.name} ({typeLabels[method.type]})
-                  </option>
-                ))}
-              </select>
+              />
+            </>
+          )}
 
-              {fieldErrors.paymentMethod && (
-                <p role="alert" className={styles.fieldError}>
-                  {fieldErrors.paymentMethod}
-                </p>
-              )}
+          {isVariable && fieldErrors.date && (
+            <p role="alert" className={styles.fieldError}>
+              {fieldErrors.date}
+            </p>
+          )}
+          {!isVariable && (
+            <>
               <label htmlFor="expense-date">첫 결제일</label>
               <input
                 id="expense-date"

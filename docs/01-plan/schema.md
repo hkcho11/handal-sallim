@@ -544,4 +544,4 @@ MVP에는 금융 연동 테이블을 생성하지 않는다. 카드·은행 거�
 
 ## 고정비 결제 유형과 해당 월 (2026-11-04)
 
-2026-11-04 고정비 유형 추가(V17): `recurring_expense_revisions.billing_mode`는 기존 `LEGACY`, 금액 일정 `FIXED`, 금액 변동 `VARIABLE`을 구분한다. 변동 유형은 `billing_month`(월 첫날)를 저장하고 등록 금액·반복 일정은 NULL이다. 다른 유형의 등록 금액은 양의 정수다. `auto_from_date`는 유형 전환 전 미결제 회차의 자동 완료를 막는 하한이다. 완료 회차의 `scheduled_charges.billing_month`는 실제 결제일과 분리된 통계 기준이며 기존 NULL은 예정 결제월로 해석한다. 상세 불변 조건은 [고정비 결제 유형](../02-design/expense-billing-modes.md)을 따른다. 활성·완료 회차에만 `(recurring_expense_id, due_date)` 유일성을 적용하므로 유형 전환에서 취소된 원본 회차를 보존하면서 같은 날짜의 새 회차를 기록할 수 있다.
+2026-11-04 고정비 유형 추가(V17): `recurring_expense_revisions.billing_mode`는 기존 `LEGACY`, 금액 일정 `FIXED`, 금액 변동 `VARIABLE`을 구분한다. 변동 유형은 `billing_month`(월 첫날)를 저장하고 등록 금액·첫 결제일은 NULL이다. V18부터 반복주기·반복 결제일·결제자·결제수단은 두 유형의 공통 설정으로 보존한다. 다른 유형의 등록 금액은 양의 정수다. `auto_from_date`는 유형 전환 전 미결제 회차의 자동 완료를 막는 하한이다. 완료 회차의 `scheduled_charges.billing_month`는 실제 결제일과 분리된 통계 기준이며 기존 NULL은 예정 결제월로 해석한다. 상세 불변 조건은 [고정비 결제 유형](../02-design/expense-billing-modes.md)을 따른다. 활성·완료 회차에만 `(recurring_expense_id, due_date)` 유일성을 적용하므로 유형 전환에서 취소된 원본 회차를 보존하면서 같은 날짜의 새 회차를 기록할 수 있다.

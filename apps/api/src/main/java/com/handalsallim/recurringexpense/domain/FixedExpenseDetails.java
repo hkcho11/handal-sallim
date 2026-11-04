@@ -109,9 +109,7 @@ public record FixedExpenseDetails(
           || billingMonth.getYear() < 1
           || billingMonth.getYear() > 9998
           || expectedAmount != null
-          || firstDueDate != null
-          || intervalMonths != null
-          || recurringDayOfMonth != null)
+          || firstDueDate != null)
         throw new IllegalArgumentException("변동 고정비는 금액·첫 결제일 대신 해당 월을 입력해 주세요.");
     } else if (expectedAmount == null
         || expectedAmount <= 0

@@ -124,7 +124,9 @@ for (const width of [360, 1280]) {
     await page.getByLabel("반복주기").selectOption("1");
     await page.getByLabel("첫 결제일").fill("2026-11-15");
     await page.getByRole("button", { name: "정보 저장" }).click();
-    await expect(page.getByText("고정비 정보를 수정했습니다.")).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "정보 수정", exact: true }),
+    ).toBeVisible();
     await expect(page.getByText("2026-11-15", { exact: true })).toBeVisible();
     const nextOptions = page.waitForResponse(
       "**/backend/recurring-expenses/options",
@@ -141,7 +143,9 @@ for (const width of [360, 1280]) {
     await page.getByLabel("반복 결제일").fill("30");
     await page.getByLabel("첫 결제일").fill("2026-11-30");
     await page.getByRole("button", { name: "정보 저장" }).click();
-    await expect(page.getByText("고정비 정보를 수정했습니다.")).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "정보 수정", exact: true }),
+    ).toBeVisible();
     await expect(page.getByText("42,000")).toBeVisible();
     await page
       .getByRole("link", { name: "← 고정비 목록", exact: true })

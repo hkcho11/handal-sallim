@@ -268,16 +268,10 @@ export default function FixedExpensesListScreen() {
                     </div>
                     <div className={styles.itemMeta}>
                       <span>
-                        {expense.billingMode === "VARIABLE" ? (
-                          `${expense.billingMonth}부터 월별 입력`
-                        ) : (
-                          <>
-                            {expenseInterval(expense.intervalMonths)} · 결제일{" "}
-                            {expense.recurringDayOfMonth === null
-                              ? "-"
-                              : `${expense.recurringDayOfMonth}일`}
-                          </>
-                        )}
+                        {expenseInterval(expense.intervalMonths)} · 결제일{" "}
+                        {expense.recurringDayOfMonth === null
+                          ? "-"
+                          : `${expense.recurringDayOfMonth}일`}
                       </span>
                       <span
                         className={styles.badge}
@@ -288,9 +282,7 @@ export default function FixedExpensesListScreen() {
                     </div>
                     <div className={styles.itemMeta}>
                       <span>
-                        {expense.billingMode === "VARIABLE"
-                          ? "월별 결제 내역에서 확인"
-                          : `결제수단 ${expense.paymentMethodName ?? "-"}`}
+                        {`결제수단 ${expense.paymentMethodName ?? "-"}`}
                       </span>
                       <span aria-hidden="true">→</span>
                     </div>
