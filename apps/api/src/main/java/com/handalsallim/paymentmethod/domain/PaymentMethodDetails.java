@@ -9,7 +9,8 @@ public record PaymentMethodDetails(String name, String type, UUID holderUserId, 
         || name.isBlank()
         || name.strip().length() > 100
         || type == null
-        || !Set.of("CARD", "ACCOUNT", "CASH").contains(type)
+        || !Set.of("CARD", "CREDIT_CARD", "DEBIT_CARD", "SIMPLE_PAY", "ACCOUNT", "CASH")
+            .contains(type)
         || (color != null && !color.matches("#[0-9a-fA-F]{6}")))
       throw new IllegalArgumentException();
     name = name.strip();

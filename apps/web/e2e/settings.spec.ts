@@ -74,6 +74,9 @@ test("결제수단 추가·수정·보관과 설정 분류 관리", async ({ pag
   await page.getByRole("button", { name: "저장", exact: true }).click();
   await expect(page.getByRole("textbox", { name: "이름" })).toBeFocused();
   await page.getByRole("textbox", { name: "이름" }).fill("생활비 카드");
+  await page
+    .getByRole("combobox", { name: "종류", exact: true })
+    .selectOption("SIMPLE_PAY");
   await page.getByRole("combobox", { name: "명의자" }).selectOption(memberId);
   await page.getByRole("button", { name: "파랑", exact: true }).click();
   await page.getByRole("button", { name: "저장", exact: true }).click();
@@ -81,6 +84,12 @@ test("결제수단 추가·수정·보관과 설정 분류 관리", async ({ pag
     page.getByRole("heading", { name: "생활비 카드" }),
   ).toBeVisible();
   await page.getByRole("link", { name: "정보 수정" }).click();
+  await expect(
+    page.getByRole("combobox", { name: "종류", exact: true }),
+  ).toHaveValue("SIMPLE_PAY");
+  await page
+    .getByRole("combobox", { name: "종류", exact: true })
+    .selectOption("DEBIT_CARD");
   await page.getByRole("textbox", { name: "이름" }).fill("공용 카드");
   await page.getByRole("button", { name: "저장", exact: true }).click();
   await expect(page.getByRole("heading", { name: "공용 카드" })).toBeVisible();
@@ -161,6 +170,9 @@ test("결제수단 추가·수정·보관과 설정 분류 관리", async ({ pag
 
 test("결제수단 조회 실패 후 재시도", async ({ page }) => {
   let attempt = 0;
+  await page.route("**/backend/payment-methods/members", (route) =>
+    route.fulfill({ json: [] }),
+  );
   await page.route("**/backend/payment-methods", (route) =>
     route.fulfill(attempt++ === 0 ? { status: 503 } : { json: [] }),
   );

@@ -184,7 +184,7 @@
 | `space_id` | `uuid` | Y | FK → `spaces.id` |
 | `holder_user_id` | `uuid` | N | `(space_id, holder_user_id)` → 공간 멤버, 명의자/담당자 |
 | `name` | `varchar(100)` | Y | 사용자가 정한 표시명 |
-| `type` | `varchar(20)` | Y | `CARD`, `ACCOUNT`, `CASH` |
+| `type` | `varchar(20)` | Y | `CREDIT_CARD`, `DEBIT_CARD`, `SIMPLE_PAY`, `ACCOUNT`, `CASH`, 기존 카드 미분류 `CARD` |
 | `color` | `varchar(20)` | N | 허용 형식을 경계에서 검증 |
 | `status` | `varchar(20)` | Y | `ACTIVE`, `ARCHIVED` |
 | `archived_at` | `timestamptz` | N | 보관 시각 |

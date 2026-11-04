@@ -1,6 +1,11 @@
 import { cachedRead } from "../../shared/api/readCache";
 import { apiFetch } from "../../shared/api/apiFetch";
 import { SERVICE_UNAVAILABLE_MESSAGE } from "../../shared/api/serviceAvailability";
+import {
+  comparePaymentMethodNames,
+  isPaymentMethodType,
+  type PaymentMethodType,
+} from "../payment-methods/types";
 
 export interface FixedExpense {
   id: string;
@@ -41,7 +46,7 @@ export interface FixedExpenseFormOptions {
   paymentMethods: Array<{
     id: string;
     name: string;
-    type: "CARD" | "ACCOUNT" | "CASH";
+    type: PaymentMethodType;
   }>;
 }
 
@@ -203,7 +208,7 @@ export async function getFixedExpenseFormOptions(): Promise<FixedExpenseFormOpti
       isObject(item) &&
       isUuid(item.id) &&
       typeof item.name === "string" &&
-      ["CARD", "ACCOUNT", "CASH"].includes(String(item.type)),
+      isPaymentMethodType(item.type),
   );
   const categories =
     data.categories === undefined ||
@@ -230,7 +235,9 @@ export async function getFixedExpenseFormOptions(): Promise<FixedExpenseFormOpti
   if (!payers || !paymentMethods || !categories || !subcategories) {
     throw new FixedExpenseApiError(0, "입력 선택지를 확인할 수 없습니다.");
   }
-  return data as unknown as FixedExpenseFormOptions;
+  const options = data as unknown as FixedExpenseFormOptions;
+  options.paymentMethods.sort(comparePaymentMethodNames);
+  return options;
 }
 
 export async function createFixedExpense(

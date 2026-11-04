@@ -32,7 +32,7 @@ export default function PaymentMethodScreen({
   const [expenses, setExpenses] = useState<FixedExpense[]>([]);
   const [input, setInput] = useState<PaymentMethodInput>({
     name: "",
-    type: "CARD",
+    type: "CREDIT_CARD",
     holderUserId: null,
     color: null,
   });
@@ -211,9 +211,11 @@ export default function PaymentMethodScreen({
                 key.current = null;
               }}
             >
-              <option value="CARD">카드</option>
-              <option value="ACCOUNT">계좌</option>
-              <option value="CASH">현금</option>
+              {Object.entries(typeLabels).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
             </select>
           </label>
           <label className={styles.field}>

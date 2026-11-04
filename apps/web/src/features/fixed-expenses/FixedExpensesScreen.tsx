@@ -14,6 +14,7 @@ import {
   type NewFixedExpense,
 } from "./api";
 import styles from "./fixed-expenses.module.css";
+import { typeLabels } from "../payment-methods/types";
 
 const INTERVALS = [
   { value: 1, label: "매월" },
@@ -531,7 +532,7 @@ export default function FixedExpensesScreen({
             <option value="">-</option>
             {options.paymentMethods.map((method) => (
               <option key={method.id} value={method.id}>
-                {method.name} ({paymentMethodType(method.type)})
+                {method.name} ({typeLabels[method.type]})
               </option>
             ))}
           </select>
@@ -580,10 +581,4 @@ export default function FixedExpensesScreen({
       </section>
     </main>
   );
-}
-
-function paymentMethodType(type: "CARD" | "ACCOUNT" | "CASH") {
-  if (type === "CARD") return "카드";
-  if (type === "ACCOUNT") return "계좌";
-  return "현금";
 }
