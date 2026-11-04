@@ -1,10 +1,16 @@
 import { apiFetch } from "../../shared/api/apiFetch";
 import { SERVICE_UNAVAILABLE_MESSAGE } from "../../shared/api/serviceAvailability";
+import {
+  comparePaymentMethodNames,
+  isPaymentMethodType,
+  type PaymentMethodType,
+} from "./types";
+export { typeLabels } from "./types";
 
 export interface PaymentMethod {
   id: string;
   name: string;
-  type: "CARD" | "ACCOUNT" | "CASH";
+  type: PaymentMethodType;
   holderUserId: string | null;
   color: string | null;
   status: "ACTIVE" | "ARCHIVED";
@@ -18,7 +24,6 @@ export type PaymentMethodInput = Pick<
   PaymentMethod,
   "name" | "type" | "holderUserId" | "color"
 >;
-export const typeLabels = { CARD: "카드", ACCOUNT: "계좌", CASH: "현금" };
 function object(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -36,9 +41,7 @@ function method(value: unknown): value is PaymentMethod {
     uuid(value.id) &&
     typeof value.name === "string" &&
     value.name.trim().length > 0 &&
-    (value.type === "CARD" ||
-      value.type === "ACCOUNT" ||
-      value.type === "CASH") &&
+    isPaymentMethodType(value.type) &&
     (value.holderUserId === null || uuid(value.holderUserId)) &&
     (value.color === null ||
       (typeof value.color === "string" &&
@@ -89,7 +92,7 @@ export async function listPaymentMethods(): Promise<PaymentMethod[]> {
     new Set(result.map((item) => item.id)).size !== result.length
   )
     throw new Error("결제수단 응답을 확인할 수 없습니다.");
-  return result;
+  return result.sort(comparePaymentMethodNames);
 }
 export async function listMembers(): Promise<Member[]> {
   const result = await request("/members");

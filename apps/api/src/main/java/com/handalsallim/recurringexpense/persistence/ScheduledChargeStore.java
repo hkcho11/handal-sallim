@@ -49,7 +49,8 @@ public class ScheduledChargeStore {
       WITH settings AS (
         SELECT r.*, ?::date horizon FROM recurring_expenses e
         JOIN LATERAL (SELECT * FROM recurring_expense_revisions v WHERE v.recurring_expense_id=e.id ORDER BY v.created_at DESC,v.id DESC LIMIT 1) r ON true
-        WHERE e.space_id=? AND e.status='ACTIVE' AND r.interval_months IS NOT NULL AND r.recurring_day_of_month IS NOT NULL AND r.anchor_due_date IS NOT NULL
+        WHERE e.space_id=? AND e.status='ACTIVE' AND r.billing_mode<>'VARIABLE' AND r.interval_months IS NOT NULL AND r.recurring_day_of_month IS NOT NULL AND r.anchor_due_date IS NOT NULL
+          AND (r.billing_mode='LEGACY' OR EXISTS (SELECT 1 FROM payment_methods p WHERE p.id=r.default_payment_method_id AND p.space_id=r.space_id AND p.status='ACTIVE'))
       ), candidates AS (
         SELECT r.*, CASE WHEN n=0 THEN r.anchor_due_date ELSE
           (date_trunc('month',r.anchor_due_date) + make_interval(months => n*r.interval_months))::date
@@ -58,13 +59,46 @@ public class ScheduledChargeStore {
       )
       INSERT INTO scheduled_charges(id,space_id,recurring_expense_id,recurring_expense_revision_id,due_date,expense_name,expected_amount,assignee_user_id,planned_payment_method_id,category_id,subcategory_id,memo,status,created_at,updated_at)
       SELECT gen_random_uuid(),c.space_id,c.recurring_expense_id,c.id,c.due,c.name,
-        NULL,
+        CASE WHEN c.billing_mode='FIXED' THEN c.default_expected_amount ELSE NULL END,
         c.assignee_user_id,c.default_payment_method_id,c.category_id,c.subcategory_id,c.memo,'PENDING',?,?
       FROM candidates c WHERE c.due>=COALESCE(c.effective_from,c.anchor_due_date)
-      ON CONFLICT(recurring_expense_id,due_date) DO NOTHING
+        AND (c.billing_mode='LEGACY' OR (c.due<=? AND c.due>=COALESCE(c.auto_from_date,c.anchor_due_date)))
+        AND (c.billing_mode<>'LEGACY' OR NOT EXISTS (
+          SELECT 1 FROM scheduled_charges old WHERE old.recurring_expense_id=c.recurring_expense_id
+            AND old.due_date=c.due AND old.status='CANCELLED'))
+      ON CONFLICT(recurring_expense_id,due_date) WHERE status<>'CANCELLED' DO NOTHING
       """,
         through,
         space,
+        Timestamp.from(now),
+        Timestamp.from(now),
+        now.atZone(java.time.ZoneId.of("Asia/Seoul")).toLocalDate());
+    autoComplete(space, now);
+  }
+
+  private void autoComplete(UUID space, Instant now) {
+    jdbc.update(
+        """
+      WITH completed AS (
+        UPDATE scheduled_charges c SET status='COMPLETED', actual_amount=c.expected_amount,
+          actual_paid_on=c.due_date, actual_payment_method_id=c.planned_payment_method_id,
+          completed_by=e.created_by,completed_at=?,updated_at=?,version=c.version+1
+        FROM recurring_expenses e, recurring_expense_revisions r, payment_methods p
+        WHERE c.space_id=? AND c.recurring_expense_id=e.id AND e.status='ACTIVE'
+          AND r.id=c.recurring_expense_revision_id AND r.billing_mode='FIXED'
+          AND c.status='PENDING' AND c.due_date<=? AND c.expected_amount IS NOT NULL
+          AND p.id=c.planned_payment_method_id AND p.space_id=c.space_id AND p.status='ACTIVE'
+        RETURNING c.*
+      )
+      INSERT INTO transactions(id,space_id,created_by,type,amount,occurred_on,category_id,subcategory_id,
+        payment_method_id,memo,visibility,source,scheduled_charge_id,status,created_at,updated_at)
+      SELECT gen_random_uuid(),space_id,completed_by,'EXPENSE',actual_amount,actual_paid_on,category_id,
+        subcategory_id,actual_payment_method_id,memo,'SHARED','SCHEDULED_CHARGE',id,'ACTIVE',?,? FROM completed
+      """,
+        Timestamp.from(now),
+        Timestamp.from(now),
+        space,
+        now.atZone(java.time.ZoneId.of("Asia/Seoul")).toLocalDate(),
         Timestamp.from(now),
         Timestamp.from(now));
   }
@@ -82,7 +116,11 @@ public class ScheduledChargeStore {
         rs.getObject("planned_payment_method_id", UUID.class),
         rs.getObject("actual_payment_method_id", UUID.class),
         rs.getString("payment_name"),
-        rs.getLong("version"));
+        rs.getLong("version"),
+        java.time.YearMonth.from(
+            rs.getObject("billing_month", LocalDate.class) == null
+                ? rs.getObject("due_date", LocalDate.class)
+                : rs.getObject("billing_month", LocalDate.class)));
   }
 
   private static final String SELECT =
@@ -148,5 +186,124 @@ public class ScheduledChargeStore {
             space,
             expense);
     return java.time.YearMonth.from(due).plusMonths(interval).atEndOfMonth();
+  }
+
+  public List<UUID> fixedSpaces() {
+    return jdbc.queryForList(
+        "SELECT DISTINCT e.space_id FROM recurring_expenses e JOIN spaces s ON s.id=e.space_id JOIN recurring_expense_revisions r ON r.recurring_expense_id=e.id WHERE e.status='ACTIVE' AND s.status='ACTIVE' AND r.billing_mode='FIXED'",
+        UUID.class);
+  }
+
+  public ChargeView saveManual(
+      UUID space,
+      UUID user,
+      UUID expense,
+      UUID key,
+      java.time.YearMonth month,
+      PaymentCompletion input,
+      Instant now) {
+    var settings =
+        jdbc.queryForList(
+            "SELECT r.*,e.status expense_status FROM recurring_expenses e JOIN LATERAL (SELECT * FROM recurring_expense_revisions v WHERE v.recurring_expense_id=e.id ORDER BY v.created_at DESC,v.id DESC LIMIT 1) r ON true WHERE e.id=? AND e.space_id=?",
+            expense,
+            space);
+    if (settings.isEmpty() || !"ACTIVE".equals(settings.getFirst().get("expense_status")))
+      throw new ChargeFailure(404, "고정비를 찾지 못했습니다.");
+    var r = settings.getFirst();
+    if (!"VARIABLE".equals(r.get("billing_mode")))
+      throw new ChargeFailure(400, "변동 고정비에만 수동 내역을 추가할 수 있습니다.");
+    var existing = jdbc.query(SELECT + "WHERE c.space_id=? AND c.id=?", this::view, space, key);
+    if (!existing.isEmpty()) {
+      var c = existing.getFirst();
+      if ("COMPLETED".equals(c.status())
+          && c.recurringExpenseId().equals(expense)
+          && c.billingMonth().equals(month)
+          && c.actualAmount().equals(input.amount())
+          && c.actualPaidOn().equals(input.paidOn())
+          && c.actualPaymentMethodId().equals(input.paymentMethodId())) return c;
+      throw new ChargeFailure(409, "다른 내용으로 저장된 요청입니다.");
+    }
+    if (!jdbc.queryForList(
+            "SELECT id FROM scheduled_charges WHERE recurring_expense_id=? AND status<>'CANCELLED' AND COALESCE(billing_month,date_trunc('month',due_date)::date)=?",
+            UUID.class,
+            expense,
+            month.atDay(1))
+        .isEmpty()) throw new ChargeFailure(409, "해당 월의 결제 내역이 이미 있습니다. 기존 내역을 수정해 주세요.");
+    jdbc.update(
+        """
+      INSERT INTO scheduled_charges(id,space_id,recurring_expense_id,recurring_expense_revision_id,due_date,
+        billing_month,expense_name,assignee_user_id,planned_payment_method_id,category_id,subcategory_id,memo,status,created_at,updated_at)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,'PENDING',?,?)
+      """,
+        key,
+        space,
+        expense,
+        r.get("id"),
+        month.atDay(1),
+        month.atDay(1),
+        r.get("name"),
+        r.get("assignee_user_id"),
+        input.paymentMethodId(),
+        r.get("category_id"),
+        r.get("subcategory_id"),
+        r.get("memo"),
+        Timestamp.from(now),
+        Timestamp.from(now));
+    var pending = charge(space, key);
+    complete(space, user, pending, input, now);
+    return charge(space, key);
+  }
+
+  public ChargeView editCompleted(
+      UUID space,
+      UUID user,
+      UUID id,
+      java.time.YearMonth month,
+      PaymentCompletion input,
+      Instant now) {
+    var current = charge(space, id);
+    if (jdbc.queryForList(
+            "SELECT id FROM recurring_expenses WHERE id=? AND space_id=? AND status='ACTIVE'",
+            UUID.class,
+            current.recurringExpenseId(),
+            space)
+        .isEmpty()) throw new ChargeFailure(404, "고정비를 찾지 못했습니다.");
+    if (!"COMPLETED".equals(current.status())) throw new ChargeFailure(400, "완료된 내역을 선택해 주세요.");
+    if (current.version() != input.version())
+      throw new ChargeFailure(409, "결제 내역이 변경되었습니다. 다시 불러와 주세요.");
+    if (month == null) month = current.billingMonth();
+    if (!jdbc.queryForList(
+            "SELECT id FROM scheduled_charges WHERE recurring_expense_id=? AND status<>'CANCELLED' AND id<>? AND COALESCE(billing_month,date_trunc('month',due_date)::date)=?",
+            UUID.class,
+            current.recurringExpenseId(),
+            id,
+            month.atDay(1))
+        .isEmpty()) throw new ChargeFailure(409, "해당 월의 결제 내역이 이미 있습니다.");
+    if (jdbc.queryForList(
+            "SELECT id FROM payment_methods WHERE id=? AND space_id=? AND status='ACTIVE' FOR SHARE",
+            input.paymentMethodId(),
+            space)
+        .isEmpty()) throw new ChargeFailure(400, "사용 중인 결제수단을 선택해 주세요.");
+    var time = Timestamp.from(now);
+    jdbc.update(
+        "UPDATE scheduled_charges SET billing_month=?,actual_amount=?,actual_paid_on=?,actual_payment_method_id=?,updated_at=?,version=version+1 WHERE id=? AND space_id=?",
+        month.atDay(1),
+        input.amount(),
+        input.paidOn(),
+        input.paymentMethodId(),
+        time,
+        id,
+        space);
+    int changed =
+        jdbc.update(
+            "UPDATE transactions SET amount=?,occurred_on=?,payment_method_id=?,updated_at=?,version=version+1 WHERE scheduled_charge_id=? AND space_id=? AND status='ACTIVE'",
+            input.amount(),
+            input.paidOn(),
+            input.paymentMethodId(),
+            time,
+            id,
+            space);
+    if (changed != 1) throw new ChargeFailure(409, "연결된 지출을 확인할 수 없습니다.");
+    return charge(space, id);
   }
 }

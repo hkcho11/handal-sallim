@@ -19,6 +19,8 @@ import {
 } from "./expenseOrder";
 
 export function expenseStatus(expense: FixedExpense) {
+  if (expense.billingMode === "VARIABLE") return "직접 입력";
+  if (expense.billingMode === "FIXED") return "자동 기록";
   if (expense.firstChargeStatus === "COMPLETED") return "완료";
   if (expense.firstChargeStatus === "OVERDUE")
     return overdueStatus(expense, todayInSeoul());
@@ -259,7 +261,9 @@ export default function FixedExpensesListScreen() {
                         </strong>
                       </div>
                       <span className={styles.amount}>
-                        {expense.expectedAmount.toLocaleString("ko-KR")}원
+                        {expense.expectedAmount === null
+                          ? "금액 변동"
+                          : `${expense.expectedAmount.toLocaleString("ko-KR")}원`}
                       </span>
                     </div>
                     <div className={styles.itemMeta}>
@@ -277,7 +281,9 @@ export default function FixedExpensesListScreen() {
                       </span>
                     </div>
                     <div className={styles.itemMeta}>
-                      <span>결제수단 {expense.paymentMethodName ?? "-"}</span>
+                      <span>
+                        {`결제수단 ${expense.paymentMethodName ?? "-"}`}
+                      </span>
                       <span aria-hidden="true">→</span>
                     </div>
                   </SwipeableExpenseItem>

@@ -6,7 +6,7 @@ import java.util.UUID;
 public record FixedExpenseView(
     UUID id,
     String name,
-    long expectedAmount,
+    Long expectedAmount,
     Integer intervalMonths,
     Integer recurringDayOfMonth,
     LocalDate firstDueDate,
@@ -20,4 +20,6 @@ public record FixedExpenseView(
     UUID subcategoryId,
     String subcategoryName,
     String memo,
-    LocalDate firstChargeDueDate) {}
+    LocalDate firstChargeDueDate,
+    String billingMode,
+    java.time.YearMonth billingMonth) {}

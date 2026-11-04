@@ -27,7 +27,7 @@ public class DashboardRepository {
         LEFT JOIN categories c ON c.id=t.category_id AND c.space_id=t.space_id
         JOIN payment_methods p ON p.id=t.payment_method_id AND p.space_id=t.space_id
         WHERE t.space_id=? AND t.visibility='SHARED' AND t.type='EXPENSE' AND t.status='ACTIVE'
-          AND t.occurred_on>=? AND t.occurred_on<?
+          AND COALESCE(sc.billing_month,t.occurred_on)>=? AND COALESCE(sc.billing_month,t.occurred_on)<?
         ORDER BY t.occurred_on DESC, t.id
         """,
         (rs, row) ->
@@ -61,11 +61,14 @@ public class DashboardRepository {
         LEFT JOIN categories c ON c.id=sc.category_id AND c.space_id=sc.space_id
         LEFT JOIN expense_subcategories sub ON sub.id=sc.subcategory_id AND sub.category_id=sc.category_id AND sub.space_id=sc.space_id
         LEFT JOIN payment_methods actual ON actual.id=sc.actual_payment_method_id AND actual.space_id=sc.space_id
-        WHERE sc.space_id=? AND sc.status<>'CANCELLED' AND sc.due_date>=? AND sc.due_date<?
+        WHERE sc.space_id=? AND sc.status<>'CANCELLED' AND COALESCE(sc.billing_month,sc.due_date)>=? AND COALESCE(sc.billing_month,sc.due_date)<?
         ORDER BY sc.due_date, sc.id
         """,
         (rs, row) -> {
-          LocalDate due = rs.getDate("due_date").toLocalDate();
+          LocalDate due =
+              rs.getDate("billing_month") == null
+                  ? rs.getDate("due_date").toLocalDate()
+                  : rs.getDate("billing_month").toLocalDate();
           String status =
               "COMPLETED".equals(rs.getString("status")) ? "완료" : due.isBefore(today) ? "지연" : "예정";
           String payer =
@@ -126,6 +129,7 @@ public class DashboardRepository {
         ORDER BY r.effective_from DESC NULLS FIRST, r.created_at DESC LIMIT 1
       ) r ON true
       WHERE e.space_id=? AND e.status='ACTIVE'
+        AND r.billing_mode='LEGACY'
         AND (r.anchor_due_date IS NULL OR r.interval_months IS NULL OR r.recurring_day_of_month IS NULL)
       ORDER BY e.created_at, e.id
       """,

@@ -581,6 +581,9 @@ test("모든 선택창과 펼침 화살표가 홈과 같은 스타일을 사용�
 test("결제수단에서 설정으로 복귀하고 선택한 보관 상태를 색상으로 구분한다", async ({
   page,
 }) => {
+  await page.route("**/backend/payment-methods/members", (route) =>
+    route.fulfill({ json: [] }),
+  );
   await page.route("**/backend/payment-methods", (route) =>
     route.fulfill({
       json: [

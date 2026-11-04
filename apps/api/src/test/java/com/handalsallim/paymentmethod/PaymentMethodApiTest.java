@@ -76,6 +76,41 @@ class PaymentMethodApiTest {
   }
 
   @Test
+  void acceptsNewTypesAndReclassifiesExistingCardsWithoutChangingIdentity() throws Exception {
+    UUID legacy = create();
+    for (String type :
+        new String[] {"CREDIT_CARD", "DEBIT_CARD", "SIMPLE_PAY", "ACCOUNT", "CASH"}) {
+      UUID id = UUID.randomUUID();
+      mvc.perform(
+              post("/api/payment-methods")
+                  .principal(user::toString)
+                  .header("Idempotency-Key", id)
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(body("새 결제수단", 0).replace("CARD", type)))
+          .andExpect(status().isCreated())
+          .andExpect(jsonPath("$.type").value(type));
+    }
+    mvc.perform(
+            put("/api/payment-methods/" + legacy)
+                .principal(user::toString)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body("생활비 카드", 0).replace("CARD", "DEBIT_CARD")))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.id").value(legacy.toString()))
+        .andExpect(jsonPath("$.type").value("DEBIT_CARD"));
+    mvc.perform(get("/api/recurring-expenses/options").principal(user::toString))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.paymentMethods.length()").value(6));
+    mvc.perform(
+            post("/api/payment-methods")
+                .principal(user::toString)
+                .header("Idempotency-Key", UUID.randomUUID())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body("잘못된 종류", 0).replace("CARD", "UNKNOWN")))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
   void retriesCreationRejectsStaleEditsAndEnforcesSpaceBoundary() throws Exception {
     UUID id = create();
     mvc.perform(

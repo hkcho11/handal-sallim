@@ -3,9 +3,44 @@ import {
   createFixedExpense,
   deleteFixedExpense,
   listFixedExpenses,
+  getFixedExpenseFormOptions,
 } from "./api";
 
 afterEach(() => vi.unstubAllGlobals());
+
+test("고정비 선택지가 신규 결제수단 종류를 수용하고 가나다순으로 표시된다", async () => {
+  const paymentMethods = [
+    {
+      id: "11111111-1111-4111-8111-111111111111",
+      name: "하나 신용",
+      type: "CREDIT_CARD",
+    },
+    {
+      id: "22222222-2222-4222-8222-222222222222",
+      name: "국민 체크",
+      type: "DEBIT_CARD",
+    },
+    {
+      id: "33333333-3333-4333-8333-333333333333",
+      name: "간편 지갑",
+      type: "SIMPLE_PAY",
+    },
+  ];
+  vi.stubGlobal(
+    "fetch",
+    vi
+      .fn()
+      .mockResolvedValue(
+        new Response(JSON.stringify({ payers: [], paymentMethods })),
+      ),
+  );
+  const result = await getFixedExpenseFormOptions();
+  expect(result.paymentMethods.map((item) => item.name)).toEqual([
+    "간편 지갑",
+    "국민 체크",
+    "하나 신용",
+  ]);
+});
 
 test("삭제의 빈 성공 응답을 처리하고 권한 오류 원문을 숨긴다", async () => {
   const fetchMock = vi

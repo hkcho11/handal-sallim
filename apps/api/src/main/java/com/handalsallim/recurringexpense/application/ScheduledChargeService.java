@@ -66,4 +66,26 @@ public class ScheduledChargeService {
     generateSpace(space, next.isAfter(current) ? next : current);
     return store.charge(space, id);
   }
+
+  @Transactional
+  public ChargeView record(
+      UUID user, UUID expense, UUID key, YearMonth month, PaymentCompletion input) {
+    input.validateRecorded();
+    validateMonth(month);
+    UUID space = store.lockCurrentSpace(user);
+    return store.saveManual(space, user, expense, key, month, input, clock.instant());
+  }
+
+  @Transactional
+  public ChargeView edit(UUID user, UUID id, YearMonth month, PaymentCompletion input) {
+    input.validateRecorded();
+    if (month != null) validateMonth(month);
+    UUID space = store.lockCurrentSpace(user);
+    return store.editCompleted(space, user, id, month, input, clock.instant());
+  }
+
+  private void validateMonth(YearMonth month) {
+    if (month == null || month.getYear() < 1 || month.getYear() > 9998)
+      throw new IllegalArgumentException("해당 월을 확인해 주세요.");
+  }
 }

@@ -21,7 +21,6 @@ export default function FixedExpenseDetailScreen({ id }: { id: string }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [editing, setEditing] = useState(false);
-  const [notice, setNotice] = useState("");
   const [retry, setRetry] = useState(0);
   const [deleting, setDeleting] = useState(false);
   useEffect(() => {
@@ -51,7 +50,6 @@ export default function FixedExpenseDetailScreen({ id }: { id: string }) {
         onSaved={(updated) => {
           setExpense(updated);
           setEditing(false);
-          if (updated !== expense) setNotice("고정비 정보를 수정했습니다.");
         }}
       />
     );
@@ -105,12 +103,24 @@ export default function FixedExpenseDetailScreen({ id }: { id: string }) {
             <h2 className={styles.detailTitle}>
               {expense.subcategoryName ?? expense.name}
             </h2>
-            <p className={styles.detailAmount}>
-              <span>등록 금액 </span>
-              {expense.expectedAmount.toLocaleString("ko-KR")}
-              <span>원</span>
-            </p>
+            {expense.billingMode !== "VARIABLE" && (
+              <p className={styles.detailAmount}>
+                <span>등록 금액 </span>
+                {expense.expectedAmount?.toLocaleString("ko-KR")}
+                <span>원</span>
+              </p>
+            )}
             <dl className={styles.detailGrid}>
+              <div>
+                <dt>금액 변동 여부</dt>
+                <dd>
+                  {expense.billingMode === "VARIABLE"
+                    ? "금액 변동"
+                    : expense.billingMode === "FIXED"
+                      ? "금액 일정"
+                      : "기존 방식"}
+                </dd>
+              </div>
               <div>
                 <dt>대분류</dt>
                 <dd>{expense.categoryName ?? "-"}</dd>
@@ -153,26 +163,26 @@ export default function FixedExpenseDetailScreen({ id }: { id: string }) {
                 <dd>{expense.paymentMethodName ?? "-"}</dd>
               </div>
               <div>
-                <dt>첫 결제일</dt>
-                <dd>{expense.firstDueDate ?? "-"}</dd>
+                <dt>
+                  {expense.billingMode === "VARIABLE" ? "해당 월" : "첫 결제일"}
+                </dt>
+                <dd>
+                  {expense.billingMode === "VARIABLE"
+                    ? (expense.billingMonth ?? "-")
+                    : (expense.firstDueDate ?? "-")}
+                </dd>
               </div>
             </dl>
-            {!expense.firstChargeId && (
-              <p className={styles.fieldHint}>
-                반복주기, 반복 결제일과 첫 결제일이 정해지면 예정 청구를
-                만들어요.
-              </p>
-            )}
-            {notice && (
-              <p role="status" className={styles.notice}>
-                {notice}
+            {expense.billingMode === "FIXED" && !expense.paymentMethodId && (
+              <p role="status" className={styles.fieldHint}>
+                자동 기록에 사용할 결제수단이 없어요. 정보 수정에서 결제수단을
+                선택해 주세요.
               </p>
             )}
             <button
               type="button"
               className={styles.primaryButton}
               onClick={() => {
-                setNotice("");
                 setEditing(true);
               }}
             >
@@ -184,6 +194,7 @@ export default function FixedExpenseDetailScreen({ id }: { id: string }) {
       {!loading && !error && expense && (
         <ScheduledCharges
           expenseId={id}
+          expense={expense}
           onCompleted={() => setRetry((value) => value + 1)}
         />
       )}

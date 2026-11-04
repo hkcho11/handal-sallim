@@ -184,13 +184,15 @@
 | `space_id` | `uuid` | Y | FK → `spaces.id` |
 | `holder_user_id` | `uuid` | N | `(space_id, holder_user_id)` → 공간 멤버, 명의자/담당자 |
 | `name` | `varchar(100)` | Y | 사용자가 정한 표시명 |
-| `type` | `varchar(20)` | Y | `CARD`, `ACCOUNT`, `CASH` |
+| `type` | `varchar(20)` | Y | `CREDIT_CARD`, `DEBIT_CARD`, `SIMPLE_PAY`, `ACCOUNT`, `CASH`, 기존 카드 미분류 `CARD` |
 | `color` | `varchar(20)` | N | 허용 형식을 경계에서 검증 |
 | `status` | `varchar(20)` | Y | `ACTIVE`, `ARCHIVED` |
 | `archived_at` | `timestamptz` | N | 보관 시각 |
 | 공통 필드 |  |  | `created_at`, `updated_at`, `version` |
 
 실제 카드번호·계좌번호 전체를 저장하는 필드는 만들지 않는다. 사용 중인 결제수단은 물리 삭제하지 않고 `ARCHIVED`로 보관하며 대체 결제수단을 필수로 요구하지 않는다. 과거 완료 기록은 기존 참조를 유지하고, 연결된 반복 고정비에는 다음 미완료 회차부터 적용되는 결제수단 미지정 revision을 생성한다.
+
+
 
 ### 4.8 `recurring_expenses`
 
@@ -539,3 +541,7 @@ MVP에는 금융 연동 테이블을 생성하지 않는다. 카드·은행 거�
 - 보관 공간의 금융 테이블에는 INSERT/UPDATE/DELETE 보호 트리거를 둔다. 진행 중 쓰기는 보관 전에 완료되거나 현재 공간에서 재시도하도록 거부된다. 연동 전 데이터를 후속 요청이 덮어쓰지 않는다.
 - 반복 설정은 새 카테고리·세부 분류·참조 중인 활성 결제수단으로 매핑하며 원래 기록을 수정하지 않는다. 완료 거래·기존 예정 청구·수입·저축은 복제하지 않는다.
 - 월이나 거래 날짜 대신 활성 공간의 전환으로 신규 공유 기록을 구분한다. 모든 금융 API는 현재 활성 멤버십을 기준으로 하며 개인 보존 공간에는 기존 API의 쓰기 권한을 부여하지 않는다.
+
+## 고정비 결제 유형과 해당 월 (2026-11-04)
+
+2026-11-04 고정비 유형 추가(V17): `recurring_expense_revisions.billing_mode`는 기존 `LEGACY`, 금액 일정 `FIXED`, 금액 변동 `VARIABLE`을 구분한다. 변동 유형은 `billing_month`(월 첫날)를 저장하고 등록 금액·첫 결제일은 NULL이다. V18부터 반복주기·반복 결제일·결제자·결제수단은 두 유형의 공통 설정으로 보존한다. 다른 유형의 등록 금액은 양의 정수다. `auto_from_date`는 유형 전환 전 미결제 회차의 자동 완료를 막는 하한이다. 완료 회차의 `scheduled_charges.billing_month`는 실제 결제일과 분리된 통계 기준이며 기존 NULL은 예정 결제월로 해석한다. 상세 불변 조건은 [고정비 결제 유형](../02-design/expense-billing-modes.md)을 따른다. 활성·완료 회차에만 `(recurring_expense_id, due_date)` 유일성을 적용하므로 유형 전환에서 취소된 원본 회차를 보존하면서 같은 날짜의 새 회차를 기록할 수 있다.

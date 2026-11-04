@@ -74,7 +74,7 @@ export default function RegisteredExpenses({
               ? `${expenses.length}건 · `
               : `실제 등록 내역 ${expenses.length}건 · 등록 금액 합계 `}
             {expenses
-              .reduce((sum, expense) => sum + expense.expectedAmount, 0)
+              .reduce((sum, expense) => sum + (expense.expectedAmount ?? 0), 0)
               .toLocaleString("ko-KR")}
             원
           </p>
@@ -130,7 +130,9 @@ export default function RegisteredExpenses({
                 </div>
                 <div className={styles.amount}>
                   <strong>
-                    {expense.expectedAmount.toLocaleString("ko-KR")}원
+                    {expense.expectedAmount === null
+                      ? "금액 변동"
+                      : `${expense.expectedAmount.toLocaleString("ko-KR")}원`}
                   </strong>
                   {!compact && <span>등록 금액</span>}
                 </div>

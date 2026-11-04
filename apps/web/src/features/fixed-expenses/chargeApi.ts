@@ -2,6 +2,7 @@ import { apiFetch } from "../../shared/api/apiFetch";
 import { initializeCsrf } from "../auth/api";
 
 export interface ScheduledCharge {
+  billingMonth?: string;
   id: string;
   recurringExpenseId: string;
   name: string;
@@ -35,6 +36,9 @@ export function parseCharge(value: unknown): ScheduledCharge {
     !uuid(value.recurringExpenseId) ||
     typeof value.name !== "string" ||
     !date(value.dueDate) ||
+    (value.billingMonth !== undefined &&
+      (typeof value.billingMonth !== "string" ||
+        !date(`${value.billingMonth}-01`))) ||
     (value.expectedAmount !== null && !amount(value.expectedAmount)) ||
     !Number.isSafeInteger(value.version) ||
     Number(value.version) < 0 ||
@@ -61,6 +65,7 @@ export function parseCharge(value: unknown): ScheduledCharge {
 async function request(
   path: string,
   input?: Record<string, unknown>,
+  key?: string,
 ): Promise<unknown> {
   if (input) await initializeCsrf();
   let response: Response;
@@ -68,7 +73,12 @@ async function request(
     response = await apiFetch(`/backend/${path}`, {
       method: input ? "POST" : "GET",
       cache: "no-store",
-      headers: input ? { "Content-Type": "application/json" } : undefined,
+      headers: input
+        ? {
+            "Content-Type": "application/json",
+            ...(key ? { "Idempotency-Key": key } : {}),
+          }
+        : undefined,
       body: input ? JSON.stringify(input) : undefined,
     });
   } catch {
@@ -113,5 +123,31 @@ export async function completeCharge(
       `scheduled-charges/${encodeURIComponent(id)}/complete`,
       input,
     ),
+  );
+}
+
+export interface PaymentInput extends Record<string, unknown> {
+  billingMonth: string;
+  amount: number;
+  paidOn: string;
+  paymentMethodId: string;
+  version: number;
+}
+export async function recordPayment(
+  expense: string,
+  input: PaymentInput,
+  key: string,
+) {
+  return parseCharge(
+    await request(
+      `recurring-expenses/${encodeURIComponent(expense)}/payments`,
+      input,
+      key,
+    ),
+  );
+}
+export async function editPayment(id: string, input: PaymentInput) {
+  return parseCharge(
+    await request(`scheduled-charges/${encodeURIComponent(id)}/edit`, input),
   );
 }

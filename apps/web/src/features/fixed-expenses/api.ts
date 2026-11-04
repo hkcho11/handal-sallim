@@ -1,11 +1,18 @@
 import { cachedRead } from "../../shared/api/readCache";
 import { apiFetch } from "../../shared/api/apiFetch";
 import { SERVICE_UNAVAILABLE_MESSAGE } from "../../shared/api/serviceAvailability";
+import {
+  comparePaymentMethodNames,
+  isPaymentMethodType,
+  type PaymentMethodType,
+} from "../payment-methods/types";
 
 export interface FixedExpense {
   id: string;
   name: string;
-  expectedAmount: number;
+  expectedAmount: number | null;
+  billingMode?: "LEGACY" | "FIXED" | "VARIABLE";
+  billingMonth?: string | null;
   intervalMonths: 1 | 2 | 3 | 12 | null;
   recurringDayOfMonth: number | null;
   firstDueDate: string | null;
@@ -23,9 +30,11 @@ export interface FixedExpense {
 }
 
 export interface NewFixedExpense {
+  billingMode?: "LEGACY" | "FIXED" | "VARIABLE";
+  billingMonth?: string | null;
   memo: string | null;
   subcategoryId: string;
-  expectedAmount: number;
+  expectedAmount: number | null;
   intervalMonths: Exclude<FixedExpense["intervalMonths"], null> | null;
   recurringDayOfMonth: number | null;
   firstDueDate: string | null;
@@ -41,7 +50,7 @@ export interface FixedExpenseFormOptions {
   paymentMethods: Array<{
     id: string;
     name: string;
-    type: "CARD" | "ACCOUNT" | "CASH";
+    type: PaymentMethodType;
   }>;
 }
 
@@ -82,8 +91,16 @@ function isFixedExpense(value: unknown): value is FixedExpense {
   return (
     isUuid(value.id) &&
     typeof value.name === "string" &&
-    Number.isSafeInteger(value.expectedAmount) &&
-    Number(value.expectedAmount) > 0 &&
+    (value.billingMode === undefined ||
+      ["LEGACY", "FIXED", "VARIABLE"].includes(String(value.billingMode))) &&
+    (value.billingMonth === undefined ||
+      value.billingMonth === null ||
+      (typeof value.billingMonth === "string" &&
+        /^\d{4}-(0[1-9]|1[0-2])$/.test(value.billingMonth))) &&
+    (value.billingMode === "VARIABLE"
+      ? value.expectedAmount === null && typeof value.billingMonth === "string"
+      : Number.isSafeInteger(value.expectedAmount) &&
+        Number(value.expectedAmount) > 0) &&
     (value.intervalMonths === null ||
       [1, 2, 3, 12].includes(Number(value.intervalMonths))) &&
     (value.recurringDayOfMonth === null ||
@@ -203,7 +220,7 @@ export async function getFixedExpenseFormOptions(): Promise<FixedExpenseFormOpti
       isObject(item) &&
       isUuid(item.id) &&
       typeof item.name === "string" &&
-      ["CARD", "ACCOUNT", "CASH"].includes(String(item.type)),
+      isPaymentMethodType(item.type),
   );
   const categories =
     data.categories === undefined ||
@@ -230,7 +247,9 @@ export async function getFixedExpenseFormOptions(): Promise<FixedExpenseFormOpti
   if (!payers || !paymentMethods || !categories || !subcategories) {
     throw new FixedExpenseApiError(0, "입력 선택지를 확인할 수 없습니다.");
   }
-  return data as unknown as FixedExpenseFormOptions;
+  const options = data as unknown as FixedExpenseFormOptions;
+  options.paymentMethods.sort(comparePaymentMethodNames);
+  return options;
 }
 
 export async function createFixedExpense(
