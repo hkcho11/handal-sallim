@@ -517,14 +517,14 @@ test("회원코드 요청·수락 후 새 기록을 공유하고 과거 기록�
     }
     await page.goto(`/fixed-costs/${sharedExpense.id}`);
     await page
-      .getByRole("button", { name: `${month}-01 결제 완료`, exact: true })
+      .getByRole("button", { name: `${month} 결제 내역 입력`, exact: true })
       .click();
-    const completion = page.getByRole("dialog", { name: "결제 완료 확인" });
-    await expect(completion.getByLabel("실제 결제 금액")).toHaveValue("");
+    const completion = page.getByRole("form", { name: "결제 내역 수정" });
+    await expect(completion.getByLabel("결제 금액")).toHaveValue("");
     await expect(completion.getByLabel("실제 결제일")).toHaveValue(
       `${month}-01`,
     );
-    await completion.getByLabel("실제 결제 금액").fill("35000");
+    await completion.getByLabel("결제 금액").fill("35000");
     for (const width of [360, 1280]) {
       await page.setViewportSize({ width, height: 844 });
       await expect(completion).toBeVisible();
@@ -547,11 +547,11 @@ test("회원코드 요청·수락 후 새 기록을 공유하고 과거 기록�
           ),
         ).toBe(true);
         await completion
-          .getByRole("button", { name: "확인하고 결제 완료", exact: true })
+          .getByRole("button", { name: "결제 내역 저장", exact: true })
           .scrollIntoViewIfNeeded();
         await expect(
           completion.getByRole("button", {
-            name: "확인하고 결제 완료",
+            name: "결제 내역 저장",
             exact: true,
           }),
         ).toBeVisible();
@@ -561,10 +561,15 @@ test("회원코드 요청·수락 후 새 기록을 공유하고 과거 기록�
       }
     }
     await completion
-      .getByRole("button", { name: "확인하고 결제 완료", exact: true })
+      .getByRole("button", { name: "결제 내역 저장", exact: true })
       .click();
     await expect(completion).not.toBeVisible();
-    await expect(page.getByRole("status")).toContainText("실제 지출에 반영");
+    await expect(
+      page
+        .getByRole("region", { name: "회차별 결제 내역" })
+        .getByRole("listitem")
+        .filter({ hasText: "35,000원" }),
+    ).toHaveCount(1);
     const sharedCycles = await context.request.get(
       `/backend/recurring-expenses/${sharedExpense.id}/charges`,
     );
